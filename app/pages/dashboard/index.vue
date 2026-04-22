@@ -259,11 +259,33 @@ const refreshData = () => { alert('Data refreshed!') }
 .badge.pending { background: #fef3c7; color: #b45309; }
 
 /* 6. PROMO CARD */
-.analysis-promo-card { background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%); color: white; border-radius: 12px; padding: 2.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.promo-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.9; }
-.view-stats-btn { background: white; color: #1e3a8a; padding: 0.8rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 1rem; transition: all 0.3s ease; }
-.view-stats-btn:hover { transform: scale(1.05); background: #f8fafc; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+/* Update this selector in your code */
+.analysis-promo-card {
+  /* Use a linear gradient for a smooth blue fade */
+  background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 2.5rem; /* Ensure there's good internal padding */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
+/* Add or update this selector for the button */
+.view-stats-btn {
+  background: white;
+  color: #1e3a8a;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  margin-top: 1.5rem; /* This moves the button further down */
+  display: inline-block;
+  transition: all 0.3s ease;
+  border: none;
+}
 /* UTILITIES */
 .clickable { cursor: pointer; transition: all 0.2s ease; }
 .clickable:hover { opacity: 0.8; transform: translateY(-1px); }
