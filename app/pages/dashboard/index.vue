@@ -211,30 +211,85 @@ const refreshData = () => { alert('Data refreshed!') }
 .filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; height: 44px; }
 
 /* 4. ANIMATED STATS CARDS */
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.stats-grid { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 1.5rem; 
+  margin-bottom: 2.5rem; 
+  perspective: 1000px; /* Required for 3D-like movement */
 }
 
-.animate-in { opacity: 0; animation: fadeInUp 0.6s ease-out forwards; }
+/* 1. POP-IN ENTRANCE ANIMATION */
+@keyframes popIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8) translateY(10px); 
+  }
+  70% { 
+    transform: scale(1.05) translateY(-2px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
 
+.animate-in { 
+  opacity: 0; 
+  animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; 
+}
+
+/* 2. PERSPECTIVE HOVER EFFECT */
 .stat-card { 
-  background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  background: white; 
+  padding: 1.5rem; 
+  border-radius: 12px; 
+  border: 1px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  /* Smoother transition for the scale and shadow */
+  transition: 
+    transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+    box-shadow 0.4s ease, 
+    border-color 0.3s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(30, 58, 138, 0.08);
-  border-color: #cbd5e1;
+  /* Scales up slightly and tilts forward */
+  transform: scale(1.03) translateY(-5px) rotateX(2deg);
+  box-shadow: 0 20px 30px -10px rgba(30, 58, 138, 0.15);
+  border-color: #2563eb;
+  z-index: 10;
 }
 
+/* 3. SUBTLE REFLECTION ON HOVER */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.stat-card:hover::before {
+  left: 150%;
+  transition: 0.7s;
+}
+
+/* TEXT STYLES (Kept consistent) */
 .stat-card h3 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700; letter-spacing: 0.025em; }
 .stat-value { font-size: 1.8rem; font-weight: 800; color: #1e3a8a; margin: 0; }
 .stat-change { font-size: 0.85rem; font-weight: 700; display: block; margin-top: 4px; }
 
+/* INDICATOR COLORS */
 .positive { color: #16a34a; }
 .warning { color: #ea580c; }
 .negative { color: #dc2626; }
