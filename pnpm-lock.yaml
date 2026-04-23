@@ -18,6 +18,9 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4(@vue/compiler-sfc@3.5.32)(vue@3.5.32)
     devDependencies:
+      '@iconify-json/lucide':
+        specifier: ^1.2.102
+        version: 1.2.102
       '@nuxt/icon':
         specifier: ^2.2.1
         version: 2.2.1(magicast@0.5.2)(vite@7.3.2(jiti@2.6.1)(terser@5.46.1)(yaml@2.8.3))(vue@3.5.32)
@@ -347,6 +350,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@iconify-json/lucide@1.2.102':
+    resolution: {integrity: sha512-Dm3EEqu5NrmzyDMB2U1+8yroEj2/dB9V4KlH0m/szwwF/ofSf0cPaGTZqkd1aExXjCor+vU53ttRMCGuXf+/cg==}
 
   '@iconify/collections@1.0.675':
     resolution: {integrity: sha512-Tosk0Eeh84Tr7vEQbo3fcUTvb0ZGIz04+CJxiGj+Y78qe2CjZP5JnDoWmAowJJcm77NnLGqoN8oxsdukE+xtIw==}
@@ -3625,6 +3631,10 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.7':
     optional: true
+
+  '@iconify-json/lucide@1.2.102':
+    dependencies:
+      '@iconify/types': 2.0.0
 
   '@iconify/collections@1.0.675':
     dependencies:
