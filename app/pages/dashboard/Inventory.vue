@@ -47,7 +47,7 @@
           <p>Monitor medical supplies, equipment stock levels, and procurement alerts.</p>
         </div>
         <div class="header-actions">
-          <button class="add-btn" @click="isModalOpen = true">+ Add New Item</button>
+          <button class="add-btn" @click="openAddModal">+ Add New Item</button>
         </div>
       </header>
 
@@ -125,11 +125,11 @@
     </main>
 
     <Transition name="fade">
-      <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
+      <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
           <div class="modal-header">
-            <h3>Add New Inventory Item</h3>
-            <button class="close-modal" @click="isModalOpen = false">&times;</button>
+            <h3>{{ isEditing ? 'Manage Inventory Item' : 'Add New Inventory Item' }}</h3>
+            <button class="close-modal" @click="closeModal">&times;</button>
           </div>
           <form @submit.prevent="handleSave">
             <div class="form-group">
@@ -151,13 +151,23 @@
                 <input type="number" v-model="newItem.stock" placeholder="0" required />
               </div>
             </div>
-            <div class="form-group">
-              <label>Unit Price (₱)</label>
-              <input type="number" step="0.01" v-model="newItem.price" placeholder="0.00" required />
+            <div class="form-row">
+              <div class="form-group">
+                <label>Unit Price (₱)</label>
+                <input type="number" step="0.01" v-model="newItem.price" placeholder="0.00" required />
+              </div>
+              <div class="form-group">
+                <label>Unit Type</label>
+                <input type="text" v-model="newItem.unit" placeholder="pcs, caps, boxes" required />
+              </div>
             </div>
+            
             <div class="modal-actions">
-              <button type="button" class="btn-secondary" @click="isModalOpen = false">Cancel</button>
-              <button type="submit" class="add-btn">Add to Stock</button>
+              <button v-if="isEditing" type="button" class="btn-delete" @click="deleteItem">Delete Item</button>
+              <div class="right-actions">
+                <button type="button" class="btn-secondary" @click="closeModal">Cancel</button>
+                <button type="submit" class="add-btn">{{ isEditing ? 'Update Stock' : 'Add to Stock' }}</button>
+              </div>
             </div>
           </form>
         </div>
@@ -172,6 +182,8 @@ import { ref, computed } from 'vue'
 const searchQuery = ref('')
 const selectedCategory = ref('All')
 const isModalOpen = ref(false)
+const isEditing = ref(false)
+const editingId = ref(null)
 
 const newItem = ref({
   name: '',
@@ -202,42 +214,72 @@ const resetFilters = () => {
   selectedCategory.value = 'All'
 }
 
-const handleSave = () => {
-  const status = newItem.value.stock > 50 ? 'In-Stock' : (newItem.value.stock > 0 ? 'Low-Stock' : 'Out-of-Stock')
-  inventoryItems.value.push({ ...newItem.value, id: Date.now(), status })
-  isModalOpen.value = false
+// Open modal for a fresh item
+const openAddModal = () => {
+  isEditing.value = false
   newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }
+  isModalOpen.value = true
 }
 
+// Manage button logic
 const editItem = (item) => {
-  alert(`Opening management panel for: ${item.name}`)
+  isEditing.value = true
+  editingId.value = item.id
+  // Clone the item so we don't edit the table directly until "Save" is clicked
+  newItem.value = { ...item }
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  isEditing.value = false
+  editingId.value = null
+}
+
+const handleSave = () => {
+  const status = newItem.value.stock > 50 ? 'In-Stock' : (newItem.value.stock > 0 ? 'Low-Stock' : 'Out-of-Stock')
+  
+  if (isEditing.value) {
+    // Update existing
+    const index = inventoryItems.value.findIndex(i => i.id === editingId.value)
+    if (index !== -1) {
+      inventoryItems.value[index] = { ...newItem.value, status }
+    }
+  } else {
+    // Add new
+    inventoryItems.value.push({ ...newItem.value, id: Date.now(), status })
+  }
+  
+  closeModal()
+}
+
+const deleteItem = () => {
+  if (confirm(`Are you sure you want to remove ${newItem.value.name}?`)) {
+    inventoryItems.value = inventoryItems.value.filter(i => i.id !== editingId.value)
+    closeModal()
+  }
 }
 </script>
 
 <style scoped>
-/* --- CORE LAYOUT --- */
+/* --- CORE LAYOUT --- (Unchanged) */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-
-/* --- MAIN CONTENT & TOP BAR --- */
 .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; }
 .top-bar p { color: #64748b; margin-top: 4px; }
 .inventory-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
 
-/* --- CONTROLS --- */
+/* --- CONTROLS --- (Unchanged) */
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 2rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 600px; }
 .search-wrapper input { width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; font-size: 0.95rem; }
@@ -245,41 +287,35 @@ const editItem = (item) => {
 .filter-group { display: flex; gap: 12px; }
 .filter-dropdown, .filter-btn { padding: 0 1.2rem; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #475569; font-weight: 600; cursor: pointer; }
 
-/* --- TABLE --- */
+/* --- TABLE --- (Unchanged) */
 .table-container { background: white; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; overflow: hidden; }
 .inventory-table { width: 100%; border-collapse: collapse; }
 .inventory-table th { background-color: #f8fafc; padding: 1.2rem 1.5rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.05em; }
 .inventory-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-
 .item-info { display: flex; align-items: center; gap: 16px; }
 .category-badge { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; }
 .category-badge.in-stock { background: #dcfce7; color: #15803d; }
 .category-badge.low-stock { background: #fef3c7; color: #b45309; }
 .category-badge.out-of-stock { background: #fee2e2; color: #991b1b; }
-
 .i-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 1rem; }
 .i-subtext { font-size: 0.8rem; color: #94a3b8; margin: 0; }
-
 .stock-info { display: flex; flex-direction: column; }
 .main-stock { font-weight: 600; color: #334155; }
 .sub-stock { font-size: 0.75rem; color: #94a3b8; }
-
 .price-tag { background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; color: #1e3a8a; }
 
-/* --- STATUS BADGES --- */
+/* --- BADGES & BUTTONS --- */
 .badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; display: inline-block; }
 .badge.in-stock { background: #dcfce7; color: #15803d; }
 .badge.low-stock { background: #fef3c7; color: #b45309; }
 .badge.out-of-stock { background: #fee2e2; color: #991b1b; }
-
-/* --- BUTTONS --- */
 .view-link { color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
 .view-link:hover { background: #2563eb; color: white; }
 .add-btn { background-color: #2563eb; color: white; border: none; padding: 0.8rem 1.6rem; border-radius: 12px; font-weight: 700; cursor: pointer; }
 .text-right { text-align: right; }
 .empty-state { text-align: center; color: #94a3b8; padding: 4rem !important; font-style: italic; }
 
-/* --- MODAL --- */
+/* --- MODAL IMPROVEMENTS --- */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
 .modal-content { background: white; width: 500px; border-radius: 20px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
@@ -288,10 +324,11 @@ const editItem = (item) => {
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
 .form-group input, .modal-select { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.5rem; }
+.modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+.right-actions { display: flex; gap: 12px; }
 .btn-secondary { background: #f1f5f9; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.btn-delete { background: none; border: none; color: #ef4444; font-weight: 700; cursor: pointer; padding: 0; font-size: 0.9rem; text-decoration: underline; }
 
-/* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
