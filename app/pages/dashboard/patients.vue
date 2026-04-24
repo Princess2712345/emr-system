@@ -7,28 +7,28 @@
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item" style="--order: 1">
+        <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
-        <NuxtLink to="/dashboard/patients" class="nav-item active animate-nav" style="--order: 2">
+        <NuxtLink to="/dashboard/patients" class="nav-item">
           <Icon name="lucide:users" /> Patients
         </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item animate-nav" style="--order: 3">
+        <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item animate-nav" style="--order: 4">
+         <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
          </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item animate-nav" style="--order: 5">
+        <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item animate-nav" style="--order: 6">
+        <NuxtLink to="/dashboard/billing" class="nav-item">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item animate-nav" style="--order: 7">
+        <NuxtLink to="/dashboard/appointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item animate-nav" style="--order: 8">
+        <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
       </nav>
@@ -139,7 +139,7 @@
       <section v-else class="patient-body">
         <div class="detail-container">
           <div class="detail-card main-info">
-             <div class="detail-header">
+              <div class="detail-header">
                 <div class="patient-avatar large" :class="selectedPatient.colorClass">
                   {{ selectedPatient.initials }}
                 </div>
@@ -150,9 +150,9 @@
                   </div>
                   <span class="id-badge">{{ selectedPatient.id }}</span>
                 </div>
-             </div>
-             
-             <div class="medical-grid">
+              </div>
+              
+              <div class="medical-grid">
                 <div class="grid-item">
                   <label><Icon name="lucide:mail" /> Primary Email</label>
                   <p>{{ selectedPatient.email }}</p>
@@ -169,7 +169,7 @@
                   <label><Icon name="lucide:phone" /> Emergency Contact</label>
                   <p>+1 (555) 0123</p>
                 </div>
-             </div>
+              </div>
           </div>
 
           <div class="detail-card clinical-notes">
@@ -180,10 +180,6 @@
             <div class="note-entry">
               <p class="note-date">October 24, 2023 — Dr. Aris</p>
               <p>Patient reports mild fatigue. Blood pressure stable at 120/80. Recommended routine blood work for next visit.</p>
-            </div>
-            <div class="note-entry">
-              <p class="note-date">September 15, 2023 — Dr. Aris</p>
-              <p>Annual physical examination completed. All vitals within normal range. Vaccinations up to date.</p>
             </div>
           </div>
         </div>
@@ -251,108 +247,152 @@ const handleRegister = () => { alert('Registration successful!'); isModalOpen.va
 </script>
 
 <style scoped>
-/* --- BASE LAYOUT --- */
-dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+/* --- SIDEBAR (Updated to match your image) --- */
+.dashboard-layout { 
+  display: flex; 
+  min-height: 100vh; 
+  background-color: #f1f5f9; 
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+}
+
+.sidebar { 
+  width: 280px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 2rem 0.75rem; /* Narrower padding for full-width active bars */
+  height: 100vh; 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+}
+
+.sidebar-logo { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0 1rem;
+  font-size: 1.25rem; 
+  font-weight: 800; 
+  margin-bottom: 2.5rem; 
+}
+
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
 
-/* Nuxt Active Link Style */
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-
-/* 1. Animation Keyframes */
-@keyframes popIn {
-  0% { 
-    opacity: 0; 
-    transform: scale(0.8) translateY(10px); 
-  }
-  70% { 
-    transform: scale(1.05) translateY(-2px); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: scale(1) translateY(0); 
-  }
+.nav-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  padding: 0.85rem 1.25rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-size: 1.05rem; /* Matching image font size */
+  font-weight: 500;   /* Matching image medium weight */
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease; 
 }
 
-.animate-in { 
-  opacity: 0; 
-  animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; 
+.nav-item svg, .nav-item i {
+  font-size: 1.25rem;
 }
-.nav-item.active { background: #2563eb; color: white; }
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { color: #fca5a5; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+.nav-item:hover { 
+  background: rgba(255, 255, 255, 0.05); 
+  color: white; 
+}
 
-/* --- THE REST OF YOUR ORIGINAL STYLES --- */
-.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+/* Matching the blue highlight from your image */
+.router-link-active { 
+  background: #2563eb !important; 
+  color: white !important; 
+}
+
+.sidebar-footer { 
+  padding: 1.5rem 1rem 0; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+}
+
+.logout-btn { 
+  background: none; 
+  border: none; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  text-decoration: none;
+}
+
+/* --- MAIN CONTENT & TOP BAR --- */
+.main-content { flex: 1; min-width: 0; }
+.top-bar { 
+  background: white; 
+  padding: 1.5rem 3rem; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid #e2e8f0; 
+}
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
-.back-btn { background: none; border: none; color: #2563eb; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 4px; }
-.patient-body { padding: 2rem 3rem; box-sizing: border-box; }
-.table-controls { display: flex; justify-content: space-between; margin-bottom: 1.5rem; gap: 1.5rem; }
-.search-wrapper { position: relative; flex: 1; max-width: 500px; }
-.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 12px; background: white; font-size: 0.9rem; }
-.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.1rem; }
-.filter-group { display: flex; gap: 10px; }
-.select-wrapper { position: relative; }
-.filter-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.9rem; pointer-events: none; }
-.filter-dropdown { padding: 0 1rem 0 2.2rem; height: 44px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-weight: 600; cursor: pointer; color: #475569; }
-.filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; cursor: pointer; color: #475569; transition: 0.2s; }
-.filter-btn:hover { background: #f8fafc; }
-.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+
+.patient-body { padding: 2rem 3rem; }
+
+/* --- TABLE STYLING --- */
+.table-container { 
+  background: white; 
+  border-radius: 12px; 
+  border: 1px solid #e2e8f0; 
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+  overflow: hidden; 
+}
 .patient-table { width: 100%; border-collapse: collapse; }
-.patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
-.patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.patient-info { display: flex; align-items: center; gap: 12px; }
-.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; background: #dbeafe; color: #2563eb; }
-.patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
-.patient-avatar.pink { background: #fce7f3; color: #db2777; }
-.patient-avatar.teal { background: #ccfbf1; color: #0d9488; }
-.patient-avatar.large { width: 56px; height: 56px; font-size: 1.2rem; border-radius: 14px; }
-.p-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 0.95rem; }
-.p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
-.id-badge { font-family: 'JetBrains Mono', monospace; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; color: #1e3a8a; font-weight: 600; font-size: 0.8rem; }
+.patient-table th { 
+  background: #f8fafc; 
+  padding: 1rem 1.5rem; 
+  text-align: left; 
+  font-size: 0.75rem; 
+  text-transform: uppercase; 
+  color: #64748b; 
+  font-weight: 700; 
+  border-bottom: 1px solid #e2e8f0; 
+}
+.patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+
+/* --- UTILITIES & BADGES --- */
 .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.inpatient { background: #fee2e2; color: #b91c1c; }
 .badge.pending { background: #fef3c7; color: #b45309; }
-.view-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
-.view-link:hover { background: #2563eb; color: white; }
-.detail-card { background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
-.detail-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; }
-.title-with-status { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-.title-with-status h2 { margin: 0; color: #1e3a8a; font-size: 1.5rem; }
-.medical-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
-.grid-item label { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; }
-.grid-item p { margin: 0; font-weight: 600; color: #1e293b; font-size: 1rem; }
-.section-title-icon { display: flex; align-items: center; gap: 10px; color: #1e3a8a; margin-bottom: 1rem; }
-.section-title-icon h3 { margin: 0; font-size: 1.1rem; }
-.note-entry { padding: 1.2rem 0; border-bottom: 1px solid #f1f5f9; }
-.note-date { font-weight: 700; color: #2563eb; font-size: 0.85rem; margin-bottom: 6px; }
-.add-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-.add-btn:hover { background: #1d4ed8; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+
+.add-btn { 
+  background: #2563eb; 
+  color: white; 
+  border: none; 
+  padding: 0.75rem 1.25rem; 
+  border-radius: 10px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+.modal-overlay { 
+  position: fixed; inset: 0; 
+  background: rgba(15, 23, 42, 0.6); 
+  backdrop-filter: blur(4px); 
+  display: flex; align-items: center; justify-content: center; 
+  z-index: 2000; 
+}
 .modal-content { background: white; width: 90%; max-width: 440px; border-radius: 16px; padding: 2rem; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.header-with-icon { display: flex; align-items: center; gap: 10px; color: #1e3a8a; }
-.modal-title-icon { font-size: 1.5rem; }
-.close-modal { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; }
-.form-group { margin-bottom: 1rem; }
-.form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
-.form-group input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; }
-.btn-secondary { background: #f1f5f9; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
-.text-right { text-align: right; }
-.empty-state { padding: 3rem; text-align: center; color: #64748b; font-style: italic; }
+
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.text-right { text-align: right; }
 </style>
