@@ -283,18 +283,20 @@ const handleRegister = () => { alert('Patient Registered'); isModalOpen.value = 
 }
 
 /* --- 2. SIDEBAR STYLING --- */
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.2rem; margin-bottom: 2.5rem; padding-left: 1rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.5rem; }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-.nav-item {
-  display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe;
-  text-decoration: none; border-radius: 8px; font-weight: 500; margin-bottom: 0.25rem; transition: 0.2s;
-}
-.nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+
 .nav-item.active { background: #2563eb; color: white; }
 
-.sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
-.logout-btn { color: #fca5a5; display: flex; align-items: center; gap: 8px; text-decoration: none; padding: 0.8rem 1rem; font-weight: 600; }
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
 /* --- 3. UI COMPONENTS --- */
 .header-info h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; }
