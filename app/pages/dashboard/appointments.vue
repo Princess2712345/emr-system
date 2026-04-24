@@ -198,7 +198,15 @@ const submitBooking = () => {
   const period = h >= 12 ? 'PM' : 'AM';
   const displayHours = ((h + 11) % 12 + 1);
   const displayTime = `${displayHours}:${minutes} ${period}`;
-  appointments.value.push({ id: Date.now(), date: form.value.date, time: displayTime, duration: '30 min', patientName: form.value.name, reason: form.value.reason || 'General Consultation', status: 'Pending' });
+  appointments.value.push({ 
+    id: Date.now(), 
+    date: form.value.date, 
+    time: displayTime, 
+    duration: '30 min', 
+    patientName: form.value.name, 
+    reason: form.value.reason || 'General Consultation', 
+    status: 'Pending' 
+  });
   showModal.value = false;
   form.value = { name: '', time: '', date: '', reason: '' };
 };
