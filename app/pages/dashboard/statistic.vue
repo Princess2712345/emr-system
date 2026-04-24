@@ -28,13 +28,13 @@
         <NuxtLink to="/dashboard/appointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item router-link-active">
+        <NuxtLink to="/dashboard/statistic" class="nav-item active">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="logout-btn">
+        <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" /> Logout
         </button>
       </div>
@@ -43,230 +43,301 @@
     <main class="main-content">
       <header class="top-bar">
         <div class="welcome-msg">
-          <span class="breadcrumb">Analytics / Institutional Performance</span>
-          <h1>System Intelligence</h1>
-          <p>Real-time clinical metrics and departmental throughput.</p>
+          <span class="breadcrumb">REPORTS / ANALYTICS</span>
+          <h1>System Statistics</h1>
+          <p>Real-time analytics and performance metrics across all departments.</p>
         </div>
         <div class="header-actions">
-          <div class="date-range-picker">
-            <Icon name="lucide:calendar" class="icon-sm" />
-            <span>Apr 01 - Apr 24, 2026</span>
+          <div class="status-indicator">
+            <span class="pulse-dot"></span>
+            Live Updates
           </div>
-          <button class="btn-download">
-            <Icon name="lucide:download" /> Export Data
+          <button class="export-btn">
+            <Icon name="lucide:download" /> Download Full Report
           </button>
         </div>
       </header>
 
-      <div class="scroll-area">
-        <section class="stats-row">
-          <div v-for="stat in systemKpis" :key="stat.label" class="stat-card">
-            <div class="stat-meta">
-              <span class="label">{{ stat.label }}</span>
-              <div :class="['trend-badge', stat.trendType]">
-                <Icon :name="stat.trendType === 'up' ? 'lucide:trending-up' : 'lucide:trending-down'" />
-                {{ stat.trend }}
-              </div>
+      <section class="stats-body">
+        <div class="kpi-grid">
+          <div v-for="kpi in kpiData" :key="kpi.label" class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-label">{{ kpi.label }}</span>
+              <Icon :name="kpi.icon" class="kpi-icon-bg" />
             </div>
-            <div class="stat-body">
-              <h3 class="value">{{ stat.value }}</h3>
-              <div class="mini-chart">
-                <div v-for="n in 6" :key="n" class="spark-bar" :style="{ height: Math.random() * 80 + 20 + '%' }"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div class="analytics-grid">
-          <div class="panel main-panel">
-            <div class="panel-header">
-              <div>
-                <h4>Patient Admissions Volume</h4>
-                <p>Monthly trends compared to previous year</p>
-              </div>
-              <div class="chart-legend">
-                <span class="legend-item"><span class="dot primary"></span> 2026</span>
-                <span class="legend-item"><span class="dot secondary"></span> 2025</span>
-              </div>
-            </div>
-            <div class="visual-container">
-              <div class="bar-chart">
-                <div v-for="month in months" :key="month" class="bar-column">
-                  <div class="bar-stack">
-                    <div class="bar curr" :style="{ height: Math.random() * 70 + 30 + '%' }"></div>
-                    <div class="bar prev" :style="{ height: Math.random() * 50 + 20 + '%' }"></div>
-                  </div>
-                  <span class="label">{{ month }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel side-panel">
-            <div class="panel-header">
-              <h4>Bed Occupancy</h4>
-            </div>
-            <div class="donut-container">
-              <div class="donut-svg">
-                <div class="donut-inner">
-                  <span class="percent">92%</span>
-                  <span class="sub">Capacity</span>
-                </div>
-              </div>
-            </div>
-            <ul class="stat-list">
-              <li><span>Emergency</span> <strong>12/15</strong></li>
-              <li><span>ICU</span> <strong>08/10</strong></li>
-              <li><span>General Ward</span> <strong>45/50</strong></li>
-              <li><span>Pediatrics</span> <strong>18/20</strong></li>
-            </ul>
-          </div>
-
-          <div class="panel full-panel">
-            <div class="panel-header">
-              <h4>Departmental Performance Index</h4>
-            </div>
-            <div class="table-container">
-              <table class="clinical-table">
-                <thead>
-                  <tr>
-                    <th>Department</th>
-                    <th>Head Physician</th>
-                    <th>Avg. Stay</th>
-                    <th>Patient Satisfaction</th>
-                    <th>Efficiency</th>
-                    <th class="text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="dept in departments" :key="dept.name">
-                    <td>
-                      <div class="dept-cell">
-                        <div class="dept-icon">{{ dept.name.charAt(0) }}</div>
-                        <strong>{{ dept.name }}</strong>
-                      </div>
-                    </td>
-                    <td>{{ dept.head }}</td>
-                    <td>{{ dept.los }} Days</td>
-                    <td>
-                      <div class="rating-stars">
-                        <Icon name="lucide:star" v-for="n in 5" :key="n" :class="{ filled: n <= dept.rating }" />
-                      </div>
-                    </td>
-                    <td>
-                      <div class="efficiency-bar">
-                        <div class="fill" :style="{ width: dept.efficiency + '%' }"></div>
-                        <span>{{ dept.efficiency }}%</span>
-                      </div>
-                    </td>
-                    <td class="text-right"><button class="btn-manage">Details</button></td>
-                  </tr>
-                </tbody>
-              </table>
+            <h2 class="kpi-value">{{ kpi.value }}</h2>
+            <div :class="['kpi-trend', kpi.trendType]">
+              <Icon :name="kpi.trendType === 'up' ? 'lucide:trending-up' : 'lucide:trending-down'" />
+              {{ kpi.trend }} <span class="trend-label">vs last month</span>
             </div>
           </div>
         </div>
-      </div>
+
+        <div class="charts-container">
+          <div class="chart-box main-chart">
+            <div class="chart-header">
+              <div>
+                <h3>Patient Admissions (Monthly)</h3>
+                <p class="chart-sub">Volume tracking for current fiscal year</p>
+              </div>
+              <select class="chart-filter">
+                <option>Last 6 Months</option>
+                <option>Last Year</option>
+              </select>
+            </div>
+            <div class="visual-placeholder bar-chart">
+              <div v-for="(height, index) in [40, 60, 55, 90, 75, 85, 70, 95, 65, 80]" 
+                   :key="index" 
+                   class="bar-wrapper">
+                <div class="bar-tooltip">{{ height }}%</div>
+                <div class="bar" :style="{ height: height + '%' }"></div>
+                <span class="bar-label">M{{ index + 1 }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chart-box side-chart">
+            <div class="chart-header">
+              <h3>Distribution</h3>
+            </div>
+            <div class="pie-container">
+              <div class="pie-visual">
+                <div class="circle"></div>
+                <div class="inner-label">
+                  <strong>100%</strong>
+                  <span>Total</span>
+                </div>
+              </div>
+              <ul class="chart-legend">
+                <li v-for="item in distribution" :key="item.name">
+                  <div class="legend-info">
+                    <span :class="['dot', item.class]"></span>
+                    {{ item.name }}
+                  </div>
+                  <strong>{{ item.pct }}%</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="chart-box full-width-table">
+            <div class="chart-header">
+              <h3>Departmental Performance Index</h3>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Department</th>
+                  <th>Total Patients</th>
+                  <th>Avg. Stay</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="dept in departments" :key="dept.name">
+                  <td class="font-bold">{{ dept.name }}</td>
+                  <td>{{ dept.patients }}</td>
+                  <td>{{ dept.stay }} Days</td>
+                  <td><span class="status-pill">Optimal</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </template>
 
 <script setup>
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+const kpiData = [
+  { label: 'Patient Growth', value: '2,405', trend: '+8.2%', trendType: 'up', icon: 'lucide:user-plus' },
+  { label: 'Avg. Consultation', value: '18m', trend: '-2.1%', trendType: 'up', icon: 'lucide:clock' },
+  { label: 'System Uptime', value: '99.9%', trend: 'Stable', trendType: 'up', icon: 'lucide:activity' },
+  { label: 'Active Staff', value: '142', trend: '+4', trendType: 'up', icon: 'lucide:shield-check' }
+];
 
-const systemKpis = [
-  { label: 'Avg. Consultation', value: '18.4m', trend: '12%', trendType: 'up' },
-  { label: 'Mortality Rate', value: '0.02%', trend: '0.1%', trendType: 'down' },
-  { label: 'Wait Time', value: '12m', trend: '4%', trendType: 'down' },
-  { label: 'Staff Activity', value: '94%', trend: 'Stable', trendType: 'up' }
+const distribution = [
+  { name: 'Cardiology', pct: 40, class: 'cardio' },
+  { name: 'Neurology', pct: 30, class: 'neuro' },
+  { name: 'Pediatrics', pct: 30, class: 'ped' }
 ];
 
 const departments = [
-  { name: 'Cardiology', head: 'Dr. Aris Thorne', los: '4.2', rating: 5, efficiency: 92 },
-  { name: 'Pediatrics', head: 'Dr. Sarah Jenkins', los: '2.8', rating: 4, efficiency: 88 },
-  { name: 'Neurology', head: 'Dr. Robert Lim', los: '6.1', rating: 5, efficiency: 75 }
+  { name: 'Cardiology Unit', patients: '1,204', stay: '4.2' },
+  { name: 'Neurology Dept', patients: '840', stay: '6.1' },
+  { name: 'Pediatric Ward', patients: '361', stay: '2.5' }
 ];
+
+const handleLogout = () => {
+  console.log("Logged out");
+}
 </script>
 
 <style scoped>
-/* --- BASE LAYOUT (Matching Screenshot 538) --- */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+/* --- SIDEBAR (NO CHANGES TO COLOR) --- */
+.dashboard-layout { 
+  display: flex; 
+  height: 100vh; /* Fixed height */
+  background: #f8fafc; 
+  font-family: 'Inter', sans-serif; 
+  color: #1e293b; 
+  overflow: hidden; /* Prevent global scroll */
+}
+
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 2rem 1.5rem; 
+  height: 100vh; 
+  position: sticky; 
+  top: 0; 
+  z-index: 10; 
+}
+
+.main-content { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  height: 100vh; /* Fixed height */
+  overflow: hidden; 
+}
+
+.top-bar { 
+  background: white; 
+  padding: 1.25rem 2.5rem; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid #e2e8f0; 
+  flex-shrink: 0; /* Header won't shrink or scroll */
+}
+
+/* Renamed from .patient-body to .stats-body to match template */
+.stats-body { 
+  flex: 1; 
+  overflow-y: auto; /* Independent scroll enabled */
+  padding: 2rem 2.5rem; 
+}
+
+/* --- SIDEBAR STYLING --- */
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+.nav-item.active { background: #2563eb; color: white; }
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
-.main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
-.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-.top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; }
-.top-bar p { color: #64748b; margin-top: 4px; }
+/* --- ENHANCED CONTENT --- */
+.breadcrumb { font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 1px; }
+.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 800; }
+.top-bar p { color: #64748b; margin: 4px 0 0; font-size: 0.9rem; }
 
-.header-actions { display: flex; gap: 12px; }
-.date-range-picker { background: #f1f5f9; padding: 0.6rem 1rem; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #475569; font-weight: 600; }
-.btn-download { background: #0f172a; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.status-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; color: #10b981; margin-right: 1.5rem; }
+.pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
 
-.scroll-area { padding: 2rem 2.5rem; overflow-y: auto; }
+/* KPI CARDS ENHANCEMENT */
+.kpi-grid { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 1.5rem; 
+  margin-bottom: 2rem; 
+}
 
-/* --- KPI CARDS --- */
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-.stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-.stat-meta { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-.stat-meta .label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-.trend-badge { font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; }
-.trend-badge.up { background: #dcfce7; color: #166534; }
-.trend-badge.down { background: #fee2e2; color: #991b1b; }
-.stat-body { display: flex; justify-content: space-between; align-items: flex-end; }
-.stat-body .value { font-size: 1.75rem; font-weight: 800; margin: 0; color: #0f172a; }
-.mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 35px; }
-.spark-bar { width: 4px; background: #e2e8f0; border-radius: 2px; }
+.kpi-card { 
+  background: white; 
+  padding: 1.5rem; 
+  border-radius: 12px; 
+  border: 1px solid #e2e8f0; 
+  border-top: 4px solid #2563eb; 
+  position: relative; 
+  overflow: hidden;
+  /* Added for the lifting effect */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
 
-/* --- ANALYTICS PANELS --- */
-.analytics-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
-.panel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; }
-.panel-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
-.panel-header h4 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e293b; }
-.panel-header p { margin: 4px 0 0; font-size: 0.85rem; color: #64748b; }
+/* Hover Lift Effect */
+.kpi-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-top-color: #3b82f6;
+}
 
-.visual-container { height: 280px; }
-.bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 100%; padding-bottom: 20px; }
-.bar-column { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
-.bar-stack { width: 14px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
-.bar.curr { background: #3b82f6; border-radius: 3px; }
-.bar.prev { background: #cbd5e1; border-radius: 3px; }
-.bar-column .label { margin-top: 12px; font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+/* Click Press Effect */
+.kpi-card:active {
+  transform: translateY(-2px);
+  transition: all 0.1s ease;
+}
 
-.donut-container { height: 200px; display: flex; justify-content: center; align-items: center; }
-.donut-svg { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(#3b82f6 0% 92%, #f1f5f9 92% 100%); display: flex; align-items: center; justify-content: center; }
-.donut-inner { width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.donut-inner .percent { font-size: 1.75rem; font-weight: 800; color: #0f172a; }
-.donut-inner .sub { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+.kpi-top { display: flex; justify-content: space-between; align-items: center; }
 
-.stat-list { list-style: none; padding: 0; margin-top: 1.5rem; }
-.stat-list li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; color: #475569; }
-.stat-list li strong { color: #0f172a; }
+.kpi-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
 
-/* --- PERFORMANCE TABLE --- */
-.full-panel { grid-column: span 2; }
-.clinical-table { width: 100%; border-collapse: collapse; }
-.clinical-table th { text-align: left; padding: 12px 20px; background: #f8fafc; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
-.clinical-table td { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+.kpi-icon-bg { 
+  position: absolute; 
+  right: -10px; 
+  top: -10px; 
+  font-size: 4rem; 
+  opacity: 0.03; 
+  color: #1e3a8a; 
+  pointer-events: none;
+}
 
-.dept-cell { display: flex; align-items: center; gap: 12px; }
-.dept-icon { width: 32px; height: 32px; background: #eff6ff; color: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
+.kpi-value { 
+  font-size: 2rem; 
+  font-weight: 800; 
+  margin: 1rem 0; 
+  color: #1e293b; 
+  letter-spacing: -1px; 
+}
 
-.rating-stars { color: #e2e8f0; display: flex; gap: 2px; }
-.rating-stars .filled { color: #f59e0b; }
+/* BAR CHART ENHANCEMENT */
+.charts-container { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; }
+.chart-box { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.chart-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e3a8a; }
+.chart-sub { font-size: 0.8rem; color: #94a3b8; margin: 4px 0 0; }
 
-.efficiency-bar { display: flex; align-items: center; gap: 10px; }
-.efficiency-bar .fill { height: 6px; width: 80px; background: #10b981; border-radius: 3px; }
-.efficiency-bar span { font-size: 0.75rem; font-weight: 700; color: #10b981; }
+.visual-placeholder { background: #f8fafc; border-radius: 8px; height: 300px; display: flex; align-items: flex-end; justify-content: space-around; padding: 1.5rem 1rem; border: 1px solid #f1f5f9; }
+.bar-wrapper { width: 7%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+.bar { width: 100%; background: linear-gradient(to top, #1e3a8a, #3b82f6); border-radius: 4px 4px 0 0; transition: 0.3s; cursor: pointer; }
+.bar:hover { filter: brightness(1.2); }
+.bar-tooltip { position: absolute; top: -30px; background: #1e293b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; opacity: 0; transition: 0.2s; }
+.bar-wrapper:hover .bar-tooltip { opacity: 1; transform: translateY(-5px); }
+.bar-label { font-size: 10px; color: #94a3b8; margin-top: 8px; font-weight: 600; }
 
-.btn-manage { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; color: #475569; }
-.btn-manage:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
-.text-right { text-align: right; }
+/* PIE CHART ENHANCEMENT */
+.pie-container { display: flex; flex-direction: column; align-items: center; gap: 2rem; margin-top: 1rem; }
+.pie-visual { position: relative; }
+.inner-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: flex; flex-direction: column; }
+.inner-label strong { font-size: 1.2rem; color: #1e293b; }
+.inner-label span { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+.circle { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(#2563eb 0% 40%, #10b981 40% 70%, #f59e0b 70% 100%); mask: radial-gradient(transparent 55%, black 56%); }
+
+.chart-legend { width: 100%; list-style: none; padding: 0; }
+.chart-legend li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+.legend-info { display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 500; }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.cardio { background: #2563eb; }
+.dot.neuro { background: #10b981; }
+.dot.ped { background: #f59e0b; }
+
+/* DATA TABLE */
+.full-width-table { grid-column: span 2; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+.data-table th { text-align: left; padding: 12px; font-size: 0.8rem; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+.data-table td { padding: 12px; font-size: 0.9rem; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
+.status-pill { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+.export-btn { background: #1e3a8a; color: white; padding: 0.7rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; cursor: pointer; }
+.export-btn:hover { background: #1e40af; }
 </style>
