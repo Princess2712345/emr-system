@@ -2,12 +2,12 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-white" />
+        <Icon name="mdi:hospital-building" class="icon-blue-light" />
         <span class="logo-text">EMR System</span>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item active">
+        <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
         <NuxtLink to="/dashboard/patients" class="nav-item">
@@ -16,9 +16,9 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
+        <NuxtLink to="/dashboard/confinement" class="nav-item active">
           <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
+        </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
