@@ -249,17 +249,18 @@ const handleAdmission = () => {
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Segoe UI', Roboto, sans-serif; }
 
 /* --- SIDEBAR --- */
-.sidebar {
-  width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; 
-  padding: 2rem 1.5rem; position: sticky; top: 0; height: 100vh; flex-shrink: 0;
-}
-.sidebar-logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
-.nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.1); color: white; }
-.nav-item.active { background: #2563eb; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { color: #fca5a5; text-decoration: none; font-weight: 600; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
 /* --- MAIN CONTENT & TOP BAR --- */
 .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
