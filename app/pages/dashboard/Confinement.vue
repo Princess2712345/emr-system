@@ -246,29 +246,10 @@ const handleAdmission = () => {
 
 <style scoped>
 /* --- CORE LAYOUT --- */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
-
-/* --- SIDEBAR --- */
+.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-
-/* --- UPDATED LOGO STYLES (MATCHING SIZE) --- */
-.sidebar-logo { 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  margin-bottom: 3rem; 
-}
-.logo-icon { 
-  color: #60a5fa; 
-  font-size: 1.25rem; /* Icon size */
-  flex-shrink: 0;
-}
-.logo-text { 
-  font-size: 1.25rem; /* Exact same font size as icon */
-  font-weight: 800; 
-  line-height: 1;    /* Removes extra spacing around letters */
-  color: white;
-}
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
