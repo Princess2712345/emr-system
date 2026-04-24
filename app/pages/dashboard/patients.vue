@@ -2,17 +2,15 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <div class="logo-icon">
-          <Icon name="mdi:hospital-building" />
-        </div>
-        <span class="logo-text">MedFlow <small>EMR</small></span>
+        <Icon name="mdi:hospital-building" class="icon-blue-light" />
+        <span class="logo-text">EMR System</span>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item">
+        <NuxtLink to="/dashboard" class="nav-item active">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
-        <NuxtLink to="/dashboard/patients" class="nav-item active">
+        <NuxtLink to="/dashboard/patients" class="nav-item">
           <Icon name="lucide:users" /> Patients
         </NuxtLink>
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
@@ -25,7 +23,10 @@
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
         <NuxtLink to="/dashboard/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Billing
+          <Icon name="lucide:credit-card" /> Statement of Account
+        </NuxtLink>
+        <NuxtLink to="/dashboard/appointments" class="nav-item">
+          <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
         <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
@@ -41,98 +42,93 @@
 
     <main class="main-content">
       <header class="top-bar">
-        <div class="header-left">
-          <template v-if="!selectedPatient">
-            <h1>Patient Directory</h1>
-            <p>Access and manage comprehensive medical records.</p>
-          </template>
-          <template v-else>
-            <button class="back-link" @click="selectedPatient = null">
-              <Icon name="lucide:arrow-left" /> Back to Directory
-            </button>
-            <div class="patient-title-group">
-              <h1>{{ selectedPatient.name }}</h1>
-              <span class="id-tag">{{ selectedPatient.id }}</span>
-            </div>
-          </template>
+        <div v-if="!selectedPatient" class="welcome-msg">
+          <h1>Patient Directory</h1>
+          <p>Manage and view all registered patient records across the network.</p>
+        </div>
+        <div v-else class="welcome-msg">
+          <button class="back-btn" @click="selectedPatient = null">
+            <Icon name="lucide:chevron-left" /> Back to List
+          </button>
+          <h1>Medical File: {{ selectedPatient.name }}</h1>
         </div>
         
         <div class="header-actions">
-          <button v-if="!selectedPatient" class="primary-btn" @click="isModalOpen = true">
-            <Icon name="lucide:user-plus" /> <span>Register Patient</span>
+          <button v-if="!selectedPatient" class="add-btn" @click="isModalOpen = true">
+            <Icon name="lucide:user-plus" /> Register New Patient
           </button>
-          <div v-else class="action-group">
-            <button class="secondary-btn"><Icon name="lucide:printer" /> Print File</button>
-            <button class="primary-btn"><Icon name="lucide:edit-3" /> Edit Record</button>
-          </div>
+          <button v-else class="add-btn" @click="selectedPatient = null">
+            <Icon name="lucide:file-x-2" /> Close File
+          </button>
         </div>
       </header>
 
-      <section v-if="!selectedPatient" class="content-body">
-        <div class="filter-bar">
-          <div class="search-box">
-            <Icon name="lucide:search" />
+      <section v-if="!selectedPatient" class="patient-body">
+        <div class="table-controls">
+          <div class="search-wrapper">
+            <Icon name="lucide:search" class="search-icon-svg" />
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Search patients by name, ID, or contact..." 
+              placeholder="Search by name, ID, or email..." 
             />
           </div>
-          <div class="filter-actions">
-            <div class="select-custom">
-               <Icon name="lucide:filter" />
-               <select v-model="selectedStatus">
+          <div class="filter-group">
+            <div class="select-wrapper">
+               <Icon name="lucide:filter" class="filter-icon" />
+               <select v-model="selectedStatus" class="filter-dropdown">
                 <option value="All">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inpatient">Inpatient</option>
                 <option value="Pending">Pending</option>
               </select>
             </div>
-            <button class="reset-link" @click="resetFilters">Reset</button>
+            <button class="filter-btn" @click="resetFilters">
+              <Icon name="lucide:rotate-ccw" /> Reset
+            </button>
           </div>
         </div>
 
-        <div class="table-card">
-          <table class="data-table">
+        <div class="table-container">
+          <table class="patient-table">
             <thead>
               <tr>
-                <th>Patient Details</th>
+                <th>Patient Name</th>
                 <th>ID Number</th>
                 <th>Last Visit</th>
                 <th>Status</th>
-                <th class="text-right">Manage</th>
+                <th class="text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="patient in filteredPatients" :key="patient.id" class="table-row">
+              <tr v-for="patient in filteredPatients" :key="patient.id">
                 <td>
-                  <div class="patient-cell">
-                    <div class="avatar-circle" :style="{ backgroundColor: patient.color }">
+                  <div class="patient-info">
+                    <div class="patient-avatar" :class="patient.colorClass">
                       {{ patient.initials }}
                     </div>
-                    <div class="info-meta">
-                      <span class="p-full-name">{{ patient.name }}</span>
-                      <span class="p-sub-detail">{{ patient.email }}</span>
+                    <div>
+                      <p class="p-name">{{ patient.name }}</p>
+                      <p class="p-email">{{ patient.email }}</p>
                     </div>
                   </div>
                 </td>
-                <td><code class="id-code">{{ patient.id }}</code></td>
+                <td><span class="id-badge">{{ patient.id }}</span></td>
                 <td>{{ patient.lastVisit }}</td>
                 <td>
-                  <span class="status-pill" :class="patient.status.toLowerCase()">
+                  <span class="badge" :class="patient.status.toLowerCase()">
                     {{ patient.status }}
                   </span>
                 </td>
                 <td class="text-right">
-                  <button class="action-icon-btn" @click="viewPatientFile(patient)" title="View Details">
-                    <Icon name="lucide:chevron-right" />
+                  <button class="view-link" @click="viewPatientFile(patient)">
+                    <Icon name="lucide:eye" /> View File
                   </button>
                 </td>
               </tr>
               <tr v-if="filteredPatients.length === 0">
-                <td colspan="5" class="empty-row">
-                  <Icon name="lucide:user-x" />
-                  <p>No records found matching your search criteria.</p>
+                <td colspan="5" class="empty-state">
+                  No patients found matching "{{ searchQuery }}"
                 </td>
               </tr>
             </tbody>
@@ -140,102 +136,84 @@
         </div>
       </section>
 
-      <section v-else class="content-body">
-        <div class="medical-dashboard">
-          <div class="profile-summary-card">
-            <div class="profile-info-main">
-              <div class="avatar-large" :style="{ backgroundColor: selectedPatient.color }">
-                {{ selectedPatient.initials }}
-              </div>
-              <div class="p-meta">
-                <span class="status-pill" :class="selectedPatient.status.toLowerCase()">{{ selectedPatient.status }}</span>
-                <h2>{{ selectedPatient.name }}</h2>
-                <p><Icon name="lucide:map-pin" /> 123 Health Ave, Medical City</p>
-              </div>
-            </div>
-            
-            <div class="quick-stats">
-              <div class="stat-box">
-                <label>Age / Sex</label>
-                <span>28 / Female</span>
-              </div>
-              <div class="stat-box">
-                <label>Blood Type</label>
-                <span class="text-red">O+</span>
-              </div>
-              <div class="stat-box">
-                <label>Height / Weight</label>
-                <span>165cm / 58kg</span>
-              </div>
-            </div>
+      <section v-else class="patient-body">
+        <div class="detail-container">
+          <div class="detail-card main-info">
+             <div class="detail-header">
+                <div class="patient-avatar large" :class="selectedPatient.colorClass">
+                  {{ selectedPatient.initials }}
+                </div>
+                <div>
+                  <div class="title-with-status">
+                    <h2>{{ selectedPatient.name }}</h2>
+                    <span class="badge" :class="selectedPatient.status.toLowerCase()">{{ selectedPatient.status }}</span>
+                  </div>
+                  <span class="id-badge">{{ selectedPatient.id }}</span>
+                </div>
+             </div>
+             
+             <div class="medical-grid">
+                <div class="grid-item">
+                  <label><Icon name="lucide:mail" /> Primary Email</label>
+                  <p>{{ selectedPatient.email }}</p>
+                </div>
+                <div class="grid-item">
+                  <label><Icon name="lucide:clock" /> Last Consultation</label>
+                  <p>{{ selectedPatient.lastVisit }}</p>
+                </div>
+                <div class="grid-item">
+                  <label><Icon name="lucide:droplet" /> Blood Type</label>
+                  <p>O+</p>
+                </div>
+                <div class="grid-item">
+                  <label><Icon name="lucide:phone" /> Emergency Contact</label>
+                  <p>+1 (555) 0123</p>
+                </div>
+             </div>
           </div>
 
-          <div class="detail-grid">
-            <div class="detail-column main">
-              <div class="section-card">
-                <div class="section-header">
-                  <h3><Icon name="lucide:clipboard-list" /> Clinical History</h3>
-                  <button class="text-btn">+ New Note</button>
-                </div>
-                <div class="timeline">
-                  <div class="timeline-item">
-                    <div class="tm-date">Oct 24, 2025</div>
-                    <div class="tm-content">
-                      <h4>Dr. Aris — General Checkup</h4>
-                      <p>Patient reports mild fatigue. BP: 120/80. Prescribed Vitamin B Complex.</p>
-                    </div>
-                  </div>
-                  <div class="timeline-item">
-                    <div class="tm-date">Sep 15, 2025</div>
-                    <div class="tm-content">
-                      <h4>Dr. Sarah — Laboratory Review</h4>
-                      <p>CBC results within normal range. Glucose levels stable.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="detail-card clinical-notes">
+            <div class="section-title-icon">
+              <Icon name="lucide:clipboard-list" />
+              <h3>Recent Clinical Notes</h3>
             </div>
-
-            <div class="detail-column side">
-              <div class="section-card">
-                <h3>Contact Information</h3>
-                <ul class="contact-list">
-                  <li><Icon name="lucide:phone" /> +1 (555) 012-3456</li>
-                  <li><Icon name="lucide:mail" /> {{ selectedPatient.email }}</li>
-                  <li><Icon name="lucide:shield-check" /> Insurance: MediCare Plus</li>
-                </ul>
-              </div>
+            <div class="note-entry">
+              <p class="note-date">October 24, 2023 — Dr. Aris</p>
+              <p>Patient reports mild fatigue. Blood pressure stable at 120/80. Recommended routine blood work for next visit.</p>
+            </div>
+            <div class="note-entry">
+              <p class="note-date">September 15, 2023 — Dr. Aris</p>
+              <p>Annual physical examination completed. All vitals within normal range. Vaccinations up to date.</p>
             </div>
           </div>
         </div>
       </section>
     </main>
 
-    <Transition name="modal-scale">
+    <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
-        <div class="modal-window">
-          <div class="modal-head">
-            <h3>Register New Patient</h3>
-            <button class="close-btn" @click="isModalOpen = false"><Icon name="lucide:x" /></button>
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="header-with-icon">
+              <Icon name="lucide:user-circle-2" class="modal-title-icon" />
+              <h3>New Patient Registration</h3>
+            </div>
+            <button class="close-modal" @click="isModalOpen = false">
+              <Icon name="lucide:x" />
+            </button>
           </div>
-          <form @submit.prevent="handleRegister" class="modal-form">
-            <div class="input-group">
-              <label>Full Legal Name</label>
-              <input type="text" placeholder="John Doe" required />
+          <form @submit.prevent="handleRegister">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" placeholder="e.g. Jane Smith" required />
             </div>
-            <div class="input-row">
-               <div class="input-group">
-                <label>Email</label>
-                <input type="email" placeholder="john@example.com" required />
-              </div>
-               <div class="input-group">
-                <label>Date of Birth</label>
-                <input type="date" required />
-              </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" placeholder="jane@example.com" required />
             </div>
-            <div class="modal-footer">
-              <button type="button" class="cancel-btn" @click="isModalOpen = false">Cancel</button>
-              <button type="submit" class="primary-btn">Complete Registration</button>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="isModalOpen = false">Cancel</button>
+              <button type="submit" class="add-btn">Create Record</button>
             </div>
           </form>
         </div>
@@ -253,15 +231,15 @@ const isModalOpen = ref(false)
 const selectedPatient = ref(null)
 
 const patients = ref([
-  { initials: 'PRP', name: 'Penny Rose Peduhan', email: 'ppeduhan@email.com', id: '#EMR-2045', lastVisit: 'Oct 24, 2025', status: 'Active', color: '#8b5cf6' },
-  { initials: 'HJB', name: 'Harvey Jhon Bacla-an', email: 'hbaclaan@email.com', id: '#EMR-1192', lastVisit: 'Oct 20, 2025', status: 'Inpatient', color: '#ec4899' },
-  { initials: 'PAB', name: 'Phoebe Angel Barbecho', email: 'pbarbecho@email.com', id: '#EMR-8830', lastVisit: 'Jan 15, 2026', status: 'Pending', color: '#14b8a6' }
+  { initials: 'PRP', name: 'Penny Rose Peduhan', email: 'ppeduhan@email.com', id: '#EMR-2045', lastVisit: 'Oct 24, 2025', status: 'Active', colorClass: 'purple' },
+  { initials: 'HJB', name: 'Harvey Jhon Bacla-an', email: 'hbaclaan@email.com', id: '#EMR-1192', lastVisit: 'Oct 20, 2025', status: 'Inpatient', colorClass: 'pink' },
+  { initials: 'PAB', name: 'Phoebe Angel Barbecho', email: 'pbarbecho@email.com', id: '#EMR-8830', lastVisit: 'Jan 15, 2026', status: 'Pending', colorClass: 'teal' }
 ])
 
 const filteredPatients = computed(() => {
   return patients.value.filter(p => {
     const s = searchQuery.value.toLowerCase()
-    const matchesSearch = p.name.toLowerCase().includes(s) || p.id.toLowerCase().includes(s)
+    const matchesSearch = p.name.toLowerCase().includes(s) || p.id.toLowerCase().includes(s) || p.email.toLowerCase().includes(s)
     const matchesStatus = selectedStatus.value === 'All' || p.status === selectedStatus.value
     return matchesSearch && matchesStatus
   })
@@ -273,248 +251,120 @@ const handleRegister = () => { alert('Registration successful!'); isModalOpen.va
 </script>
 
 <style scoped>
-/* --- DESIGN SYSTEM --- */
-:root {
-  --primary: #2563eb;
-  --primary-dark: #1e40af;
-  --bg-main: #f8fafc;
-  --sidebar-bg: #0f172a;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
-}
-
+/* --- BASE LAYOUT --- */
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #1e293b;
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f1f5f9;
+  font-family: 'Inter', sans-serif;
 }
 
-/* --- SIDEBAR REFINED --- */
+/* --- SIDEBAR (Synced with Inventory) --- */
 .sidebar {
-  width: 280px;
-  background: #0f172a;
+  width: 260px;
+  background: #1e3a8a;
   color: white;
   display: flex;
   flex-direction: column;
-  padding: 2rem 1.25rem;
-  position: sticky;
-  top: 0;
+  padding: 2rem 1.5rem;
   height: 100vh;
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 2.5rem;
-  padding-left: 0.5rem;
-}
-
-.logo-icon {
-  background: #2563eb;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  font-size: 1.4rem;
-}
-
-.logo-text { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
-.logo-text small { font-weight: 400; opacity: 0.6; font-size: 0.7rem; display: block; margin-top: -4px; }
-
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0.85rem 1rem;
-  color: #94a3b8;
-  text-decoration: none;
-  border-radius: 10px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-.nav-item.active { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-
-/* --- HEADER & TOP BAR --- */
-.main-content { flex: 1; min-width: 0; }
-.top-bar {
-  background: white;
-  padding: 1.5rem 2.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  flex-shrink: 0;
 }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-.top-bar h1 { font-size: 1.5rem; font-weight: 800; margin: 0; color: #0f172a; letter-spacing: -0.5px; }
-.top-bar p { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
+.nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.1); color: white; }
+.nav-item.active { background: #2563eb; }
 
-.back-link {
-  background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer;
-  display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 8px;
-}
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { color: #fca5a5; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 10px; font-size: 1rem; }
 
-.patient-title-group { display: flex; align-items: center; gap: 12px; }
-.id-tag { background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 600; color: #475569; }
+/* --- MAIN CONTENT & HEADER --- */
+.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
+.top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
 
-/* --- FILTERS & TABLES --- */
-.content-body { padding: 2rem 2.5rem; }
-.filter-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
-}
+.back-btn { background: none; border: none; color: #2563eb; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 4px; }
 
-.search-box { position: relative; flex: 1; max-width: 450px; }
-.search-box input {
-  width: 100%; padding: 0.8rem 1rem 0.8rem 2.8rem;
-  border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.9rem;
-  transition: all 0.2s;
-}
-.search-box input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
-.search-box .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+/* --- CONTROLS & TABLE --- */
+.patient-body { padding: 2rem 3rem; box-sizing: border-box; }
+.table-controls { display: flex; justify-content: space-between; margin-bottom: 1.5rem; gap: 1.5rem; }
 
-.filter-actions { display: flex; align-items: center; gap: 1rem; }
-.select-custom { position: relative; }
-.select-custom select {
-  appearance: none; padding: 0.75rem 2.5rem 0.75rem 2.5rem;
-  border: 1px solid #e2e8f0; border-radius: 10px; background: white;
-  font-weight: 600; color: #475569; cursor: pointer;
-}
-.select-custom .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
+.search-wrapper { position: relative; flex: 1; max-width: 500px; }
+.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 12px; background: white; font-size: 0.9rem; }
+.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.1rem; }
 
-.table-card {
-  background: white; border-radius: 16px; border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;
-}
+.filter-group { display: flex; gap: 10px; }
+.select-wrapper { position: relative; }
+.filter-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.9rem; pointer-events: none; }
+.filter-dropdown { padding: 0 1rem 0 2.2rem; height: 44px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-weight: 600; cursor: pointer; color: #475569; }
+.filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; cursor: pointer; color: #475569; transition: 0.2s; }
+.filter-btn:hover { background: #f8fafc; }
 
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th {
-  background: #f8fafc; padding: 1rem 1.5rem; text-align: left;
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
-  color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0;
-}
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+.patient-table { width: 100%; border-collapse: collapse; }
+.patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
+.patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
-.table-row:hover { background-color: #f8fafc; }
-.data-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+/* --- PATIENT INFO & BADGES --- */
+.patient-info { display: flex; align-items: center; gap: 12px; }
+.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; background: #dbeafe; color: #2563eb; }
+.patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
+.patient-avatar.pink { background: #fce7f3; color: #db2777; }
+.patient-avatar.teal { background: #ccfbf1; color: #0d9488; }
+.patient-avatar.large { width: 56px; height: 56px; font-size: 1.2rem; border-radius: 14px; }
 
-.patient-cell { display: flex; align-items: center; gap: 12px; }
-.avatar-circle {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  color: white; font-weight: 700; font-size: 0.85rem;
-}
+.p-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 0.95rem; }
+.p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
+.id-badge { font-family: 'JetBrains Mono', monospace; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; color: #1e3a8a; font-weight: 600; font-size: 0.8rem; }
 
-.info-meta { display: flex; flex-direction: column; }
-.p-full-name { font-weight: 700; color: #0f172a; }
-.p-sub-detail { font-size: 0.8rem; color: #64748b; }
+.badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.badge.active { background: #dcfce7; color: #15803d; }
+.badge.inpatient { background: #fee2e2; color: #b91c1c; }
+.badge.pending { background: #fef3c7; color: #b45309; }
 
-.status-pill {
-  padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;
-}
-.status-pill.active { background: #dcfce7; color: #166534; }
-.status-pill.inpatient { background: #fee2e2; color: #991b1b; }
-.status-pill.pending { background: #fef3c7; color: #92400e; }
+.view-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+.view-link:hover { background: #2563eb; color: white; }
 
-.action-icon-btn {
-  background: #f1f5f9; border: none; padding: 8px; border-radius: 8px;
-  color: #475569; cursor: pointer; transition: all 0.2s;
-}
-.action-icon-btn:hover { background: #2563eb; color: white; }
+/* --- DETAIL VIEW CARDS --- */
+.detail-card { background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
+.detail-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; }
+.title-with-status { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.title-with-status h2 { margin: 0; color: #1e3a8a; font-size: 1.5rem; }
 
-/* --- MEDICAL DETAIL VIEW --- */
-.profile-summary-card {
-  background: white; border-radius: 20px; padding: 2rem;
-  border: 1px solid #e2e8f0; margin-bottom: 2rem;
-  display: flex; justify-content: space-between; align-items: center;
-}
+.medical-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+.grid-item label { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; }
+.grid-item p { margin: 0; font-weight: 600; color: #1e293b; font-size: 1rem; }
 
-.profile-info-main { display: flex; align-items: center; gap: 24px; }
-.avatar-large {
-  width: 80px; height: 80px; border-radius: 20px;
-  display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 1.8rem; font-weight: 800;
-}
+.section-title-icon { display: flex; align-items: center; gap: 10px; color: #1e3a8a; margin-bottom: 1rem; }
+.section-title-icon h3 { margin: 0; font-size: 1.1rem; }
+.note-entry { padding: 1.2rem 0; border-bottom: 1px solid #f1f5f9; }
+.note-date { font-weight: 700; color: #2563eb; font-size: 0.85rem; margin-bottom: 6px; }
 
-.p-meta h2 { margin: 8px 0 4px; font-size: 1.8rem; letter-spacing: -1px; }
-.p-meta p { color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 4px; }
+.add-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+.add-btn:hover { background: #1d4ed8; }
 
-.quick-stats { display: flex; gap: 3rem; }
-.stat-box { display: flex; flex-direction: column; gap: 4px; }
-.stat-box label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; }
-.stat-box span { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
-
-.detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
-.section-card {
-  background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 1.5rem;
-}
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.section-header h3 { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin: 0; }
-
-.timeline-item {
-  padding-left: 20px; border-left: 2px solid #e2e8f0;
-  position: relative; padding-bottom: 2rem;
-}
-.timeline-item::before {
-  content: ''; position: absolute; left: -7px; top: 0;
-  width: 12px; height: 12px; border-radius: 50%; background: #2563eb; border: 3px solid white;
-}
-.tm-date { font-size: 0.8rem; font-weight: 700; color: #2563eb; margin-bottom: 4px; }
-.tm-content h4 { margin: 0 0 6px; font-size: 0.95rem; }
-.tm-content p { margin: 0; font-size: 0.9rem; color: #475569; line-height: 1.5; }
-
-/* --- BUTTONS & MODALS --- */
-.primary-btn {
-  background: #2563eb; color: white; border: none; padding: 0.75rem 1.5rem;
-  border-radius: 12px; font-weight: 700; cursor: pointer;
-  display: flex; align-items: center; gap: 8px; transition: all 0.2s;
-}
-.primary-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
-
-.secondary-btn {
-  background: white; color: #475569; border: 1px solid #e2e8f0;
-  padding: 0.75rem 1.25rem; border-radius: 12px; font-weight: 600; cursor: pointer;
-}
-
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000;
-}
-.modal-window {
-  background: white; width: 95%; max-width: 500px; border-radius: 24px; padding: 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-}
-.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.modal-form { display: flex; flex-direction: column; gap: 1.25rem; }
-.input-group { display: flex; flex-direction: column; gap: 6px; }
-.input-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
-.input-group input {
-  padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem;
-}
-.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-.modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
-.cancel-btn { background: none; border: none; font-weight: 600; color: #64748b; cursor: pointer; }
-
-/* ANIMATIONS */
-.modal-scale-enter-active, .modal-scale-leave-active { transition: all 0.3s ease; }
-.modal-scale-enter-from, .modal-scale-leave-to { opacity: 0; transform: scale(0.95); }
+/* --- MODAL --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.modal-content { background: white; width: 90%; max-width: 440px; border-radius: 16px; padding: 2rem; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.header-with-icon { display: flex; align-items: center; gap: 10px; color: #1e3a8a; }
+.modal-title-icon { font-size: 1.5rem; }
+.close-modal { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+.form-group input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; }
+.btn-secondary { background: #f1f5f9; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
 
 .text-right { text-align: right; }
-.text-red { color: #dc2626; }
-.empty-row { text-align: center; padding: 4rem !important; color: #94a3b8; }
-.empty-row .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+.empty-state { padding: 3rem; text-align: center; color: #64748b; font-style: italic; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
