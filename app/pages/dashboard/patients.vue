@@ -252,7 +252,7 @@ const handleRegister = () => { alert('Registration successful!'); isModalOpen.va
 
 <style scoped>
 /* --- BASE LAYOUT --- */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
@@ -261,44 +261,31 @@ const handleRegister = () => { alert('Registration successful!'); isModalOpen.va
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
 
+/* Nuxt Active Link Style */
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
 /* 1. Animation Keyframes */
-@keyframes slideInSidebar {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes popIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8) translateY(10px); 
+  }
+  70% { 
+    transform: scale(1.05) translateY(-2px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
 }
 
-/* 2. Entrance Class */
-.animate-nav {
-  opacity: 0;
-  animation: slideInSidebar 0.4s ease forwards;
-  animation-delay: calc(var(--order) * 0.08s);
+.animate-in { 
+  opacity: 0; 
+  animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; 
 }
-
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-
-.nav-item { 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 0.8rem 1rem; 
-  color: #bfdbfe; 
-  text-decoration: none; 
-  border-radius: 8px; 
-  font-weight: 500; 
-  transition: all 0.3s ease; /* Ensure smooth transition */
-}
-
-/* 3. Hover Slide Animation */
-.nav-item:hover { 
-  background: rgba(255, 255, 255, 0.1); 
-  color: white; 
-  transform: translateX(8px); 
-}
-
 .nav-item.active { background: #2563eb; color: white; }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
