@@ -7,7 +7,7 @@
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item active">
+        <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
         <NuxtLink to="/dashboard/patients" class="nav-item">
@@ -19,7 +19,7 @@
          <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
          </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
+        <NuxtLink to="/dashboard/inventory" class="nav-item active">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
         <NuxtLink to="/dashboard/billing" class="nav-item">
@@ -42,17 +42,16 @@
 
     <main class="main-content">
       <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="add-btn" @click="showModal = true">+ Add New Item</button>
+        </div>
+        
         <div class="header-text">
           <h1>Inventory Management</h1>
           <p>Monitor and manage your medical supplies and equipment.</p>
         </div>
-        <div class="user-profile">
-          <div class="notification-wrapper clickable" title="Notifications">
-            <Icon name="lucide:bell" class="bell-icon-svg" />
-            <span class="notification-dot"></span>
-          </div>
-          <div class="avatar clickable">JS</div>
-        </div>
+        
+        <div class="top-bar-right-spacer"></div>
       </header>
 
       <section class="dashboard-body">
@@ -61,10 +60,9 @@
             <div class="search-section">
               <div class="search-bar">
                 <Icon name="lucide:search" class="search-icon-svg" />
-                <input type="text" placeholder="Search inventory items..." aria-label="Inventory Search" />
+                <input type="text" placeholder="Search by item name, category, or ID..." aria-label="Inventory Search" />
               </div>
             </div>
-            <button class="add-btn" @click="showModal = true">+ Add New Item</button>
           </div>
         </div>
 
@@ -223,8 +221,8 @@ const handleLogout = () => {
   --bg-sidebar: #1e3a8a;
   --bg-card: #ffffff;
   --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #cbd5e1;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
   --accent-blue: #2563eb;
   display: flex; min-height: 100vh; background-color: var(--bg-main); font-family: 'Segoe UI', Roboto, sans-serif;
 }
@@ -232,42 +230,63 @@ const handleLogout = () => {
 /* --- SIDEBAR --- */
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
 /* --- TOP BAR --- */
 .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.top-bar { 
+  background: white; 
+  padding: 1rem 3rem; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid #e2e8f0; 
+}
+
+/* Add Button on the left of header */
+.top-bar-left { flex: 1; }
+.header-text { flex: 2; text-align: center; }
+.top-bar-right-spacer { flex: 1; }
+
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
 
 /* --- DASHBOARD BODY --- */
 .dashboard-body { padding: 2.5rem 3rem; max-width: 1400px; width: 100%; }
 .welcome-header { margin-bottom: 2.5rem; }
-.header-flex { display: flex; justify-content: space-between; align-items: center; }
+.header-flex { display: flex; justify-content: center; }
 
-/* Search bar styling */
-.search-bar { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 0.5rem 1.2rem; width: 380px; display: flex; align-items: center; gap: 10px; }
-.search-icon-svg { color: var(--text-secondary); font-size: 1.1rem; }
-.search-bar input { background: transparent; border: none; outline: none; width: 100%; font-size: 0.9rem; }
+/* --- SEARCH BAR --- */
+.search-section { width: 100%; max-width: 800px; }
+.search-bar { 
+  background: #ffffff; 
+  border: 1px solid #dfe5f0; 
+  border-radius: 18px; 
+  padding: 0.8rem 1.4rem; 
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02); 
+}
+.search-icon-svg { color: #94a3b8; font-size: 1.4rem; }
+.search-bar input { background: transparent; border: none; outline: none; width: 100%; font-size: 1.05rem; color: #4b5563; }
 
 .add-btn { 
   background: var(--accent-blue); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; 
-  font-weight: 600; cursor: pointer; transition: 0.2s;
+  font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;
 }
-.add-btn:hover { background: #1d4ed8; }
+.add-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
 
 /* --- STATS CARDS --- */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-.stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); transition: transform 0.3s ease; }
+.stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; transition: transform 0.3s ease; }
 .stat-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
 .stat-card h3 { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.5px; }
 .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--bg-sidebar); margin: 0; }
@@ -275,7 +294,7 @@ const handleLogout = () => {
 .positive { color: #10b981; font-weight: 600; }
 
 /* --- TABLE SECTION --- */
-.activity-card { background: var(--bg-card); padding: 1.8rem; border-radius: 16px; border: 1px solid var(--border-color); }
+.activity-card { background: var(--bg-card); padding: 1.8rem; border-radius: 16px; border: 1px solid #e2e8f0; }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .filter-chip { padding: 5px 15px; background: var(--bg-main); border-radius: 20px; font-size: 0.85rem; cursor: pointer; margin-left: 8px; font-weight: 500; }
 .filter-chip.active { background: var(--accent-blue); color: white; }
@@ -308,9 +327,6 @@ input, select { padding: 12px 14px; border: 1px solid var(--border-color); borde
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 2rem; }
 .cancel-btn { background: #f1f5f9; border: none; padding: 0.8rem 1.8rem; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-secondary); }
 .save-btn { background: var(--accent-blue); color: white; border: none; padding: 0.8rem 1.8rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
-
-.clickable { cursor: pointer; }
-.clickable:hover { opacity: 0.8; }
 
 .modal-enter-active, .modal-leave-active { transition: opacity 0.3s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
