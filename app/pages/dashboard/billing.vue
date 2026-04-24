@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-         <Icon name="mdi:hospital-building" class="icon-blue-light" />
+        <Icon name="mdi:hospital-building" class="icon-blue-light" />
         <span class="logo-text">EMR System</span>
       </div>
       
@@ -16,9 +16,9 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
+        <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
+        </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
@@ -214,7 +214,7 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
 
 /* --- MAIN CONTENT AREA --- */
 .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
@@ -223,18 +223,12 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .top-bar p { color: #64748b; margin-top: 4px; }
 .billing-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
 
-/* --- FINANCIAL STATS (WITH ANIMATIONS) --- */
+/* --- FINANCIAL STATS (WITH REQUESTED HOVER) --- */
 .billing-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .b-stat-card { 
@@ -242,22 +236,35 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
   border-radius: 16px; 
   color: white; 
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  /* Animation properties */
   animation: fadeInUp 0.6s ease-out forwards;
-  opacity: 0; /* Start hidden for the animation */
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  opacity: 0;
   cursor: pointer;
+  /* Optimized transition for the hover effects */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background 0.3s ease, 
+              box-shadow 0.3s ease,
+              color 0.3s ease;
+  border: 1px solid transparent;
 }
 
-/* Staggered entrance delays */
+/* Base Gradients */
 .b-stat-card.blue { background: linear-gradient(135deg, #3b82f6, #1e3a8a); animation-delay: 0.1s; }
 .b-stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); animation-delay: 0.2s; }
 .b-stat-card.green { background: linear-gradient(135deg, #10b981, #059669); animation-delay: 0.3s; }
 
-/* Hover effects */
+/* REPLACED HOVER EFFECTS */
 .b-stat-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.9); /* Card turns white-ish */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  color: #1e3a8a; /* Text changes to dark blue so it's readable on light background */
+  border-color: #e2e8f0;
+}
+
+/* Adjust label/value color on hover so they don't disappear */
+.b-stat-card:hover .b-label,
+.b-stat-card:hover .b-value {
+  color: inherit; 
 }
 
 .b-label { font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; font-weight: 600; }
@@ -317,4 +324,3 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
-
