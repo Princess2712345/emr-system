@@ -34,9 +34,9 @@
       </nav>
 
       <div class="sidebar-footer">
-        <NuxtLink to="/auth/login" class="logout-link">
+        <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" /> Logout
-        </NuxtLink>
+        </button>
       </div>
     </aside>
 
