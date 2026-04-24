@@ -2,12 +2,14 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">EMR System</span>
+        <div class="logo-icon">
+          <Icon name="mdi:hospital-building" />
+        </div>
+        <span class="logo-text">EMR<span>System</span></span>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item active">
+        <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
         <NuxtLink to="/dashboard/patients" class="nav-item">
@@ -16,14 +18,14 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
+        <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
+        </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
         <NuxtLink to="/dashboard/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Statement of Account
+          <Icon name="lucide:credit-card" /> Billing
         </NuxtLink>
         <NuxtLink to="/dashboard/appointments" class="nav-item active">
           <Icon name="lucide:calendar-days" /> Appointments
@@ -34,38 +36,42 @@
       </nav>
 
       <div class="sidebar-footer">
-        <NuxtLink to="/auth/login" class="logout-btn">Logout</NuxtLink>
+        <button class="logout-btn">
+          <Icon name="lucide:log-out" /> Logout
+        </button>
       </div>
     </aside>
 
     <main class="main-content">
       <header class="top-bar">
-        <div class="welcome-msg">
-          <h1>Schedule & Appointments</h1>
-          <p>{{ currentView === 'list' ? 'Daily Timeline' : 'Monthly View' }} — 2026</p>
+        <div class="header-left">
+          <h1>Appointments</h1>
+          <p class="subtitle">{{ currentView === 'list' ? 'Daily Schedule' : 'Monthly Overview' }} • April 3, 2026</p>
         </div>
         <div class="header-actions">
-          <button class="calendar-btn" @click="toggleView">
-            <Icon :name="currentView === 'list' ? 'lucide:calendar' : 'lucide:list'" />
+          <button class="secondary-btn" @click="toggleView">
+            <Icon :name="currentView === 'list' ? 'lucide:calendar' : 'lucide:list-ordered'" />
             {{ currentView === 'list' ? 'Calendar View' : 'List View' }}
           </button>
-          <button class="add-btn" @click="showModal = true">+ Book Appointment</button>
+          <button class="primary-btn" @click="showModal = true">
+            <Icon name="lucide:plus" /> Book Appointment
+          </button>
         </div>
       </header>
 
-      <section class="appointment-body">
-        <div v-if="currentView === 'list'">
-          <div class="schedule-header">
-            <div class="date-display">
-              <button class="arrow-btn"><Icon name="lucide:chevron-left" /></button>
-              <span class="current-date">Today, April 3</span>
-              <button class="arrow-btn"><Icon name="lucide:chevron-right" /></button>
+      <section class="content-body">
+        <div v-if="currentView === 'list'" class="fade-in">
+          <div class="toolbar">
+            <div class="date-navigator">
+              <button class="icon-btn"><Icon name="lucide:chevron-left" /></button>
+              <span class="nav-date">Friday, April 03</span>
+              <button class="icon-btn"><Icon name="lucide:chevron-right" /></button>
             </div>
-            <div class="view-filters">
+            <div class="filter-tabs">
               <button 
                 v-for="status in ['All', 'Confirmed', 'Pending', 'Urgent', 'In Progress']" 
                 :key="status"
-                :class="['filter-pill', { active: activeFilter === status }]"
+                :class="['tab-link', { active: activeFilter === status }]"
                 @click="activeFilter = status"
               >
                 {{ status }}
@@ -73,44 +79,54 @@
             </div>
           </div>
 
-          <div class="appointment-list">
+          <div class="appointment-grid">
             <div 
               v-for="appt in filteredAppointments" 
               :key="appt.id" 
-              :class="['appointment-card', { urgent: appt.status === 'Urgent', 'in-progress-card': appt.status === 'In Progress' }]"
+              :class="['appt-card', appt.status.toLowerCase().replace(/\s+/g, '-'), { 'is-urgent': appt.status === 'Urgent' }]"
             >
-              <div class="time-slot">
-                <span class="time">{{ appt.time }}</span>
-                <span class="duration">{{ appt.duration }}</span>
-                <span class="appt-date-label">{{ appt.date }}</span>
+              <div class="appt-time">
+                <span class="main-time">{{ appt.time }}</span>
+                <span class="duration-tag">{{ appt.duration }}</span>
               </div>
-              <div class="patient-brief">
-                <p class="p-name">{{ appt.patientName }}</p>
-                <p class="p-reason">{{ appt.reason }}</p>
+              
+              <div class="appt-info">
+                <div class="patient-meta">
+                  <h3>{{ appt.patientName }}</h3>
+                  <p>{{ appt.reason }}</p>
+                </div>
               </div>
-              <div class="status-box">
-                <span :class="['status-tag', appt.status.toLowerCase().replace(/\s+/g, '-')]">{{ appt.status }}</span>
+
+              <div class="appt-status">
+                <span class="status-pill">
+                  <span v-if="appt.status === 'In Progress'" class="live-dot"></span>
+                  {{ appt.status }}
+                </span>
               </div>
-              <div class="actions">
-                <button v-if="appt.status === 'Pending'" class="action-btn outline" @click="confirmAppt(appt.id)">
-                  Confirm
-                </button>
-                <button v-else class="action-btn primary" @click="startVisit(appt.id)">
-                  {{ appt.status === 'In Progress' ? 'Continue Visit' : 'Start Visit' }}
+
+              <div class="appt-actions">
+                <button v-if="appt.status === 'Pending'" class="btn-confirm" @click="confirmAppt(appt.id)">Confirm</button>
+                <button v-else class="btn-start" @click="startVisit(appt.id)">
+                  {{ appt.status === 'In Progress' ? 'Resume' : 'Start Visit' }}
                 </button>
               </div>
             </div>
+            
             <div v-if="filteredAppointments.length === 0" class="empty-state">
-              No appointments found for this category.
+              <Icon name="lucide:calendar-x" class="empty-icon" />
+              <p>No appointments found for this filter.</p>
             </div>
           </div>
         </div>
 
-        <div v-else class="calendar-wrapper">
+        <div v-else class="calendar-container fade-in">
+          <div class="calendar-header">
+            <span v-for="d in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="d">{{ d }}</span>
+          </div>
           <div class="calendar-grid">
-            <div v-for="day in 30" :key="day" class="calendar-day">
-              <span class="day-num">{{ day }}</span>
-              <div v-if="getApptsForDay(day) > 0" class="event-indicator">
+            <div v-for="day in 30" :key="day" :class="['cal-day', { 'today': day === 3 }]">
+              <span class="day-label">{{ day }}</span>
+              <div v-if="getApptsForDay(day) > 0" class="appt-indicator">
                 {{ getApptsForDay(day) }} Appts
               </div>
             </div>
@@ -119,37 +135,358 @@
       </section>
     </main>
 
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-      <div class="modal-card">
-        <h3 class="modal-title">New Appointment</h3>
-        <div class="form-group">
-          <label>Patient Name</label>
-          <input v-model="form.name" type="text" placeholder="e.g. John Doe" />
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label>Date</label>
-            <input v-model="form.date" type="date" />
+    <Transition name="scale">
+      <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h2>New Appointment</h2>
+            <button class="close-x" @click="showModal = false"><Icon name="lucide:x" /></button>
           </div>
-          <div class="form-group">
-            <label>Time</label>
-            <input v-model="form.time" type="time" />
+          <div class="modal-body">
+            <div class="input-field">
+              <label>Patient Full Name</label>
+              <input v-model="form.name" type="text" placeholder="Johnathan Doe" />
+            </div>
+            <div class="input-row">
+              <div class="input-field">
+                <label>Date</label>
+                <input v-model="form.date" type="date" />
+              </div>
+              <div class="input-field">
+                <label>Time</label>
+                <input v-model="form.time" type="time" />
+              </div>
+            </div>
+            <div class="input-field">
+              <label>Reason for Visit</label>
+              <textarea v-model="form.reason" rows="3" placeholder="Symptoms or checkup type..."></textarea>
+            </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>Reason for Visit</label>
-          <input v-model="form.reason" type="text" placeholder="e.g. Consultation" />
-        </div>
-        <div class="modal-btns">
-          <button class="cancel-link" @click="showModal = false">Cancel</button>
-          <button class="submit-btn" @click="submitBooking">Book Now</button>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="showModal = false">Cancel</button>
+            <button class="btn-submit" @click="submitBooking">Complete Booking</button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+/* Base Theme & Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar Realism */
+.sidebar {
+  width: 280px;
+  background: #0f172a;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-right: 1px solid #1e293b;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2.5rem;
+  padding: 0.5rem;
+}
+
+.logo-icon {
+  background: #3b82f6;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 1.5rem;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.logo-text span {
+  color: #3b82f6;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+.nav-item:hover {
+  background: #1e293b;
+  color: #fff;
+}
+
+.nav-item.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.logout-btn {
+  margin-top: auto;
+  background: #1e293b;
+  border: none;
+  color: #fca5a5;
+  padding: 0.75rem;
+  border-radius: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Header & Actions */
+.main-content { flex: 1; min-width: 0; }
+
+.top-bar {
+  background: white;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.top-bar h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 2px; color: #0f172a; }
+.subtitle { color: #64748b; font-size: 0.9rem; font-weight: 500; }
+
+.header-actions { display: flex; gap: 0.75rem; }
+
+.primary-btn, .secondary-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.primary-btn { background: #3b82f6; color: white; border: none; }
+.primary-btn:hover { background: #2563eb; transform: translateY(-1px); }
+
+.secondary-btn { background: white; border: 1px solid #e2e8f0; color: #475569; }
+.secondary-btn:hover { background: #f8fafc; }
+
+/* Dashboard Body */
+.content-body { padding: 2rem 2.5rem; }
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.date-navigator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.nav-date { font-weight: 700; font-size: 0.95rem; color: #0f172a; }
+
+.filter-tabs { display: flex; gap: 0.5rem; }
+
+.tab-link {
+  background: none;
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tab-link.active {
+  background: white;
+  border-color: #e2e8f0;
+  color: #3b82f6;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Appointment Cards - Realistic Grid */
+.appointment-grid { display: flex; flex-direction: column; gap: 1rem; }
+
+.appt-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 140px;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  transition: 0.3s;
+}
+
+.appt-card:hover { border-color: #3b82f6; transform: translateX(4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+
+.appt-time { display: flex; flex-direction: column; gap: 4px; }
+.main-time { font-weight: 800; font-size: 1.1rem; color: #0f172a; }
+.duration-tag { font-size: 0.75rem; font-weight: 600; color: #94a3b8; }
+
+.patient-meta h3 { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+.patient-meta p { font-size: 0.9rem; color: #64748b; font-weight: 500; }
+
+.status-pill {
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status Colors */
+.confirmed .status-pill { background: #dcfce7; color: #166534; }
+.pending .status-pill { background: #fef3c7; color: #92400e; }
+.urgent .status-pill { background: #fee2e2; color: #991b1b; }
+.in-progress .status-pill { background: #dbeafe; color: #1e40af; }
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+.btn-confirm, .btn-start {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-confirm { background: white; border: 1px solid #3b82f6; color: #3b82f6; }
+.btn-confirm:hover { background: #3b82f6; color: white; }
+
+.btn-start { background: #0f172a; color: white; border: none; }
+.btn-start:hover { background: #334155; }
+
+/* Modal Realism */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-sheet {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 { font-size: 1.25rem; font-weight: 800; color: #0f172a; }
+
+.modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.input-field label { display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem; }
+
+input, textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-cancel { background: none; border: none; font-weight: 600; color: #64748b; cursor: pointer; }
+.btn-submit { background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
+/* Animations */
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+/* Calendar Grid */
+.calendar-container { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+.calendar-header span { padding: 1rem; text-align: center; font-weight: 700; font-size: 0.8rem; color: #64748b; text-transform: uppercase; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-day { height: 120px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; padding: 0.75rem; position: relative; }
+.cal-day.today { background: #f0f7ff; }
+.day-label { font-weight: 700; font-size: 0.9rem; color: #94a3b8; }
+.cal-day.today .day-label { color: #3b82f6; }
+.appt-indicator { background: #dbeafe; color: #1e40af; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 5px; }
+</style>
 
 <script setup>
 import { ref, computed } from 'vue';
@@ -187,9 +524,7 @@ const confirmAppt = (id) => {
 
 const startVisit = (id) => {
   const appt = appointments.value.find(a => a.id === id);
-  if (appt) {
-    appt.status = 'In Progress';
-  }
+  if (appt) appt.status = 'In Progress';
 };
 
 const submitBooking = () => {
@@ -218,122 +553,3 @@ const submitBooking = () => {
   form.value = { name: '', time: '', date: '', reason: '' };
 };
 </script>
-
-<style scoped>
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-
-/* --- MAIN CONTENT --- */
-.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.top-bar {
-  background: white;
-  padding: 1.5rem 3rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e2e8f0;
-}
-.top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; font-weight: 700; }
-.header-actions { display: flex; gap: 1rem; }
-
-.calendar-btn, .add-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.7rem 1.4rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.calendar-btn { background: white; border: 1px solid #e2e8f0; color: #64748b; }
-.add-btn { background-color: #2563eb; color: white; border: none; }
-.add-btn:hover { background-color: #1d4ed8; transform: translateY(-1px); }
-
-/* --- APPOINTMENT CARDS --- */
-.appointment-body { padding: 2.5rem 3rem; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-.schedule-header { display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: center; }
-.date-display { display: flex; align-items: center; gap: 1.5rem; background: white; padding: 0.6rem 1.2rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.current-date { font-weight: 700; color: #1e3a8a; }
-.arrow-btn { background: none; border: none; cursor: pointer; color: #2563eb; display: flex; align-items: center; }
-
-/* --- UPDATED CALENDAR STYLES --- */
-.calendar-wrapper { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 1rem; }
-.calendar-grid { 
-  display: grid; 
-  grid-template-columns: repeat(7, 1fr); 
-  gap: 1px; 
-  background-color: #e2e8f0; 
-  border: 1px solid #e2e8f0; 
-}
-.calendar-day { 
-  height: 120px; 
-  background-color: white; 
-  padding: 0.75rem; 
-  display: flex; 
-  flex-direction: column; 
-  transition: 0.2s; 
-}
-.calendar-day:hover { background-color: #f8fafc; }
-.day-num { font-weight: 700; color: #64748b; font-size: 0.9rem; margin-bottom: 8px; }
-.event-indicator { background: #dbeafe; color: #1e3a8a; font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; text-align: center; border: 1px solid #bfdbfe; }
-
-/* --- OTHER STYLES --- */
-.view-filters { display: flex; gap: 0.5rem; }
-.filter-pill { padding: 0.5rem 1.2rem; border-radius: 20px; border: 1px solid #e2e8f0; background: white; cursor: pointer; color: #64748b; font-weight: 500; transition: 0.2s; }
-.filter-pill.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
-
-.appointment-card {
-  background: white;
-  display: grid;
-  grid-template-columns: 120px 1fr 150px 160px; 
-  align-items: center;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border-left: 4px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  margin-bottom: 1rem;
-  transition: 0.3s;
-}
-.appointment-card:hover { transform: translateX(5px); }
-.appointment-card.urgent { border-left-color: #f43f5e; background: #fff1f2; }
-.appointment-card.in-progress-card { border-left-color: #0ea5e9; background: #f0f9ff; }
-
-.time { font-weight: 800; color: #1e293b; font-size: 1.1rem; }
-.status-tag { padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-.confirmed { background: #dcfce7; color: #15803d; }
-.urgent { background: #f43f5e; color: white; }
-.pending { background: #fef3c7; color: #b45309; }
-.in-progress { background: #0ea5e9; color: white; animation: pulse 2s infinite; }
-
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
-  display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px);
-}
-.modal-card { background: white; padding: 2.5rem; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-.modal-title { margin: 0 0 1.5rem 0; font-size: 1.5rem; color: #1e3a8a; font-weight: 700; }
-.form-group { margin-bottom: 1.2rem; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: #334155; }
-input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.2s; }
-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-
-.modal-btns { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
-.submit-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
-.cancel-link { background: none; border: none; color: #64748b; cursor: pointer; font-weight: 600; }
-
-.empty-state { text-align: center; padding: 4rem; color: #94a3b8; font-style: italic; }
-</style>
