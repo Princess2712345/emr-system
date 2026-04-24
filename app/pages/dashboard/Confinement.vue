@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
+        <Icon name="mdi:hospital-building" class="logo-icon" />
         <span class="logo-text">EMR System</span>
       </div>
       
@@ -250,8 +250,25 @@ const handleAdmission = () => {
 
 /* --- SIDEBAR --- */
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+
+/* --- UPDATED LOGO STYLES (MATCHING SIZE) --- */
+.sidebar-logo { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  margin-bottom: 3rem; 
+}
+.logo-icon { 
+  color: #60a5fa; 
+  font-size: 1.5rem; /* Icon size */
+  flex-shrink: 0;
+}
+.logo-text { 
+  font-size: 1.5rem; /* Exact same font size as icon */
+  font-weight: 800; 
+  line-height: 1;    /* Removes extra spacing around letters */
+  color: white;
+}
 
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
@@ -260,7 +277,7 @@ const handleAdmission = () => {
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
 /* --- MAIN CONTENT & TOP BAR --- */
 .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
@@ -319,7 +336,7 @@ const handleAdmission = () => {
 .form-group { margin-bottom: 1.25rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
-.form-group input, .modal-select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit; }
+.form-group input, .modal-select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit; box-sizing: border-box;}
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.5rem; }
 .btn-secondary { background: #f1f5f9; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
 
@@ -327,4 +344,3 @@ const handleAdmission = () => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
-
