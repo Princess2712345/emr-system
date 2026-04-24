@@ -230,37 +230,29 @@ const handleLogout = () => {
 }
 
 /* --- SIDEBAR --- */
-.sidebar { width: 260px; background: var(--bg-sidebar); color: white; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; flex-shrink: 0; display: flex; flex-direction: column; }
-.sidebar-logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 800; margin-bottom: 2.5rem; }
-.icon-blue { color: #60a5fa; font-size: 1.5rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
-.nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.1); color: white; }
-.nav-item.active { background: var(--accent-blue); }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { 
-  width: 100%; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
-  background: transparent; border: none; color: #fca5a5; font-weight: 600; 
-  cursor: pointer; text-align: left; border-radius: 8px; transition: 0.2s; font-size: 1rem;
-}
-.logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ffffff; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
 /* --- TOP BAR --- */
-.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-x: hidden; }
-.top-bar { 
-  background: var(--bg-card); padding: 1rem 3rem; display: flex; justify-content: space-between; 
-  align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 50;
-}
+.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
+.top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
+.inventory-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
+
 .search-bar { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 0.5rem 1.2rem; width: 380px; display: flex; align-items: center; gap: 10px; }
 .search-icon-svg { color: var(--text-secondary); font-size: 1.1rem; }
 .search-bar input { background: transparent; border: none; outline: none; width: 100%; font-size: 0.9rem; }
-
-.user-profile { display: flex; align-items: center; gap: 1.5rem; }
-.notification-wrapper { position: relative; display: flex; align-items: center; font-size: 1.4rem; color: var(--text-secondary); }
-.bell-icon-svg { color: var(--text-secondary); font-size: 1.4rem; }
-.notification-dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; background: #ef4444; border-radius: 50%; border: 2px solid white; }
-.avatar { width: 38px; height: 38px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
 
 /* --- DASHBOARD BODY --- */
 .dashboard-body { padding: 2.5rem 3rem; max-width: 1400px; width: 100%; }
