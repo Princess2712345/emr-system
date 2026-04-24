@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue" />
+        <Icon name="mdi:hospital-building" class="icon-blue-light" />
         <span class="logo-text">EMR System</span>
       </div>
       
