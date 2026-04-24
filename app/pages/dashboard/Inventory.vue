@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue" />
+        <Icon name="mdi:hospital-building" class="icon-white" />
         <span class="logo-text">EMR System</span>
       </div>
       
@@ -16,9 +16,9 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
+        <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
+        </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item active">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
@@ -34,7 +34,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn">
+        <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" /> Logout
         </button>
       </div>
@@ -42,194 +42,186 @@
 
     <main class="main-content">
       <header class="top-bar">
-        <div class="top-bar-left">
-          <button class="add-btn" @click="showModal = true">+ Add New Item</button>
-        </div>
-        
-        <div class="header-text">
+        <div class="welcome-msg">
           <h1>Inventory Management</h1>
-          <p>Monitor and manage your medical supplies and equipment.</p>
+          <p>Monitor medical supplies, equipment stock levels, and procurement alerts.</p>
         </div>
-        
-        <div class="top-bar-right-spacer"></div>
+        <div class="header-actions">
+          <button class="add-btn" @click="isModalOpen = true">+ Add New Item</button>
+        </div>
       </header>
 
-      <section class="dashboard-body">
-        <div class="welcome-header">
-          <div class="header-flex">
-            <div class="search-section">
-              <div class="search-bar">
-                <Icon name="lucide:search" class="search-icon-svg" />
-                <input type="text" placeholder="Search by item name, category, or ID..." aria-label="Inventory Search" />
-              </div>
-            </div>
+      <section class="inventory-body">
+        <div class="table-controls">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              placeholder="Search by item name, category, or SKU..." 
+            />
+          </div>
+          <div class="filter-group">
+            <select v-model="selectedCategory" class="filter-dropdown">
+              <option value="All">All Categories</option>
+              <option value="Medication">Medication</option>
+              <option value="Equipment">Equipment</option>
+              <option value="Disposables">Disposables</option>
+            </select>
+            <button class="filter-btn" @click="resetFilters">Reset</button>
           </div>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card" v-for="stat in stats" :key="stat.label">
-            <h3>{{ stat.label }}</h3>
-            <p class="stat-value">{{ stat.value }}</p>
-            <span class="stat-change" :class="stat.type">{{ stat.meta }}</span>
-          </div>
-        </div>
-
-        <div class="activity-card">
-          <div class="section-header">
-            <h3>Supply Stock List</h3>
-            <div class="table-actions">
-              <span class="filter-chip active">All</span>
-              <span class="filter-chip">Medications</span>
-              <span class="filter-chip">Equipment</span>
-            </div>
-          </div>
-
+        <div class="table-container">
           <table class="inventory-table">
             <thead>
               <tr>
-                <th>Item Name</th>
-                <th>Category</th>
-                <th>In Stock</th>
+                <th>Item & Category</th>
+                <th>Stock Level</th>
                 <th>Unit Price</th>
                 <th>Status</th>
-                <th class="text-center">Actions</th>
+                <th class="text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in inventoryItems" :key="item.id">
-                <td><strong>{{ item.name }}</strong></td>
-                <td>{{ item.category }}</td>
-                <td>{{ item.stock }} {{ item.unit }}</td>
-                <td>₱{{ item.price }}</td>
+              <tr v-for="item in filteredInventory" :key="item.id">
                 <td>
-                  <span class="status-badge" :class="item.status">
+                  <div class="item-info">
+                    <div class="category-badge" :class="item.status.toLowerCase()">
+                      {{ item.category.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="i-name">{{ item.name }}</p>
+                      <p class="i-subtext">ID: SKU-00{{ item.id }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stock-info">
+                    <span class="main-stock">{{ item.stock }} {{ item.unit }}</span>
+                    <span class="sub-stock">Min. Req: 50</span>
+                  </div>
+                </td>
+                <td><span class="price-tag">₱{{ item.price }}</span></td>
+                <td>
+                  <span class="badge" :class="item.status.toLowerCase()">
                     {{ item.status.replace('-', ' ') }}
                   </span>
                 </td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="edit-btn" @click="editItem(item)" title="Edit Item">
-                      <Icon name="lucide:pencil" />
-                    </button>
-                    <button class="delete-btn" @click="deleteItem(item.id)" title="Delete Item">
-                      <Icon name="lucide:trash-2" />
-                    </button>
-                  </div>
+                <td class="text-right">
+                  <button class="view-link" @click="editItem(item)">
+                    Manage
+                  </button>
                 </td>
+              </tr>
+              
+              <tr v-if="filteredInventory.length === 0">
+                <td colspan="5" class="empty-state">No inventory items found matching your search.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
+    </main>
 
-      <Transition name="modal">
-        <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-          <div class="modal-content">
-            <h3 class="modal-title">Add New Inventory Item</h3>
-            <form @submit.prevent="saveItem">
-              <div class="form-group">
-                <label>Item Name</label>
-                <input type="text" v-model="newItem.name" placeholder="e.g. Paracetamol" required>
-              </div>
-              
+    <Transition name="fade">
+      <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add New Inventory Item</h3>
+            <button class="close-modal" @click="isModalOpen = false">&times;</button>
+          </div>
+          <form @submit.prevent="handleSave">
+            <div class="form-group">
+              <label>Item Name</label>
+              <input type="text" v-model="newItem.name" placeholder="e.g. Amoxicillin" required />
+            </div>
+            <div class="form-row">
               <div class="form-group">
                 <label>Category</label>
-                <select v-model="newItem.category">
+                <select v-model="newItem.category" class="modal-select">
                   <option>Medication</option>
-                  <option>Disposables</option>
                   <option>Equipment</option>
-                  <option>Medical Supplies</option>
+                  <option>Disposables</option>
+                  <option>Supplies</option>
                 </select>
               </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Stock Quantity</label>
-                  <input type="number" v-model="newItem.stock" placeholder="0" required>
-                </div>
-                <div class="form-group">
-                  <label>Price (₱)</label>
-                  <input type="number" step="0.01" v-model="newItem.price" placeholder="0.00" required>
-                </div>
+              <div class="form-group">
+                <label>Stock Quantity</label>
+                <input type="number" v-model="newItem.stock" placeholder="0" required />
               </div>
-
-              <div class="modal-actions">
-                <button type="button" class="cancel-btn" @click="showModal = false">Cancel</button>
-                <button type="submit" class="save-btn">Save Item</button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div class="form-group">
+              <label>Unit Price (₱)</label>
+              <input type="number" step="0.01" v-model="newItem.price" placeholder="0.00" required />
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" @click="isModalOpen = false">Cancel</button>
+              <button type="submit" class="add-btn">Add to Stock</button>
+            </div>
+          </form>
         </div>
-      </Transition>
-    </main>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 
-const router = useRouter()
-const showModal = ref(false)
-const newItem = ref({ name: '', category: 'Medication', stock: 0, price: '', unit: 'pcs' })
+const searchQuery = ref('')
+const selectedCategory = ref('All')
+const isModalOpen = ref(false)
 
-const stats = [
-  { label: 'Total Items', value: '412', meta: 'Active SKUs', type: '' },
-  { label: 'Low Stock', value: '12', meta: 'Requires order', type: 'negative' },
-  { label: 'Out of Stock', value: '2', meta: 'Critical alerts', type: 'negative' },
-  { label: 'Recent Orders', value: '5', meta: 'In transit', type: 'positive' }
-]
+const newItem = ref({
+  name: '',
+  category: 'Medication',
+  stock: '',
+  price: '',
+  unit: 'pcs'
+})
 
 const inventoryItems = ref([
-  { id: 1, name: 'Amoxicillin 500mg', category: 'Medication', stock: 450, unit: 'caps', price: '25.00', status: 'in-stock' },
-  { id: 2, name: 'Surgical Gloves (M)', category: 'Disposables', stock: 12, unit: 'boxes', price: '750.00', status: 'low-stock' },
-  { id: 3, name: 'Digital Thermometer', category: 'Equipment', stock: 0, unit: 'pcs', price: '1,250.00', status: 'out-of-stock' },
-  { id: 4, name: 'Paracetamol Syrup', category: 'Medication', stock: 85, unit: 'bottles', price: '210.00', status: 'in-stock' },
-  { id: 5, name: 'IV Cannula 20G', category: 'Medical Supplies', stock: 15, unit: 'pcs', price: '55.00', status: 'low-stock' },
+  { id: 1, name: 'Amoxicillin 500mg', category: 'Medication', stock: 450, unit: 'caps', price: '25.00', status: 'In-Stock' },
+  { id: 2, name: 'Surgical Gloves (M)', category: 'Disposables', stock: 12, unit: 'boxes', price: '750.00', status: 'Low-Stock' },
+  { id: 3, name: 'Digital Thermometer', category: 'Equipment', stock: 0, unit: 'pcs', price: '1,250.00', status: 'Out-of-Stock' },
+  { id: 4, name: 'Paracetamol Syrup', category: 'Medication', stock: 85, unit: 'bottles', price: '210.00', status: 'In-Stock' },
 ])
 
-const saveItem = () => {
-  const id = inventoryItems.value.length + 1
-  inventoryItems.value.push({ 
-    ...newItem.value, 
-    id, 
-    status: newItem.value.stock > 0 ? 'in-stock' : 'out-of-stock' 
+const filteredInventory = computed(() => {
+  return inventoryItems.value.filter(item => {
+    const s = searchQuery.value.toLowerCase()
+    const matchesSearch = item.name.toLowerCase().includes(s) || item.category.toLowerCase().includes(s)
+    const matchesCat = selectedCategory.value === 'All' || item.category === selectedCategory.value
+    return matchesSearch && matchesCat
   })
-  showModal.value = false
-  newItem.value = { name: '', category: 'Medication', stock: 0, price: '', unit: 'pcs' }
+})
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedCategory.value = 'All'
 }
 
-const deleteItem = (id) => {
-  if(confirm('Are you sure you want to delete this item?')) {
-    inventoryItems.value = inventoryItems.value.filter(item => item.id !== id)
-  }
+const handleSave = () => {
+  const status = newItem.value.stock > 50 ? 'In-Stock' : (newItem.value.stock > 0 ? 'Low-Stock' : 'Out-of-Stock')
+  inventoryItems.value.push({ ...newItem.value, id: Date.now(), status })
+  isModalOpen.value = false
+  newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }
 }
 
 const editItem = (item) => {
-  alert(`Editing: ${item.name}`)
-}
-
-const handleLogout = () => {
-  router.push('/auth/login')
+  alert(`Opening management panel for: ${item.name}`)
 }
 </script>
 
 <style scoped>
-/* --- CORE THEME --- */
-.dashboard-layout {
-  --bg-main: #f0f4f8;
-  --bg-sidebar: #1e3a8a;
-  --bg-card: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #6b7280;
-  --border-color: #e5e7eb;
-  --accent-blue: #2563eb;
-  display: flex; min-height: 100vh; background-color: var(--bg-main); font-family: 'Segoe UI', Roboto, sans-serif;
-}
+/* --- CORE LAYOUT --- */
+.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Segoe UI', Roboto, sans-serif; }
 
 /* --- SIDEBAR --- */
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-white { color: white; font-size: 1.6rem; }
 
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
@@ -239,95 +231,68 @@ const handleLogout = () => {
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
-/* --- TOP BAR --- */
-.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.top-bar { 
-  background: white; 
-  padding: 1rem 3rem; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  border-bottom: 1px solid #e2e8f0; 
-}
+/* --- MAIN CONTENT & TOP BAR --- */
+.main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
+.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; }
+.top-bar p { color: #64748b; margin-top: 4px; }
+.inventory-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
 
-/* Add Button on the left of header */
-.top-bar-left { flex: 1; }
-.header-text { flex: 2; text-align: center; }
-.top-bar-right-spacer { flex: 1; }
+/* --- CONTROLS --- */
+.table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 2rem; }
+.search-wrapper { position: relative; flex: 1; max-width: 600px; }
+.search-wrapper input { width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; font-size: 0.95rem; }
+.search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); }
+.filter-group { display: flex; gap: 12px; }
+.filter-dropdown, .filter-btn { padding: 0 1.2rem; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #475569; font-weight: 600; cursor: pointer; }
 
-.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
-.top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
+/* --- TABLE --- */
+.table-container { background: white; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+.inventory-table { width: 100%; border-collapse: collapse; }
+.inventory-table th { background-color: #f8fafc; padding: 1.2rem 1.5rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.05em; }
+.inventory-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
-/* --- DASHBOARD BODY --- */
-.dashboard-body { padding: 2.5rem 3rem; max-width: 1400px; width: 100%; }
-.welcome-header { margin-bottom: 2.5rem; }
-.header-flex { display: flex; justify-content: center; }
+.item-info { display: flex; align-items: center; gap: 16px; }
+.category-badge { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; }
+.category-badge.in-stock { background: #dcfce7; color: #15803d; }
+.category-badge.low-stock { background: #fef3c7; color: #b45309; }
+.category-badge.out-of-stock { background: #fee2e2; color: #991b1b; }
 
-/* --- SEARCH BAR --- */
-.search-section { width: 100%; max-width: 800px; }
-.search-bar { 
-  background: #ffffff; 
-  border: 1px solid #dfe5f0; 
-  border-radius: 18px; 
-  padding: 0.8rem 1.4rem; 
-  display: flex; 
-  align-items: center; 
-  gap: 15px; 
-  box-shadow: 0 2px 5px rgba(0,0,0,0.02); 
-}
-.search-icon-svg { color: #94a3b8; font-size: 1.4rem; }
-.search-bar input { background: transparent; border: none; outline: none; width: 100%; font-size: 1.05rem; color: #4b5563; }
+.i-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 1rem; }
+.i-subtext { font-size: 0.8rem; color: #94a3b8; margin: 0; }
 
-.add-btn { 
-  background: var(--accent-blue); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; 
-  font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;
-}
-.add-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+.stock-info { display: flex; flex-direction: column; }
+.main-stock { font-weight: 600; color: #334155; }
+.sub-stock { font-size: 0.75rem; color: #94a3b8; }
 
-/* --- STATS CARDS --- */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-.stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; transition: transform 0.3s ease; }
-.stat-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
-.stat-card h3 { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.5px; }
-.stat-value { font-size: 1.8rem; font-weight: 800; color: var(--bg-sidebar); margin: 0; }
-.negative { color: #ef4444; font-weight: 600; }
-.positive { color: #10b981; font-weight: 600; }
+.price-tag { background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; color: #1e3a8a; }
 
-/* --- TABLE SECTION --- */
-.activity-card { background: var(--bg-card); padding: 1.8rem; border-radius: 16px; border: 1px solid #e2e8f0; }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.filter-chip { padding: 5px 15px; background: var(--bg-main); border-radius: 20px; font-size: 0.85rem; cursor: pointer; margin-left: 8px; font-weight: 500; }
-.filter-chip.active { background: var(--accent-blue); color: white; }
+/* --- STATUS BADGES --- */
+.badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; display: inline-block; }
+.badge.in-stock { background: #dcfce7; color: #15803d; }
+.badge.low-stock { background: #fef3c7; color: #b45309; }
+.badge.out-of-stock { background: #fee2e2; color: #991b1b; }
 
-.inventory-table { width: 100%; border-collapse: collapse; text-align: left; }
-.inventory-table th { padding: 12px; border-bottom: 2px solid var(--bg-main); color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
-.inventory-table td { padding: 15px 12px; border-bottom: 1px solid var(--bg-main); font-size: 0.95rem; }
+/* --- BUTTONS --- */
+.view-link { color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.view-link:hover { background: #2563eb; color: white; }
+.add-btn { background-color: #2563eb; color: white; border: none; padding: 0.8rem 1.6rem; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.text-right { text-align: right; }
+.empty-state { text-align: center; color: #94a3b8; padding: 4rem !important; font-style: italic; }
 
-/* --- STATUS & ACTIONS --- */
-.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-.in-stock { background: #dcfce7; color: #166534; }
-.low-stock { background: #fef3c7; color: #92400e; }
-.out-of-stock { background: #fee2e2; color: #991b1b; }
+/* --- MODAL --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.modal-content { background: white; width: 500px; border-radius: 20px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8; }
+.form-group { margin-bottom: 1.25rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.form-group input, .modal-select { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit; box-sizing: border-box; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.5rem; }
+.btn-secondary { background: #f1f5f9; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
 
-.action-buttons { display: flex; gap: 10px; }
-.action-buttons button { display: flex; align-items: center; background: #f1f5f9; border: none; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; color: var(--text-primary); }
-.action-buttons button:hover { background: #e2e8f0; }
-
-/* --- MODAL STYLES --- */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(2px); }
-.modal-content { background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-.modal-title { margin-top: 0; margin-bottom: 1.5rem; color: var(--bg-sidebar); font-size: 1.4rem; font-weight: 700; }
-
-.form-group { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-label { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
-input, select { padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
-
-.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 2rem; }
-.cancel-btn { background: #f1f5f9; border: none; padding: 0.8rem 1.8rem; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-secondary); }
-.save-btn { background: var(--accent-blue); color: white; border: none; padding: 0.8rem 1.8rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
-
-.modal-enter-active, .modal-leave-active { transition: opacity 0.3s ease; }
-.modal-enter-from, .modal-leave-to { opacity: 0; }
+/* Transitions */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
