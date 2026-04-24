@@ -16,10 +16,10 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
+        <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
+        </NuxtLink>
+        <NuxtLink to="/dashboard/inventory" class="nav-item router-link-active">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
         <NuxtLink to="/dashboard/billing" class="nav-item">
@@ -28,237 +28,272 @@
         <NuxtLink to="/dashboard/appointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item router-link-active">
+        <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
-        <NuxtLink to="/auth/login" class="logout-btn">
+        <button @click="handleLogout" class="logout-btn">
           <Icon name="lucide:log-out" /> Logout
-        </NuxtLink>
+        </button>
       </div>
     </aside>
 
     <main class="main-content">
       <header class="top-bar">
         <div class="welcome-msg">
-          <h1>Analytics Intelligence</h1>
-          <p>Comprehensive data insights for clinical and operational excellence.</p>
+          <span class="breadcrumb">Supply Chain / Warehouse</span>
+          <h1>Inventory Intelligence</h1>
+          <p>Automated stock tracking and procurement forecasting.</p>
         </div>
         <div class="header-actions">
           <button class="btn-secondary">
-            <Icon name="lucide:filter" /> Filter Date
+            <Icon name="lucide:file-text" /> Order History
           </button>
-          <button class="export-btn">
-            <Icon name="lucide:download" /> Download Full Report
+          <button class="add-btn" @click="openAddModal">
+            <Icon name="lucide:plus" /> Add New Item
           </button>
         </div>
       </header>
 
-      <section class="stats-body">
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <span class="kpi-label">Total Admissions</span>
-              <Icon name="lucide:user-plus" class="kpi-icon" />
+      <div class="scroll-area">
+        <section class="stats-row">
+          <div v-for="stat in inventoryStats" :key="stat.label" class="stat-card">
+            <div class="stat-meta">
+              <span class="label">{{ stat.label }}</span>
+              <Icon :name="stat.icon" class="stat-icon-mini" />
             </div>
-            <h2 class="kpi-value">2,405</h2>
-            <div class="kpi-trend up">
-              <Icon name="lucide:trending-up" /> +8.2% 
-              <span class="trend-label">vs last month</span>
+            <div class="stat-body">
+              <h3 class="value">{{ stat.value }}</h3>
+              <span :class="['trend', stat.trendType]">{{ stat.trend }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="inventory-section">
+          <div class="panel-header">
+            <div class="search-wrapper">
+              <Icon name="lucide:search" class="search-icon" />
+              <input v-model="searchQuery" type="text" placeholder="Search by SKU, Name, or Category..." />
+            </div>
+            <div class="filter-group">
+              <select v-model="selectedCategory" class="minimal-select">
+                <option value="All">All Categories</option>
+                <option>Medication</option>
+                <option>Equipment</option>
+                <option>Disposables</option>
+              </select>
+              <button class="btn-icon" @click="resetFilters"><Icon name="lucide:rotate-ccw" /></button>
             </div>
           </div>
 
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <span class="kpi-label">Bed Occupancy</span>
-              <Icon name="lucide:bed" class="kpi-icon" />
-            </div>
-            <h2 class="kpi-value">84%</h2>
-            <div class="progress-bar-mini"><div class="fill" style="width: 84%"></div></div>
-            <div class="kpi-trend neutral">Near Capacity</div>
+          <div class="table-container">
+            <table class="clinical-table">
+              <thead>
+                <tr>
+                  <th>Item Details</th>
+                  <th>Quantity on Hand</th>
+                  <th>Unit Price</th>
+                  <th>Valuation</th>
+                  <th>Availability</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in filteredInventory" :key="item.id">
+                  <td>
+                    <div class="item-cell">
+                      <div class="sku-badge">{{ item.category.substring(0, 3).toUpperCase() }}</div>
+                      <div class="item-text">
+                        <p class="i-name">{{ item.name }}</p>
+                        <p class="i-sub">SKU-{{ 1000 + item.id }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="stock-cell">
+                      <span class="main-stock">{{ item.stock }} {{ item.unit }}</span>
+                      <div class="stock-progress"><div class="fill" :style="{ width: (item.stock / 5) + '%' }"></div></div>
+                    </div>
+                  </td>
+                  <td>₱{{ item.price }}</td>
+                  <td class="valuation">₱{{ (item.price.replace(',', '') * item.stock).toLocaleString() }}</td>
+                  <td>
+                    <span class="status-dot" :class="item.status.toLowerCase()"></span>
+                    <span class="status-text">{{ item.status }}</span>
+                  </td>
+                  <td class="text-right">
+                    <button class="btn-manage" @click="editItem(item)">Manage</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <span class="kpi-label">Avg. ER Wait Time</span>
-              <Icon name="lucide:clock" class="kpi-icon" />
-            </div>
-            <h2 class="kpi-value">24m</h2>
-            <div class="kpi-trend down">
-              <Icon name="lucide:trending-down" /> -5.4% 
-              <span class="trend-label">efficiency gain</span>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <span class="kpi-label">Revenue Growth</span>
-              <Icon name="lucide:banknote" class="kpi-icon" />
-            </div>
-            <h2 class="kpi-value">$142k</h2>
-            <div class="kpi-trend up">
-              <Icon name="lucide:trending-up" /> +12% 
-              <span class="trend-label">this quarter</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="charts-container">
-          <div class="chart-box main-chart">
-            <div class="chart-header">
-              <div class="title-group">
-                <h3>Patient Demographics & Trends</h3>
-                <p>New vs. Returning patients per month</p>
-              </div>
-              <div class="chart-controls">
-                <button class="tab active">Monthly</button>
-                <button class="tab">Weekly</button>
-              </div>
-            </div>
-            <div class="visual-placeholder bar-chart">
-              <div class="bar-wrapper" v-for="h in [40, 60, 55, 90, 75, 85, 70, 95, 65, 80, 50, 70]" :key="h">
-                <div class="bar" :style="{ height: h + '%' }"></div>
-                <span class="bar-label">M</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="chart-box side-chart">
-            <div class="chart-header">
-              <h3>Specialty Distribution</h3>
-            </div>
-            <div class="pie-container">
-              <div class="visual-placeholder pie-chart">
-                <div class="circle">
-                   <div class="inner-circle"><span>78%</span><small>Capacity</small></div>
-                </div>
-              </div>
-              <ul class="chart-legend">
-                <li>
-                  <span class="dot cardio"></span> 
-                  <span class="dept">Cardiology</span>
-                  <span class="val">40%</span>
-                </li>
-                <li>
-                  <span class="dot neuro"></span> 
-                  <span class="dept">Neurology</span>
-                  <span class="val">30%</span>
-                </li>
-                <li>
-                  <span class="dot ped"></span> 
-                  <span class="dept">Pediatrics</span>
-                  <span class="val">30%</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="performance-table-section">
-          <h3>Department Performance Leaderboard</h3>
-          <table class="stats-table">
-            <thead>
-              <tr>
-                <th>Department</th>
-                <th>Patient Volume</th>
-                <th>Satisfaction Score</th>
-                <th>Avg. Stay</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>General Medicine</td>
-                <td>1,200</td>
-                <td>4.8/5.0</td>
-                <td>3.2 Days</td>
-                <td><span class="status-tag success">Optimal</span></td>
-              </tr>
-              <tr>
-                <td>Emergency Room</td>
-                <td>850</td>
-                <td>4.2/5.0</td>
-                <td>0.4 Days</td>
-                <td><span class="status-tag warning">Busy</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
+
+    <Transition name="fade">
+      <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>{{ isEditing ? 'Update Stock Intelligence' : 'Register New Asset' }}</h3>
+            <button class="close-btn" @click="closeModal">&times;</button>
+          </div>
+          <form @submit.prevent="handleSave" class="clinical-form">
+            <div class="form-group full">
+              <label>Item Description</label>
+              <input type="text" v-model="newItem.name" placeholder="Official medical nomenclature..." required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Category</label>
+                <select v-model="newItem.category">
+                  <option>Medication</option>
+                  <option>Equipment</option>
+                  <option>Disposables</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Unit Type</label>
+                <input type="text" v-model="newItem.unit" placeholder="vials, boxes..." required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Current Count</label>
+                <input type="number" v-model="newItem.stock" required />
+              </div>
+              <div class="form-group">
+                <label>Unit Price (₱)</label>
+                <input type="number" step="0.01" v-model="newItem.price" required />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button v-if="isEditing" type="button" class="btn-danger" @click="deleteItem">Decommission</button>
+              <div class="spacer"></div>
+              <button type="button" class="btn-cancel" @click="closeModal">Cancel</button>
+              <button type="submit" class="btn-confirm">{{ isEditing ? 'Save Changes' : 'Add to Inventory' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
+<script setup>
+import { ref, computed } from 'vue'
+
+const searchQuery = ref('')
+const selectedCategory = ref('All')
+const isModalOpen = ref(false)
+const isEditing = ref(false)
+const editingId = ref(null)
+
+const inventoryStats = [
+  { label: 'Total Valuation', value: '₱2.4M', trend: '+4.2%', trendType: 'up', icon: 'lucide:banknote' },
+  { label: 'Low Stock Alerts', value: '14', trend: 'Critical', trendType: 'down', icon: 'lucide:alert-triangle' },
+  { label: 'Expired (30d)', value: '3', trend: '-2', trendType: 'up', icon: 'lucide:calendar-x' },
+  { label: 'Inventory Turnover', value: '84%', trend: 'Optimal', trendType: 'up', icon: 'lucide:refresh-cw' }
+]
+
+const newItem = ref({ name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' })
+
+const inventoryItems = ref([
+  { id: 1, name: 'Amoxicillin 500mg', category: 'Medication', stock: 450, unit: 'caps', price: '25.00', status: 'In-Stock' },
+  { id: 2, name: 'Surgical Gloves (M)', category: 'Disposables', stock: 12, unit: 'boxes', price: '750.00', status: 'Low-Stock' },
+  { id: 3, name: 'Digital Thermometer', category: 'Equipment', stock: 0, unit: 'pcs', price: '1250.00', status: 'Out-of-Stock' },
+  { id: 4, name: 'Paracetamol Syrup', category: 'Medication', stock: 85, unit: 'bottles', price: '210.00', status: 'In-Stock' },
+])
+
+const filteredInventory = computed(() => {
+  return inventoryItems.value.filter(item => {
+    const s = searchQuery.value.toLowerCase()
+    const matchesSearch = item.name.toLowerCase().includes(s)
+    const matchesCat = selectedCategory.value === 'All' || item.category === selectedCategory.value
+    return matchesSearch && matchesCat
+  })
+})
+
+const resetFilters = () => { searchQuery.value = ''; selectedCategory.value = 'All' }
+const openAddModal = () => { isEditing.value = false; newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }; isModalOpen.value = true }
+const editItem = (item) => { isEditing.value = true; editingId.value = item.id; newItem.value = { ...item }; isModalOpen.value = true }
+const closeModal = () => { isModalOpen.value = false }
+const handleSave = () => {
+  const status = newItem.value.stock > 50 ? 'In-Stock' : (newItem.value.stock > 0 ? 'Low-Stock' : 'Out-of-Stock')
+  if (isEditing.value) {
+    const index = inventoryItems.value.findIndex(i => i.id === editingId.value)
+    inventoryItems.value[index] = { ...newItem.value, status }
+  } else {
+    inventoryItems.value.push({ ...newItem.value, id: Date.now(), status })
+  }
+  closeModal()
+}
+</script>
+
 <style scoped>
-/* --- Keep your existing Sidebar CSS, then add/update these: --- */
+/* --- CONSISTENT LAYOUT CORE --- */
+.dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
+.sidebar { width: 240px; background: #0f172a; padding: 1.5rem 1rem; display: flex; flex-direction: column; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2.5rem; color: white; font-weight: 700; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.7rem 0.8rem; color: #94a3b8; text-decoration: none; font-size: 0.9rem; border-radius: 6px; }
+.nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+.router-link-active { background: #1e293b; color: #3b82f6; box-shadow: inset 3px 0 0 #3b82f6; }
 
-.top-bar p { color: #64748b; margin-top: 4px; font-size: 0.95rem; }
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.top-bar { background: white; padding: 1rem 2rem; border-bottom: 1px solid #e2e8f0; }
+.breadcrumb { font-size: 0.7rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+.top-bar h1 { margin: 4px 0 0; font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+.top-bar p { margin: 2px 0 0; font-size: 0.85rem; color: #64748b; }
+.scroll-area { padding: 1.5rem 2rem; overflow-y: auto; }
 
-.header-actions { display: flex; gap: 12px; }
-.btn-secondary {
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 0.8rem 1.2rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #475569;
-  font-weight: 600;
-}
+/* --- REALISTIC STATS ROW --- */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 1.5rem; }
+.stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; }
+.stat-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.stat-meta .label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+.stat-icon-mini { color: #3b82f6; opacity: 0.7; }
+.stat-body { display: flex; justify-content: space-between; align-items: flex-end; }
+.stat-body .value { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.trend { font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.trend.up { background: #dcfce7; color: #166534; }
+.trend.down { background: #fee2e2; color: #991b1b; }
 
-/* KPI Enhancements */
-.kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
-.kpi-icon { background: #eff6ff; color: #2563eb; padding: 8px; border-radius: 8px; font-size: 1.2rem; }
-.kpi-label { color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+/* --- REFINED TABLE & PANELS --- */
+.inventory-section { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+.panel-header { padding: 1.25rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+.search-wrapper { position: relative; width: 350px; }
+.search-wrapper input { width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.85rem; outline: none; }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1rem; }
 
-.progress-bar-mini { height: 6px; background: #f1f5f9; border-radius: 10px; margin: 1rem 0; overflow: hidden; }
-.progress-bar-mini .fill { height: 100%; background: #2563eb; border-radius: 10px; }
+.clinical-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.clinical-table th { text-align: left; padding: 12px 20px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
+.clinical-table td { padding: 14px 20px; border-bottom: 1px solid #f1f5f9; }
 
-/* Charts Layout */
-.chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
-.title-group h3 { margin: 0; color: #1e293b; font-size: 1.1rem; }
-.title-group p { margin: 4px 0 0; font-size: 0.85rem; color: #94a3b8; }
+.item-cell { display: flex; align-items: center; gap: 12px; }
+.sku-badge { background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; color: #475569; }
+.i-name { font-weight: 600; color: #1e293b; margin: 0; }
+.i-sub { font-size: 0.75rem; color: #94a3b8; margin: 0; }
 
-.chart-controls { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; }
-.tab { border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #64748b; background: transparent; }
-.tab.active { background: white; color: #1e3a8a; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.stock-progress { height: 4px; width: 100px; background: #f1f5f9; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.stock-progress .fill { height: 100%; background: #3b82f6; }
 
-/* Bar Chart Polish */
-.bar-wrapper { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 6%; gap: 8px; }
-.bar-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
-.bar { width: 100%; background: linear-gradient(to top, #2563eb, #60a5fa); border-radius: 4px; transition: height 0.3s ease; }
-.bar:hover { filter: brightness(1.1); cursor: pointer; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.status-dot.in-stock { background: #10b981; }
+.status-dot.low-stock { background: #f59e0b; }
+.status-dot.out-of-stock { background: #ef4444; }
 
-/* Donut Chart Style */
-.circle { position: relative; display: flex; align-items: center; justify-content: center; }
-.inner-circle { 
-  position: absolute; width: 120px; height: 120px; background: white; border-radius: 50%; 
-  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-}
-.inner-circle span { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
-.inner-circle small { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
-
-.chart-legend { margin-top: 1.5rem; }
-.chart-legend li { border: none; justify-content: space-between; }
-.dept { flex: 1; margin-left: 10px; font-weight: 500; }
-.val { font-weight: 700; color: #1e293b; }
-
-/* Table Section */
-.performance-table-section { margin-top: 2rem; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-.performance-table-section h3 { margin-bottom: 1.5rem; color: #1e293b; }
-
-.stats-table { width: 100%; border-collapse: collapse; text-align: left; }
-.stats-table th { padding: 12px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
-.stats-table td { padding: 16px 12px; border-bottom: 1px solid #f1f5f9; color: #475569; font-size: 0.95rem; }
-
-.status-tag { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-.status-tag.success { background: #dcfce7; color: #166534; }
-.status-tag.warning { background: #fef9c3; color: #854d0e; }
-
-.kpi-trend { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; margin-top: 0.5rem; }
-.trend-label { color: #94a3b8; font-weight: 400; }
+/* --- MODAL REFINEMENT --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-content { background: white; width: 500px; border-radius: 12px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+.modal-header { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+.clinical-form label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
+.clinical-form input, .clinical-form select { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; margin-bottom: 1rem; font-size: 0.9rem; }
+.modal-footer { display: flex; gap: 10px; margin-top: 1rem; }
+.btn-confirm { background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1; }
+.btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.btn-danger { background: transparent; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
 </style>
