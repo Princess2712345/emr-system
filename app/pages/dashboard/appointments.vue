@@ -55,9 +55,9 @@
       </header>
 
       <section class="appointment-body">
-        <div class="layout-grid">
+        <div class="side-by-side-container">
           
-          <div class="main-view-area">
+          <div class="view-content">
             <div v-if="currentView === 'list'">
               <div class="schedule-header">
                 <div class="date-display">
@@ -97,9 +97,7 @@
                     </span>
                   </div>
                   <div class="actions">
-                    <button v-if="appt.status === 'Pending'" class="action-btn outline" @click="confirmAppt(appt.id)">
-                      Confirm
-                    </button>
+                    <button v-if="appt.status === 'Pending'" class="action-btn outline" @click="confirmAppt(appt.id)">Confirm</button>
                     <button v-else class="action-btn primary" @click="startVisit(appt.id)">
                       <b>{{ appt.status === 'In Progress' ? 'Continue' : 'Start' }}</b>
                     </button>
@@ -120,12 +118,12 @@
             </div>
           </div>
 
-          <aside class="booking-panel">
-            <div class="form-container-card">
-              <h3 class="form-title">Quick Book</h3>
+          <aside class="booking-sidebar">
+            <div class="booking-card">
+              <h3 class="booking-title">Book Appointment</h3>
               <div class="form-group">
                 <label>Patient Name</label>
-                <input v-model="form.name" type="text" placeholder="e.g. John Doe" />
+                <input v-model="form.name" type="text" placeholder="Full Name" />
               </div>
               <div class="form-row">
                 <div class="form-group">
@@ -139,9 +137,9 @@
               </div>
               <div class="form-group">
                 <label>Reason for Visit</label>
-                <input v-model="form.reason" type="text" placeholder="Consultation" />
+                <input v-model="form.reason" type="text" placeholder="Reason" />
               </div>
-              <button class="submit-btn" @click="submitBooking">Confirm Appointment</button>
+              <button class="submit-btn" @click="submitBooking">Confirm Booking</button>
             </div>
           </aside>
 
@@ -199,13 +197,23 @@ const submitBooking = () => {
   const period = h >= 12 ? 'PM' : 'AM';
   const displayHours = ((h + 11) % 12 + 1);
   const displayTime = `${displayHours}:${minutes} ${period}`;
-  appointments.value.push({ id: Date.now(), date: form.value.date, time: displayTime, duration: '30 min', patientName: form.value.name, reason: form.value.reason || 'General Consultation', status: 'Pending' });
+  
+  appointments.value.push({ 
+    id: Date.now(), 
+    date: form.value.date, 
+    time: displayTime, 
+    duration: '30 min', 
+    patientName: form.value.name, 
+    reason: form.value.reason || 'General Consultation', 
+    status: 'Pending' 
+  });
+  
   form.value = { name: '', time: '', date: '', reason: '' };
 };
 </script>
 
 <style scoped>
-/* --- BASE SIDEBAR & LAYOUT --- */
+/* --- BASE SIDEBAR & LAYOUT (Preserved) --- */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
@@ -222,21 +230,21 @@ const submitBooking = () => {
 .top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; font-weight: 800; }
 .subtitle { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
 
-/* --- SIDE-BY-SIDE GRID LOGIC --- */
-.appointment-body { padding: 2rem 3rem; }
-.layout-grid {
+/* --- SIDE-BY-SIDE CONTAINER --- */
+.appointment-body { padding: 2.5rem 3rem; }
+.side-by-side-container {
   display: grid;
-  grid-template-columns: 1fr 360px; /* Left takes space, Right is fixed */
-  gap: 2rem;
+  grid-template-columns: 1fr 380px; /* Left takes space, Right is fixed */
+  gap: 2.5rem;
   align-items: start;
 }
 
-/* LEFT SIDE STYLES */
-.schedule-header { display: flex; justify-content: space-between; margin-bottom: 1.5rem; align-items: center; }
-.date-display { display: flex; align-items: center; gap: 1rem; background: white; padding: 0.5rem 1rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+/* LEFT SIDE: VIEW CONTENT */
+.schedule-header { display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: center; }
+.date-display { display: flex; align-items: center; gap: 1.5rem; background: white; padding: 0.6rem 1.2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .current-date { font-weight: 700; color: #1e3a8a; }
 .arrow-btn { background: none; border: none; cursor: pointer; color: #2563eb; }
-.filter-pill { padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid #e2e8f0; background: white; cursor: pointer; color: #64748b; font-weight: 600; font-size: 0.8rem; }
+.filter-pill { padding: 0.5rem 1.2rem; border-radius: 20px; border: 1px solid #e2e8f0; background: white; cursor: pointer; color: #64748b; font-weight: 600; font-size: 0.85rem; margin-left: 5px; }
 .filter-pill.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
 
 .appointment-card {
@@ -244,7 +252,7 @@ const submitBooking = () => {
   display: grid;
   grid-template-columns: 100px 1fr 120px 140px; 
   align-items: center;
-  padding: 1.25rem;
+  padding: 1.5rem;
   border-radius: 16px;
   border-left: 5px solid #e2e8f0;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
@@ -253,35 +261,41 @@ const submitBooking = () => {
 .urgent { border-left-color: #f43f5e; background: #fff1f2; }
 .in-progress-card { border-left-color: #3b82f6; background: #eff6ff; }
 
-/* RIGHT SIDE STYLES */
-.booking-panel { position: sticky; top: 2rem; }
-.form-container-card {
+/* CALENDAR TWEAKS FOR NARROW VIEW */
+.calendar-wrapper { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #e2e8f0; gap: 1px; }
+.calendar-day { height: 110px; background: white; padding: 0.8rem; }
+.day-num { font-weight: 700; color: #94a3b8; font-size: 0.9rem; }
+.event-indicator { background: #dbeafe; color: #1e3a8a; font-size: 0.75rem; font-weight: 700; padding: 4px; border-radius: 6px; margin-top: 4px; text-align: center; }
+
+/* RIGHT SIDE: BOOKING PANEL (Preserves Original Modal styles but permanent) */
+.booking-sidebar { position: sticky; top: 2rem; }
+.booking-card {
   background: white;
   padding: 2rem;
   border-radius: 20px;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
   border: 1px solid #e2e8f0;
 }
-.form-title { margin: 0 0 1.5rem 0; font-size: 1.3rem; color: #1e3a8a; font-weight: 800; }
+.booking-title { margin: 0 0 1.5rem 0; font-size: 1.3rem; color: #1e3a8a; font-weight: 800; }
 .form-group { margin-bottom: 1.2rem; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; color: #475569; }
-input { width: 100%; padding: 0.7rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
-.submit-btn { background: #2563eb; color: white; border: none; padding: 0.8rem; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 1rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: #475569; }
+input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 0.9rem; }
+.submit-btn { background: #2563eb; color: white; border: none; padding: 0.8rem; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 1rem; transition: 0.2s; }
+.submit-btn:hover { background: #1d4ed8; }
 
-/* CALENDAR GRID (Narrowed) */
-.calendar-wrapper { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #e2e8f0; gap: 1px; }
-.calendar-day { height: 100px; background: white; padding: 0.8rem; }
-.day-num { font-weight: 700; color: #94a3b8; font-size: 0.8rem; }
-.event-indicator { background: #dbeafe; color: #1e3a8a; font-size: 0.7rem; font-weight: 700; padding: 4px; border-radius: 6px; margin-top: 4px; text-align: center; }
-
-.status-tag { padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; text-transform: uppercase; }
+/* ORIGINAL COMPONENT STYLES */
+.time { font-weight: 800; color: #1e293b; font-size: 1rem; }
+.duration { font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; }
+.p-name { color: #1e3a8a; font-size: 1rem; margin: 0; }
+.p-reason { color: #64748b; margin: 2px 0 0; font-size: 0.85rem; }
+.status-tag { padding: 0.4rem 0.6rem; border-radius: 8px; font-size: 0.7rem; text-transform: uppercase; }
 .confirmed { background: #dcfce7; color: #15803d; }
 .pending { background: #fef3c7; color: #b45309; }
 .in-progress { background: #3b82f6; color: white; }
-.action-btn { padding: 0.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+.action-btn { padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.8rem; width: 100%; }
 .action-btn.primary { background: #1e293b; color: white; border: none; }
 .action-btn.outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
-.calendar-btn { background: white; border: 1px solid #e2e8f0; color: #475569; padding: 0.6rem 1rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.calendar-btn { background: white; border: 1px solid #e2e8f0; color: #475569; padding: 0.7rem 1.4rem; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 </style>
