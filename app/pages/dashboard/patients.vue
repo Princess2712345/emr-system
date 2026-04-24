@@ -252,26 +252,15 @@ const handleRegister = () => { alert('Registration successful!'); isModalOpen.va
 
 <style scoped>
 /* --- BASE LAYOUT --- */
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f1f5f9;
-  font-family: 'Inter', sans-serif;
-}
+.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-/* --- SIDEBAR (Updated with Animations) --- */
-.sidebar {
-  width: 260px;
-  background: #1e3a8a;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem 1.5rem;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  flex-shrink: 0;
-}
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+
 
 /* 1. Animation Keyframes */
 @keyframes slideInSidebar {
