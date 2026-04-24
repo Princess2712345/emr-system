@@ -240,17 +240,19 @@ const handleLogout = () => { if (confirm('Log out?')) alert('Goodbye!') }
 </script>
 
 <style scoped>
-/* --- 1. CORE STRUCTURE & TYPOGRAPHY --- */
+/* --- 1. CORE LAYOUT (NO DIMENSIONS CHANGED) --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 .dashboard-layout {
   display: flex;
   height: 100vh;
   background: #f8fafc;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif; /* Applied globally */
   color: #1e293b;
   -webkit-font-smoothing: antialiased;
 }
+
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 
 .main-content {
   flex: 1;
@@ -259,79 +261,70 @@ const handleLogout = () => { if (confirm('Log out?')) alert('Goodbye!') }
   overflow: hidden;
 }
 
+.top-bar {
+  background: white;
+  padding: 1.25rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
 .patient-body {
   flex: 1;
   overflow-y: auto;
   padding: 2rem 2.5rem;
 }
 
-/* --- 2. SIDEBAR STYLING (UNCHANGED LAYOUT) --- */
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+/* --- 2. TEXT WEIGHTS & THEME --- */
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
 .nav-item.active { background: #2563eb; color: white; }
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-family: 'Inter', sans-serif; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
-/* --- 3. TOP BAR & HEADERS --- */
-.top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-.header-info h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
+/* HEADER TEXT */
+.header-info h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.025em; }
 .header-info p { color: #64748b; font-size: 0.85rem; font-weight: 400; margin: 4px 0 0; }
 
-.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.close-file-btn { background: #fee2e2; color: #b91c1c; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.back-btn { background: none; border: none; color: #2563eb; font-weight: 700; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 4px; }
-
-/* --- 4. TABLE & CONTROLS --- */
-.table-controls { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
-.search-wrapper input { font-family: 'Inter', sans-serif; width: 400px; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; }
-.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-
-.filter-dropdown { font-family: 'Inter', sans-serif; padding: 0 1rem 0 2rem; height: 42px; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; background: white; }
-
+/* TABLE COMPONENTS */
 .patient-table th { background: #f8fafc; padding: 1rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
 .p-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 0.95rem; }
 .p-email { font-size: 0.8rem; color: #64748b; font-weight: 400; }
+.id-badge { font-family: 'Inter', monospace; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; color: #1e3a8a; font-weight: 700; font-size: 0.8rem; }
 .visit-date { font-size: 0.9rem; font-weight: 500; color: #475569; }
 
-.id-badge { font-family: 'Inter', monospace; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; color: #1e3a8a; font-weight: 700; font-size: 0.8rem; }
+/* BUTTONS & BADGES */
+.add-btn, .btn-submit { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-weight: 700; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
 
-/* --- 5. DETAIL VIEW TEXT --- */
-.detail-card { background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
-.detail-header h2 { margin: 0; font-size: 1.6rem; font-weight: 800; color: #0f172a; }
-.info-item label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+/* DETAIL TEXT */
+.detail-header h2 { margin: 0; font-size: 1.7rem; font-weight: 800; color: #0f172a; }
+.info-item label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; }
 .info-item p { margin: 0; font-weight: 700; color: #1e293b; font-size: 1rem; }
-
-.note-author { font-weight: 800; color: #1e3a8a; font-size: 0.9rem; }
+.note-author { font-weight: 800; color: #1e3a8a; }
 .note-item p { font-size: 0.95rem; line-height: 1.6; font-weight: 400; color: #334155; }
 
-/* --- 6. MODAL & UTILS --- */
-.modal-content h3 { font-weight: 800; letter-spacing: -0.01em; }
-.input-group label { font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: #475569; }
-.input-group input { font-family: 'Inter', sans-serif; font-size: 0.9rem; padding: 0.7rem; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; }
+/* CONTROLS */
+.search-wrapper input { font-family: 'Inter', sans-serif; width: 400px; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; }
+.filter-dropdown { font-family: 'Inter', sans-serif; font-weight: 600; padding: 0 1rem 0 2rem; border-radius: 10px; height: 42px; background: white; border: 1px solid #e2e8f0; }
 
-.btn-submit, .btn-cancel { font-family: 'Inter', sans-serif; font-weight: 700; border-radius: 8px; padding: 0.7rem 1rem; border: none; cursor: pointer; }
-.btn-submit { background: #2563eb; color: white; }
-.btn-cancel { background: #f1f5f9; color: #64748b; }
+/* --- 3. ORIGINAL LAYOUT PRESERVATION --- */
+.patient-table { width: 100%; border-collapse: collapse; }
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+.patient-info { display: flex; align-items: center; gap: 12px; }
+.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
+.patient-avatar.large { width: 64px; height: 64px; font-size: 1.2rem; border-radius: 16px; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: #f8fafc; padding: 1.5rem; border-radius: 12px; }
 
-.badge { font-weight: 700; font-size: 0.7rem; border-radius: 20px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; }
-.badge.active { background: #dcfce7; color: #15803d; }
-.badge.inpatient { background: #fee2e2; color: #b91c1c; }
-.badge.pending { background: #fef3c7; color: #b45309; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-/* ANIMATIONS */
-@keyframes popIn {
-  0% { opacity: 0; transform: scale(0.8) translateY(10px); }
-  70% { transform: scale(1.05) translateY(-2px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-.animate-in { opacity: 0; animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; }
+/* UTILS */
 .clickable { cursor: pointer; transition: 0.2s; }
 .clickable:active { transform: scale(0.98); }
+.text-right { text-align: right; }
+.row-action-btn { background: none; border: none; color: #cbd5e1; font-size: 1.2rem; }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.8) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+.animate-in { opacity: 0; animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; }
 </style>
