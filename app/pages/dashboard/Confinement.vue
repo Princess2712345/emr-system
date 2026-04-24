@@ -231,10 +231,11 @@ const handleLogout = () => alert('Logging out...')
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
 /* --- MAIN CONTENT & TOP BAR --- */
 .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
