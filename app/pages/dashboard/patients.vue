@@ -90,11 +90,11 @@
             <table class="patient-table">
               <thead>
                 <tr>
-                  <th>Patient Profile</th>
-                  <th>ID Number</th>
-                  <th>Last Visit</th>
-                  <th>Status</th>
-                  <th class="text-right">Manage</th>
+                  <th>PATIENT PROFILE</th>
+                  <th>ID NUMBER</th>
+                  <th>LAST VISIT</th>
+                  <th>STATUS</th>
+                  <th>MANAGE</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,14 +109,14 @@
                     </div>
                   </td>
                   <td><span class="id-badge">{{ patient.id }}</span></td>
-                  <td class="visit-date">{{ patient.lastVisit }}</td>
+                  <td>{{ patient.lastVisit }}</td>
                   <td>
                     <span class="badge" :class="patient.status.toLowerCase()">
                       <span class="dot"></span> {{ patient.status }}
                     </span>
                   </td>
                   <td class="text-right">
-                    <button class="row-action-btn"><Icon name="lucide:chevron-right" /></button>
+                    <Icon name="lucide:chevron-right" class="row-arrow" />
                   </td>
                 </tr>
               </tbody>
@@ -125,42 +125,48 @@
         </section>
 
         <section v-else class="view-section animate-in">
-          <div class="detail-container">
-            <div class="detail-card profile-section">
-              <div class="detail-header">
-                <div class="patient-avatar large" :class="selectedPatient.colorClass">{{ selectedPatient.initials }}</div>
-                <div class="header-text">
-                  <div class="title-row">
-                    <h2>{{ selectedPatient.name }}</h2>
-                    <span class="badge" :class="selectedPatient.status.toLowerCase()">
-                      <span class="dot"></span> {{ selectedPatient.status }}
-                    </span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="id-badge">{{ selectedPatient.id }}</span>
-                    <span class="location-tag"><Icon name="lucide:map-pin" /> OPD - Wing B</span>
-                  </div>
+          <div class="detail-header-card">
+             <div class="patient-avatar large" :class="selectedPatient.colorClass">{{ selectedPatient.initials }}</div>
+             <div class="detail-title-area">
+                <h2>{{ selectedPatient.name }}</h2>
+                <div class="detail-sub">
+                  <span class="badge" :class="selectedPatient.status.toLowerCase()"><span class="dot"></span> {{ selectedPatient.status }}</span>
+                  <span class="id-badge">{{ selectedPatient.id }}</span>
+                  <span class="loc"><Icon name="lucide:map-pin" /> OPD - Wing B</span>
                 </div>
-              </div>
-              
-              <div class="info-grid">
-                <div class="info-item">
-                  <label><Icon name="lucide:mail" /> Email</label>
-                  <p>{{ selectedPatient.email }}</p>
-                </div>
-                <div class="info-item">
-                  <label><Icon name="lucide:calendar" /> Last Seen</label>
-                  <p>{{ selectedPatient.lastVisit }}</p>
-                </div>
-                <div class="info-item">
-                  <label><Icon name="lucide:droplet" /> Blood Group</label>
-                  <p>O Positive</p>
-                </div>
-                <div class="info-item">
-                  <label><Icon name="lucide:phone" /> Emergency</label>
-                  <p>+1 (555) 0123</p>
-                </div>
-              </div>
+             </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <label><Icon name="lucide:mail" /> EMAIL</label>
+              <p>{{ selectedPatient.email }}</p>
+            </div>
+            <div class="info-item">
+              <label><Icon name="lucide:calendar" /> LAST SEEN</label>
+              <p>{{ selectedPatient.lastVisit }}</p>
+            </div>
+            <div class="info-item">
+              <label><Icon name="lucide:droplet" /> BLOOD GROUP</label>
+              <p>O Positive</p>
+            </div>
+            <div class="info-item">
+              <label><Icon name="lucide:phone" /> EMERGENCY</label>
+              <p>+1 (555) 0123</p>
+            </div>
+          </div>
+
+          <div class="notes-container">
+            <div class="notes-header">
+              <h3><Icon name="lucide:clipboard-list" /> Recent Clinical Notes</h3>
+              <button class="add-note-btn">+ New Note</button>
+            </div>
+            <div class="note-box">
+               <div class="note-head">
+                 <span class="dr">Dr. Aris (Cardiology)</span>
+                 <span class="date">Oct 24, 2025</span>
+               </div>
+               <p>Patient reports mild fatigue. BP stable at 120/80. No abnormal heart murmurs detected. Suggested routine blood work for next follow-up.</p>
             </div>
           </div>
         </section>
@@ -190,60 +196,82 @@ const handleLogout = () => { console.log('Logout') }
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* GLOBAL THEME WITHOUT BREAKING LAYOUT */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+/* --- THE ONLY FONT CHANGE --- */
+* { font-family: 'Inter', sans-serif !important; }
 
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+/* --- RESTORED ORIGINAL LAYOUT (DO NOT TOUCH) --- */
+.dashboard-layout { display: flex; height: 100vh; background: #f8fafc; color: #1e293b; }
 
-/* Nuxt Active Link Style */
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-weight: 800; margin-bottom: 3rem; font-size: 1.25rem; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; }
+.nav-item.active { background: #2563eb; color: white; }
+.sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+.logout-btn { background: none; border: none; color: #fca5a5; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-
-/* MAIN CONTENT */
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .header-info h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.header-info p { color: #64748b; font-size: 0.85rem; margin: 4px 0 0; }
+.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
 .patient-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
 
-/* ICON ALIGNMENT FIXES (CRITICAL) */
-.search-wrapper { position: relative; width: 400px; display: flex; align-items: center; }
-.search-icon-svg { position: absolute; left: 12px; color: #94a3b8; }
-.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 10px; font-family: 'Inter', sans-serif; }
+/* TABLE CONTROLS ALIGNMENT */
+.table-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
+.search-wrapper { position: relative; flex: 1; max-width: 400px; }
+.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-wrapper input { width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #e2e8f0; border-radius: 8px; }
 
-.select-wrapper { position: relative; display: flex; align-items: center; }
-.filter-icon { position: absolute; left: 12px; color: #64748b; z-index: 1; }
-.filter-dropdown { padding: 0 1rem 0 2.5rem; height: 42px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-family: 'Inter', sans-serif; font-weight: 600; }
+.filter-group { display: flex; gap: 10px; align-items: center; }
+.select-wrapper { position: relative; }
+.filter-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
+.filter-dropdown { padding: 8px 10px 8px 30px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-weight: 600; }
+.reset-btn { padding: 8px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
-/* TABLE RE-STABILIZED */
-.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+/* TABLE RE-ALIGNED */
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .patient-table { width: 100%; border-collapse: collapse; }
-.patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
-.patient-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+.patient-table th { padding: 15px 20px; text-align: left; font-size: 11px; color: #64748b; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; }
+.patient-table td { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; }
 
 .patient-info { display: flex; align-items: center; gap: 12px; }
-.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-.p-name { font-weight: 700; margin: 0; }
-.p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
-.id-badge { font-family: 'Inter', monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; color: #1e3a8a; }
+.patient-avatar { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
+.p-name { font-weight: 700; margin: 0; font-size: 14px; }
+.p-email { font-size: 12px; color: #64748b; margin: 0; }
+.id-badge { background: #f1f5f9; padding: 3px 8px; border-radius: 5px; color: #1e3a8a; font-weight: 700; font-size: 12px; }
 
-/* COLORS */
+/* DETAIL VIEW RE-ALIGNED */
+.detail-header-card { display: flex; gap: 20px; align-items: center; margin-bottom: 30px; }
+.detail-title-area h2 { margin: 0; font-size: 24px; font-weight: 800; }
+.detail-sub { display: flex; align-items: center; gap: 15px; margin-top: 8px; }
+.loc { font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 5px; }
+
+.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+.info-item { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9; }
+.info-item label { font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+.info-item p { margin: 0; font-weight: 700; font-size: 15px; }
+
+.notes-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+.notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.note-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9; }
+.note-head { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.dr { font-weight: 800; color: #1e3a8a; font-size: 14px; }
+.date { font-size: 12px; color: #94a3b8; }
+
+/* AVATAR COLORS */
 .purple { background: #f3e8ff; color: #7e22ce; }
 .pink { background: #fce7f3; color: #db2777; }
 .teal { background: #ccfbf1; color: #0d9488; }
+.patient-avatar.large { width: 60px; height: 60px; font-size: 20px; }
 
-.badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+/* BADGES */
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.inpatient { background: #fee2e2; color: #b91c1c; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-.clickable { cursor: pointer; transition: 0.2s; }
-.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.animate-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>
