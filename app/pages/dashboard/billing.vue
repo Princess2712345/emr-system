@@ -224,11 +224,17 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .billing-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
 
 /* --- FINANCIAL STATS (LIFT & DARKEN HOVER) --- */
-.billing-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+/* --- FIXED FINANCIAL STATS HOVER --- */
+.billing-stats { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+  gap: 1.5rem; 
+  margin-bottom: 2.5rem; 
+}
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; margin-top: 20px; }
+  to { opacity: 1; margin-top: 0px; }
 }
 
 .b-stat-card { 
@@ -239,7 +245,10 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
   animation: fadeInUp 0.6s ease-out forwards;
   opacity: 0;
   cursor: pointer;
-  /* Snappy 0.2s transition to match action buttons */
+  
+  /* Critical: This ensures the transform is ready to move */
+  display: block; 
+  transform: translateY(0); 
   transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -248,16 +257,13 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .b-stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); animation-delay: 0.2s; }
 .b-stat-card.green { background: linear-gradient(135deg, #10b981, #059669); animation-delay: 0.3s; }
 
-/* LIFT & DARKEN EFFECT */
+/* THE FIX: Forced Lift */
 .b-stat-card:hover {
-  transform: translateY(-1px); /* Lifts slightly upward */
-  filter: brightness(90%);      /* Darkens the color slightly */
-  box-shadow: 0 6px 15px rgba(0,0,0,0.1); /* Slightly deeper shadow */
+  /* Using !important ensures it overrides the animation's end-state if stuck */
+  transform: translateY(-5px) !important; 
+  filter: brightness(92%);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.15);
 }
-
-.b-label { font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; font-weight: 600; }
-.b-value { font-size: 1.8rem; font-weight: 800; margin: 5px 0 0; }
-
 /* --- TABLE CONTROLS --- */
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 2rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 600px; display: flex; align-items: center; }
