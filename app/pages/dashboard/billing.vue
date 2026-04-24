@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
+         <Icon name="mdi:hospital-building" class="icon-blue-light" />
         <span class="logo-text">EMR System</span>
       </div>
       
@@ -16,9 +16,9 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-        <NuxtLink to="/dashboard/confinement" class="nav-item">
+         <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
-        </NuxtLink>
+         </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
@@ -223,7 +223,7 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .top-bar p { color: #64748b; margin-top: 4px; }
 .billing-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
 
-/* --- FINANCIAL STATS (WITH REQUESTED HOVER) --- */
+/* --- FINANCIAL STATS (LIFT & DARKEN HOVER) --- */
 .billing-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
 
 @keyframes fadeInUp {
@@ -239,32 +239,20 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
   animation: fadeInUp 0.6s ease-out forwards;
   opacity: 0;
   cursor: pointer;
-  /* Optimized transition for the hover effects */
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              background 0.3s ease, 
-              box-shadow 0.3s ease,
-              color 0.3s ease;
-  border: 1px solid transparent;
+  /* Snappy 0.2s transition to match action buttons */
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Base Gradients */
+/* Individual Gradient Setup */
 .b-stat-card.blue { background: linear-gradient(135deg, #3b82f6, #1e3a8a); animation-delay: 0.1s; }
 .b-stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); animation-delay: 0.2s; }
 .b-stat-card.green { background: linear-gradient(135deg, #10b981, #059669); animation-delay: 0.3s; }
 
-/* REPLACED HOVER EFFECTS */
+/* LIFT & DARKEN EFFECT */
 .b-stat-card:hover {
-  transform: translateY(-8px);
-  background: rgba(255, 255, 255, 0.9); /* Card turns white-ish */
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  color: #1e3a8a; /* Text changes to dark blue so it's readable on light background */
-  border-color: #e2e8f0;
-}
-
-/* Adjust label/value color on hover so they don't disappear */
-.b-stat-card:hover .b-label,
-.b-stat-card:hover .b-value {
-  color: inherit; 
+  transform: translateY(-1px); /* Lifts slightly upward */
+  filter: brightness(90%);      /* Darkens the color slightly */
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1); /* Slightly deeper shadow */
 }
 
 .b-label { font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; font-weight: 600; }
