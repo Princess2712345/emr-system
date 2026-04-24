@@ -189,7 +189,7 @@ const handleLogout = () => { if (confirm('Log out?')) alert('Goodbye!') }
 
 /* SIDEBAR & LOGO */
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 3rem; padding-left: 0.5rem; height: 32px; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .logo-icon { color: #60a5fa; font-size: 24px !important; width: 24px; height: 24px; flex-shrink: 0; }
 .logo-text { font-size: 20px; font-weight: 800; line-height: 1; color: white; letter-spacing: -0.5px; }
 
