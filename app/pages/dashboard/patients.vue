@@ -10,19 +10,19 @@
         <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
-        <NuxtLink to="/dashboard/patients" class="nav-item">
+        <NuxtLink to="/dashboard/patients" class="nav-item active">
           <Icon name="lucide:users" /> Patients
         </NuxtLink>
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
+        <NuxtLink to="/dashboard/confinement" class="nav-item">
           <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
+        </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item active">
+        <NuxtLink to="/dashboard/billing" class="nav-item">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
         <NuxtLink to="/dashboard/appointments" class="nav-item">
@@ -34,11 +34,13 @@
       </nav>
 
       <div class="sidebar-footer">
-        <NuxtLink to="/auth/login" class="logout-btn">
+        <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" /> Logout
-        </NuxtLink>
+        </button>
       </div>
     </aside>
+
+
 
     <main class="main-content">
       <header class="top-bar">
@@ -377,9 +379,22 @@ const handleRegister = () => { alert('Patient Registered'); isModalOpen.value = 
 .text-right { text-align: right; }
 .row-action-btn { background: none; border: none; color: #cbd5e1; font-size: 1.2rem; }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes popIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8) translateY(10px); 
+  }
+  70% { 
+    transform: scale(1.05) translateY(-2px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
 }
-.animate-in { animation: fadeIn 0.3s ease-out forwards; }
+
+.animate-in { 
+  opacity: 0; 
+  animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; 
+}
 </style>
