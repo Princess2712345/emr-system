@@ -42,11 +42,9 @@
 
     <main class="main-content">
       <header class="top-bar">
-        <div class="search-section">
-          <div class="search-bar">
-            <Icon name="lucide:search" class="search-icon-svg" />
-            <input type="text" placeholder="Search inventory items..." aria-label="Inventory Search" />
-          </div>
+        <div class="header-text">
+          <h1>Inventory Management</h1>
+          <p>Monitor and manage your medical supplies and equipment.</p>
         </div>
         <div class="user-profile">
           <div class="notification-wrapper clickable" title="Notifications">
@@ -60,9 +58,11 @@
       <section class="dashboard-body">
         <div class="welcome-header">
           <div class="header-flex">
-            <div class="header-text">
-              <h1>Inventory Management</h1>
-              <p>Monitor and manage your medical supplies and equipment.</p>
+            <div class="search-section">
+              <div class="search-bar">
+                <Icon name="lucide:search" class="search-icon-svg" />
+                <input type="text" placeholder="Search inventory items..." aria-label="Inventory Search" />
+              </div>
             </div>
             <button class="add-btn" @click="showModal = true">+ Add New Item</button>
           </div>
@@ -248,18 +248,16 @@ const handleLogout = () => {
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
-.inventory-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
-
-.search-bar { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 0.5rem 1.2rem; width: 380px; display: flex; align-items: center; gap: 10px; }
-.search-icon-svg { color: var(--text-secondary); font-size: 1.1rem; }
-.search-bar input { background: transparent; border: none; outline: none; width: 100%; font-size: 0.9rem; }
 
 /* --- DASHBOARD BODY --- */
 .dashboard-body { padding: 2.5rem 3rem; max-width: 1400px; width: 100%; }
 .welcome-header { margin-bottom: 2.5rem; }
 .header-flex { display: flex; justify-content: space-between; align-items: center; }
-.header-text h1 { font-size: 1.6rem; color: var(--bg-sidebar); margin: 0; font-weight: 700; }
-.header-text p { color: var(--text-secondary); margin-top: 5px; }
+
+/* Search bar styling */
+.search-bar { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 0.5rem 1.2rem; width: 380px; display: flex; align-items: center; gap: 10px; }
+.search-icon-svg { color: var(--text-secondary); font-size: 1.1rem; }
+.search-bar input { background: transparent; border: none; outline: none; width: 100%; font-size: 0.9rem; }
 
 .add-btn { 
   background: var(--accent-blue); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; 
