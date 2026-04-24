@@ -119,13 +119,6 @@
 </template>
 
 <style scoped>
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f1f5f9;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-}
-
 /* --- SIDEBAR RESTORATION --- */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
