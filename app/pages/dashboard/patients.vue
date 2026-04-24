@@ -162,205 +162,88 @@
                 </div>
               </div>
             </div>
-
-            <div class="detail-card notes-section">
-              <div class="section-title">
-                <div class="title-left">
-                  <Icon name="lucide:clipboard-list" />
-                  <h3>Recent Clinical Notes</h3>
-                </div>
-                <button class="add-note-btn clickable"><Icon name="lucide:plus" /> New Note</button>
-              </div>
-              
-              <div class="note-item">
-                <div class="note-meta">
-                  <span class="note-author">Dr. Aris (Cardiology)</span>
-                  <span class="note-date">Oct 24, 2025</span>
-                </div>
-                <p>Patient reports mild fatigue. BP stable at 120/80. No abnormal heart murmurs detected. Suggested routine blood work for next follow-up.</p>
-              </div>
-            </div>
           </div>
         </section>
       </div>
     </main>
-
-    <Transition name="fade">
-      <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Register New Patient</h3>
-            <button class="close-btn" @click="isModalOpen = false"><Icon name="lucide:x" /></button>
-          </div>
-          <form class="modal-form" @submit.prevent="handleRegister">
-            <div class="input-group">
-              <label>Full Name</label>
-              <input type="text" placeholder="Enter patient name" required />
-            </div>
-            <div class="input-group">
-              <label>Email Address</label>
-              <input type="email" placeholder="email@hospital.com" required />
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn-cancel" @click="isModalOpen = false">Cancel</button>
-              <button type="submit" class="btn-submit">Create Record</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-
 const searchQuery = ref('')
 const selectedStatus = ref('All')
 const selectedPatient = ref(null)
-const isModalOpen = ref(false)
-
 const patients = ref([
   { initials: 'PRP', name: 'Penny Rose Peduhan', email: 'ppeduhan@email.com', id: '#EMR-2045', lastVisit: 'Oct 24, 2025', status: 'Active', colorClass: 'purple' },
   { initials: 'HJB', name: 'Harvey Jhon Bacla-an', email: 'hbaclaan@email.com', id: '#EMR-1192', lastVisit: 'Oct 20, 2025', status: 'Inpatient', colorClass: 'pink' },
   { initials: 'PAB', name: 'Phoebe Angel Barbecho', email: 'pbarbecho@email.com', id: '#EMR-8830', lastVisit: 'Jan 15, 2026', status: 'Pending', colorClass: 'teal' }
 ])
-
 const filteredPatients = computed(() => {
-  return patients.value.filter(p => {
-    const s = searchQuery.value.toLowerCase()
-    return p.name.toLowerCase().includes(s) || p.id.toLowerCase().includes(s)
-  })
+  return patients.value.filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
 })
-
 const viewPatientFile = (p) => { selectedPatient.value = p }
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
-const handleRegister = () => { alert('Patient Registered'); isModalOpen.value = false }
-const handleLogout = () => { alert('Logged out') }
+const handleLogout = () => { console.log('Logout') }
 </script>
 
 <style scoped>
-/* --- 1. CORE STRUCTURE (RESTORED EXACTLY) --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-.dashboard-layout {
-  display: flex;
-  height: 100vh;
-  background: #f8fafc;
-  font-family: 'Inter', sans-serif;
-  color: #1e293b;
-}
-
-.sidebar {
-  width: 260px;
-  background: #1e3a8a;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem 1.5rem;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.top-bar {
-  background: white;
-  padding: 1.25rem 2.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.patient-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 2rem 2.5rem;
-}
-
-/* --- 2. SIDEBAR STYLING (RESTORED) --- */
+/* GLOBAL THEME WITHOUT BREAKING LAYOUT */
+.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.nav-item.active { background: #2563eb; color: white; }
+
+/* Nuxt Active Link Style */
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
-/* --- 3. UI COMPONENTS (RESTORED CARD BACKGROUNDS) --- */
-.header-info h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; }
-.header-info p { color: #64748b; font-size: 0.85rem; margin: 4px 0 0; }
+/* MAIN CONTENT */
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.header-info h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.patient-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
 
-.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.close-file-btn { background: #fee2e2; color: #b91c1c; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.back-btn { background: none; border: none; color: #2563eb; font-weight: 700; display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 4px; }
+/* ICON ALIGNMENT FIXES (CRITICAL) */
+.search-wrapper { position: relative; width: 400px; display: flex; align-items: center; }
+.search-icon-svg { position: absolute; left: 12px; color: #94a3b8; }
+.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 10px; font-family: 'Inter', sans-serif; }
 
-/* TABLE CONTROLS */
-.table-controls { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
-.search-wrapper { position: relative; width: 400px; }
-.search-wrapper input { width: 100%; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; font-family: 'Inter', sans-serif; }
-.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.filter-dropdown { padding: 0 1rem 0 2rem; height: 42px; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; background: white; font-family: 'Inter', sans-serif; }
+.select-wrapper { position: relative; display: flex; align-items: center; }
+.filter-icon { position: absolute; left: 12px; color: #64748b; z-index: 1; }
+.filter-dropdown { padding: 0 1rem 0 2.5rem; height: 42px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-family: 'Inter', sans-serif; font-weight: 600; }
 
-/* TABLE (RESTORED WHITE BACKGROUND) */
-.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+/* TABLE RE-STABILIZED */
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
 .patient-table { width: 100%; border-collapse: collapse; }
-.patient-table th { background: #f8fafc; padding: 1rem; text-align: left; font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; font-weight: 700; }
-.patient-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.patient-row:hover { background: #f8fafc; }
+.patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
+.patient-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
 
 .patient-info { display: flex; align-items: center; gap: 12px; }
-.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
-.patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
-.patient-avatar.pink { background: #fce7f3; color: #db2777; }
-.patient-avatar.teal { background: #ccfbf1; color: #0d9488; }
-.patient-avatar.large { width: 64px; height: 64px; font-size: 1.2rem; border-radius: 16px; }
-
-.p-name { font-weight: 700; color: #1e293b; margin: 0; }
+.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+.p-name { font-weight: 700; margin: 0; }
 .p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
-.id-badge { font-family: monospace; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; color: #1e3a8a; font-weight: 700; font-size: 0.8rem; }
+.id-badge { font-family: 'Inter', monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; color: #1e3a8a; }
 
-/* BADGES */
-.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+/* COLORS */
+.purple { background: #f3e8ff; color: #7e22ce; }
+.pink { background: #fce7f3; color: #db2777; }
+.teal { background: #ccfbf1; color: #0d9488; }
+
+.badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.inpatient { background: #fee2e2; color: #b91c1c; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-/* --- 4. DETAIL VIEW (RESTORED CARDS) --- */
-.detail-card { background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
-.detail-header { display: flex; gap: 20px; align-items: center; margin-bottom: 2rem; }
-.title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-.title-row h2 { margin: 0; font-size: 1.6rem; color: #0f172a; font-weight: 800; }
-.meta-row { display: flex; gap: 15px; align-items: center; color: #64748b; font-size: 0.85rem; font-weight: 500; }
-
-.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: #f8fafc; padding: 1.5rem; border-radius: 12px; }
-.info-item label { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; }
-.info-item p { margin: 0; font-weight: 700; color: #1e293b; font-size: 1rem; }
-
-.section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.title-left { display: flex; align-items: center; gap: 10px; color: #1e3a8a; }
-.title-left h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
-
-.note-item { padding: 1.5rem; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; }
-.note-meta { display: flex; justify-content: space-between; margin-bottom: 0.8rem; }
-.note-author { font-weight: 800; color: #1e3a8a; font-size: 0.9rem; }
-
-/* --- 5. UTILS --- */
 .clickable { cursor: pointer; transition: 0.2s; }
-.clickable:active { transform: scale(0.98); }
-.text-right { text-align: right; }
-.row-action-btn { background: none; border: none; color: #cbd5e1; font-size: 1.2rem; cursor: pointer; }
-
-@keyframes popIn { 0% { opacity: 0; transform: scale(0.8) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-.animate-in { opacity: 0; animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; }
+.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 </style>
