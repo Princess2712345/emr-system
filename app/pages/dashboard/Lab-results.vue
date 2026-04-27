@@ -189,7 +189,6 @@ const selectedCategory = ref('All')
 const isModalOpen = ref(false)
 const selectedFile = ref(null)
 
-// Initializing form data
 const newRecord = ref({
   patientName: '',
   category: 'Hematology',
@@ -215,7 +214,6 @@ const onFileChange = (e) => {
 }
 
 const handleFileUpload = () => {
-  // 1. Create the new entry from the form inputs
   const newEntry = {
     id: Date.now(),
     testName: newRecord.value.testName || 'New Lab Report',
@@ -224,26 +222,47 @@ const handleFileUpload = () => {
     category: newRecord.value.category,
     date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     status: 'Pending',
-    colorClass: 'teal' // New uploads get a distinct color
+    colorClass: 'teal'
   }
   
-  // 2. Add to the list (at the top)
   labResults.value.unshift(newEntry)
-  
-  // 3. Reset the form and close modal
   isModalOpen.value = false
   selectedFile.value = null
   newRecord.value = { patientName: '', category: 'Hematology', testName: '' }
-  
   alert('Lab result successfully added to the directory!')
 }
 
 const resetFilters = () => { searchQuery.value = ''; selectedCategory.value = 'All' }
-const handleLogout = () => { alert('Logging out...') }
+
+/**
+ * Functional Logout Logic
+ * Clears the auth cookie and redirects to the authentication page.
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      // 1. Clear Nuxt auth cookie
+      const token = useCookie('auth_token')
+      token.value = null
+      
+      // 2. Clear client-side storage
+      if (process.client) {
+        localStorage.clear()
+        sessionStorage.clear()
+      }
+
+      // 3. Navigate back to login page
+      await navigateTo('/auth')
+      
+    } catch (error) {
+      console.error('Logout process failed:', error)
+    }
+  }
+}
 </script>
 
 <style scoped>
-/* ALL STYLES REMAIN UNCHANGED TO PRESERVE YOUR DESIGN */
+/* [Styles preserved exactly as provided in the original code] */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
@@ -256,7 +275,7 @@ const handleLogout = () => { alert('Logging out...') }
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
 .main-content { flex: 1; display: flex; flex-direction: column; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
@@ -290,7 +309,6 @@ const handleLogout = () => { alert('Logging out...') }
 .view-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
 .add-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
 
-/* MODAL STYLES */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
 .modal-content { background: white; width: 90%; max-width: 480px; border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
