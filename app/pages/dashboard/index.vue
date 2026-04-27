@@ -220,7 +220,7 @@ const refreshData = () => { alert('Data refreshed!') }
 }
 
 /* 1. POP-IN ENTRANCE ANIMATION */
-@keyframes popIn {
+@keyframes fadeInUp {
   0% { 
     opacity: 0; 
     transform: scale(0.8) translateY(10px); 
@@ -236,7 +236,7 @@ const refreshData = () => { alert('Data refreshed!') }
 
 .animate-in { 
   opacity: 0; 
-  animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; 
+  animation: fadeInUp 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; 
 }
 
 /* 2. PERSPECTIVE HOVER EFFECT */
