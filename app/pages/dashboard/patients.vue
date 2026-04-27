@@ -66,10 +66,6 @@
       <div class="patient-body">
         <section v-if="!selectedPatient" class="view-section animate-in">
           <div class="table-controls">
-            <div class="search-wrapper">
-              <Icon name="lucide:search" class="search-icon-svg" />
-              <input v-model="searchQuery" type="text" placeholder="Search by name, ID, or email..." />
-            </div>
             <div class="filter-group">
               <div class="select-wrapper">
                 <Icon name="lucide:filter" class="filter-icon" />
@@ -83,6 +79,11 @@
               <button class="reset-btn clickable" @click="resetFilters">
                 <Icon name="lucide:rotate-ccw" />
               </button>
+            </div>
+
+            <div class="search-wrapper">
+              <Icon name="lucide:search" class="search-icon-svg" />
+              <input v-model="searchQuery" type="text" placeholder="Search by name, ID, or email..." />
             </div>
           </div>
 
@@ -159,14 +160,15 @@
           <div class="notes-container">
             <div class="notes-header">
               <h3><Icon name="lucide:clipboard-list" /> Recent Clinical Notes</h3>
-              <button class="add-note-btn">+ New Note</button>
+              <button class="add-note-btn clickable" @click="handleNewNote">+ New Note</button>
             </div>
-            <div class="note-box">
+            
+            <div v-for="(note, index) in patientNotes" :key="index" class="note-box">
                <div class="note-head">
-                 <span class="dr">Dr. Aris (Cardiology)</span>
-                 <span class="date">Oct 24, 2025</span>
+                 <span class="dr">{{ note.doctor }}</span>
+                 <span class="date">{{ note.date }}</span>
                </div>
-               <p>Patient reports mild fatigue. BP stable at 120/80. No abnormal heart murmurs detected. Suggested routine blood work for next follow-up.</p>
+               <p>{{ note.content }}</p>
             </div>
           </div>
         </section>
@@ -177,31 +179,59 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+
 const searchQuery = ref('')
 const selectedStatus = ref('All')
 const selectedPatient = ref(null)
+
 const patients = ref([
   { initials: 'PRP', name: 'Penny Rose Peduhan', email: 'ppeduhan@email.com', id: '#EMR-2045', lastVisit: 'Oct 24, 2025', status: 'Active', colorClass: 'purple' },
   { initials: 'HJB', name: 'Harvey Jhon Bacla-an', email: 'hbaclaan@email.com', id: '#EMR-1192', lastVisit: 'Oct 20, 2025', status: 'Inpatient', colorClass: 'pink' },
   { initials: 'PAB', name: 'Phoebe Angel Barbecho', email: 'pbarbecho@email.com', id: '#EMR-8830', lastVisit: 'Jan 15, 2026', status: 'Pending', colorClass: 'teal' }
 ])
+
+// Mock data for clinical notes
+const patientNotes = ref([
+  { 
+    doctor: 'Dr. Aris (Cardiology)', 
+    date: 'Oct 24, 2025', 
+    content: 'Patient reports mild fatigue. BP stable at 120/80. No abnormal heart murmurs detected. Suggested routine blood work for next follow-up.' 
+  }
+])
+
 const filteredPatients = computed(() => {
-  return patients.value.filter(p => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+  return patients.value.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                          p.id.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesStatus = selectedStatus.value === 'All' || p.status === selectedStatus.value;
+    return matchesSearch && matchesStatus;
+  })
 })
+
 const viewPatientFile = (p) => { selectedPatient.value = p }
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
 const handleLogout = () => { console.log('Logout') }
+
+// New Note Function
+const handleNewNote = () => {
+  const newNote = prompt("Enter clinical note:")
+  if (newNote) {
+    patientNotes.value.unshift({
+      doctor: 'Dr. User (Internal Medicine)',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      content: newNote
+    })
+  }
+}
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* --- THE ONLY FONT CHANGE --- */
 * { font-family: 'Inter', sans-serif !important; }
 
-/* --- RESTORED ORIGINAL LAYOUT (DO NOT TOUCH) --- */
+/* --- CORE LAYOUT --- */
 .dashboard-layout { display: flex; height: 100vh; background: #f8fafc; color: #1e293b; }
-
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-weight: 800; margin-bottom: 3rem; font-size: 1.25rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; }
@@ -213,35 +243,45 @@ const handleLogout = () => { console.log('Logout') }
 .top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .header-info h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
 .header-info p { color: #64748b; font-size: 0.85rem; margin: 4px 0 0; }
-.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
+/* --- COLORED ACTION BUTTONS --- */
+.add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.add-btn:hover { background: #1d4ed8; }
+
+.back-btn { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.back-btn:hover { background: #e2e8f0; }
+
+.close-file-btn { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+.close-file-btn:hover { background: #fecaca; }
+
+.add-note-btn { background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.add-note-btn:hover { background: #1d4ed8; }
+
+/* --- TABLE CONTROLS (STATUS LEFT) --- */
 .patient-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
-
-/* TABLE CONTROLS ALIGNMENT */
-.table-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
-.search-wrapper { position: relative; flex: 1; max-width: 400px; }
+.table-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; width: 100%; }
+.filter-group { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+.search-wrapper { position: relative; flex: 1; }
 .search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 .search-wrapper input { width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #e2e8f0; border-radius: 8px; }
 
-.filter-group { display: flex; gap: 10px; align-items: center; }
 .select-wrapper { position: relative; }
 .filter-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
-.filter-dropdown { padding: 8px 10px 8px 30px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-weight: 600; }
+.filter-dropdown { padding: 8px 10px 8px 30px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-weight: 600; min-width: 160px; }
 .reset-btn { padding: 8px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
-/* TABLE RE-ALIGNED */
+/* --- TABLE STYLES --- */
 .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .patient-table { width: 100%; border-collapse: collapse; }
 .patient-table th { padding: 15px 20px; text-align: left; font-size: 11px; color: #64748b; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; }
 .patient-table td { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; }
-
 .patient-info { display: flex; align-items: center; gap: 12px; }
 .patient-avatar { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
 .p-name { font-weight: 700; margin: 0; font-size: 14px; }
 .p-email { font-size: 12px; color: #64748b; margin: 0; }
 .id-badge { background: #f1f5f9; padding: 3px 8px; border-radius: 5px; color: #1e3a8a; font-weight: 700; font-size: 12px; }
 
-/* DETAIL VIEW RE-ALIGNED */
+/* --- DETAIL VIEW --- */
 .detail-header-card { display: flex; gap: 20px; align-items: center; margin-bottom: 30px; }
 .detail-title-area h2 { margin: 0; font-size: 24px; font-weight: 800; }
 .detail-sub { display: flex; align-items: center; gap: 15px; margin-top: 8px; }
@@ -254,18 +294,18 @@ const handleLogout = () => { console.log('Logout') }
 
 .notes-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
 .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.note-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9; }
+.note-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9; margin-bottom: 12px; }
 .note-head { display: flex; justify-content: space-between; margin-bottom: 10px; }
 .dr { font-weight: 800; color: #1e3a8a; font-size: 14px; }
 .date { font-size: 12px; color: #94a3b8; }
 
-/* AVATAR COLORS */
+/* --- AVATAR COLORS --- */
 .purple { background: #f3e8ff; color: #7e22ce; }
 .pink { background: #fce7f3; color: #db2777; }
 .teal { background: #ccfbf1; color: #0d9488; }
 .patient-avatar.large { width: 60px; height: 60px; font-size: 20px; }
 
-/* BADGES */
+/* --- BADGES --- */
 .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.inpatient { background: #fee2e2; color: #b91c1c; }
