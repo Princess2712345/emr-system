@@ -190,7 +190,6 @@ const patients = ref([
   { initials: 'PAB', name: 'Phoebe Angel Barbecho', email: 'pbarbecho@email.com', id: '#EMR-8830', lastVisit: 'Jan 15, 2026', status: 'Pending', colorClass: 'teal' }
 ])
 
-// Mock data for clinical notes
 const patientNotes = ref([
   { 
     doctor: 'Dr. Aris (Cardiology)', 
@@ -210,9 +209,33 @@ const filteredPatients = computed(() => {
 
 const viewPatientFile = (p) => { selectedPatient.value = p }
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
-const handleLogout = () => { console.log('Logout') }
 
-// New Note Function
+/**
+ * Functional Logout
+ * Clears auth token and redirects to the auth page.
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      // 1. Clear Nuxt auth cookie
+      const token = useCookie('auth_token')
+      token.value = null
+      
+      // 2. Clear storage
+      if (process.client) {
+        localStorage.clear()
+        sessionStorage.clear()
+      }
+
+      // 3. Redirect back to login/auth page
+      await navigateTo('/auth')
+      
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+}
+
 const handleNewNote = () => {
   const newNote = prompt("Enter clinical note:")
   if (newNote) {
@@ -226,11 +249,11 @@ const handleNewNote = () => {
 </script>
 
 <style scoped>
+/* [Styles preserved exactly as provided] */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 * { font-family: 'Inter', sans-serif !important; }
 
-/* --- CORE LAYOUT --- */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
@@ -240,7 +263,6 @@ const handleNewNote = () => {
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
 
-/* Nuxt Active Link Style */
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
@@ -251,7 +273,6 @@ const handleNewNote = () => {
 .header-info h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
 .header-info p { color: #64748b; font-size: 0.85rem; margin: 4px 0 0; }
 
-/* --- COLORED ACTION BUTTONS --- */
 .add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
 .add-btn:hover { background: #1d4ed8; }
 
@@ -264,7 +285,6 @@ const handleNewNote = () => {
 .add-note-btn { background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 .add-note-btn:hover { background: #1d4ed8; }
 
-/* --- TABLE CONTROLS (STATUS LEFT) --- */
 .patient-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
 .table-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; width: 100%; }
 .filter-group { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
@@ -277,7 +297,6 @@ const handleNewNote = () => {
 .filter-dropdown { padding: 8px 10px 8px 30px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-weight: 600; min-width: 160px; }
 .reset-btn { padding: 8px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
-/* --- TABLE STYLES --- */
 .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .patient-table { width: 100%; border-collapse: collapse; }
 .patient-table th { padding: 15px 20px; text-align: left; font-size: 11px; color: #64748b; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; }
@@ -288,7 +307,6 @@ const handleNewNote = () => {
 .p-email { font-size: 12px; color: #64748b; margin: 0; }
 .id-badge { background: #f1f5f9; padding: 3px 8px; border-radius: 5px; color: #1e3a8a; font-weight: 700; font-size: 12px; }
 
-/* --- DETAIL VIEW --- */
 .detail-header-card { display: flex; gap: 20px; align-items: center; margin-bottom: 30px; }
 .detail-title-area h2 { margin: 0; font-size: 24px; font-weight: 800; }
 .detail-sub { display: flex; align-items: center; gap: 15px; margin-top: 8px; }
@@ -306,13 +324,11 @@ const handleNewNote = () => {
 .dr { font-weight: 800; color: #1e3a8a; font-size: 14px; }
 .date { font-size: 12px; color: #94a3b8; }
 
-/* --- AVATAR COLORS --- */
 .purple { background: #f3e8ff; color: #7e22ce; }
 .pink { background: #fce7f3; color: #db2777; }
 .teal { background: #ccfbf1; color: #0d9488; }
 .patient-avatar.large { width: 60px; height: 60px; font-size: 20px; }
 
-/* --- BADGES --- */
 .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.inpatient { background: #fee2e2; color: #b91c1c; }
@@ -321,4 +337,6 @@ const handleNewNote = () => {
 
 .animate-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.clickable { cursor: pointer; }
 </style>
