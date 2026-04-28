@@ -173,6 +173,40 @@
           </div>
         </section>
       </div>
+
+      <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
+        <div class="modal-content animate-in">
+          <div class="modal-header">
+            <h3>Register New Patient</h3>
+            <button @click="isModalOpen = false" class="close-modal-btn">✕</button>
+          </div>
+          
+          <form @submit.prevent="handleRegister" class="modal-form">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input v-model="regForm.name" type="text" placeholder="Enter patient name" required />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input v-model="regForm.email" type="email" placeholder="email@hospital.com" required />
+            </div>
+            <div class="form-group">
+              <label>Initial Status</label>
+              <select v-model="regForm.status">
+                <option value="Active">Active</option>
+                <option value="Inpatient">Inpatient</option>
+                <option value="Pending">Pending</option>
+              </select>
+            </div>
+            
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" @click="isModalOpen = false">Cancel</button>
+              <button type="submit" class="submit-btn">Complete Registration</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </main>
   </div>
 </template>
@@ -180,10 +214,20 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// UI States
 const searchQuery = ref('')
 const selectedStatus = ref('All')
 const selectedPatient = ref(null)
+const isModalOpen = ref(false)
 
+// Registration Form State
+const regForm = ref({
+  name: '',
+  email: '',
+  status: 'Active'
+})
+
+// Patient Data
 const patients = ref([
   { initials: 'PRP', name: 'Penny Rose Peduhan', email: 'ppeduhan@email.com', id: '#EMR-2045', lastVisit: 'Oct 24, 2025', status: 'Active', colorClass: 'purple' },
   { initials: 'HJB', name: 'Harvey Jhon Bacla-an', email: 'hbaclaan@email.com', id: '#EMR-1192', lastVisit: 'Oct 20, 2025', status: 'Inpatient', colorClass: 'pink' },
@@ -198,6 +242,8 @@ const patientNotes = ref([
   }
 ])
 
+// --- Methods ---
+
 const filteredPatients = computed(() => {
   return patients.value.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
@@ -210,26 +256,47 @@ const filteredPatients = computed(() => {
 const viewPatientFile = (p) => { selectedPatient.value = p }
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
 
-/**
- * Functional Logout
- * Clears auth token and redirects to the auth page.
- */
+const handleRegister = () => {
+  // Generate initials (e.g., "John Doe" -> "JD")
+  const initials = regForm.value.name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 3);
+
+  // Pick a random color class for the avatar
+  const colors = ['purple', 'pink', 'teal'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+  const newPatientObj = {
+    initials,
+    name: regForm.value.name,
+    email: regForm.value.email,
+    id: `#EMR-${Math.floor(1000 + Math.random() * 8999)}`,
+    lastVisit: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    status: regForm.value.status,
+    colorClass: randomColor
+  }
+
+  // Add to start of list
+  patients.value.unshift(newPatientObj)
+
+  // Reset and Close
+  regForm.value = { name: '', email: '', status: 'Active' }
+  isModalOpen.value = false
+}
+
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
     try {
-      // 1. Clear Nuxt auth cookie
       const token = useCookie('auth_token')
       token.value = null
-      
-      // 2. Clear storage
       if (process.client) {
         localStorage.clear()
         sessionStorage.clear()
       }
-
-      // 3. Redirect back to login/auth page
       await navigateTo('/auth')
-      
     } catch (error) {
       console.error('Logout error:', error)
     }
@@ -249,22 +316,19 @@ const handleNewNote = () => {
 </script>
 
 <style scoped>
-/* [Styles preserved exactly as provided] */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 * { font-family: 'Inter', sans-serif !important; }
 
+/* Original Layout Styles */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
@@ -275,22 +339,15 @@ const handleNewNote = () => {
 
 .add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
 .add-btn:hover { background: #1d4ed8; }
-
 .back-btn { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-.back-btn:hover { background: #e2e8f0; }
-
 .close-file-btn { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-.close-file-btn:hover { background: #fecaca; }
-
-.add-note-btn { background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-.add-note-btn:hover { background: #1d4ed8; }
 
 .patient-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
 .table-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; width: 100%; }
 .filter-group { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 .search-wrapper { position: relative; flex: 1; }
 .search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.search-wrapper input { width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #e2e8f0; border-radius: 8px; }
+.search-wrapper input { width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; }
 
 .select-wrapper { position: relative; }
 .filter-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
@@ -301,6 +358,7 @@ const handleNewNote = () => {
 .patient-table { width: 100%; border-collapse: collapse; }
 .patient-table th { padding: 15px 20px; text-align: left; font-size: 11px; color: #64748b; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; }
 .patient-table td { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; }
+.patient-row:hover { background: #f8fafc; }
 .patient-info { display: flex; align-items: center; gap: 12px; }
 .patient-avatar { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
 .p-name { font-weight: 700; margin: 0; font-size: 14px; }
@@ -334,6 +392,43 @@ const handleNewNote = () => {
 .badge.inpatient { background: #fee2e2; color: #b91c1c; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* MODAL SPECIFIC STYLES */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
+.modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 800; color: #1e3a8a; }
+.close-modal-btn { background: none; border: none; font-size: 1.25rem; color: #94a3b8; cursor: pointer; }
+
+.modal-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-group label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+.form-group input, .form-group select { padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; }
+.form-group input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+.modal-actions { display: flex; gap: 12px; margin-top: 1rem; }
+.cancel-btn { flex: 1; padding: 0.8rem; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.submit-btn { flex: 2; padding: 0.8rem; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.submit-btn:hover { background: #1d4ed8; }
 
 .animate-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
