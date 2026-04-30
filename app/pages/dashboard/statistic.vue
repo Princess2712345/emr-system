@@ -232,6 +232,7 @@ const handleLogout = () => {
 .nav-item.active { background: #2563eb; color: white; }
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px);}
 
 /* --- ENHANCED CONTENT --- */
 .breadcrumb { font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 1px; }
