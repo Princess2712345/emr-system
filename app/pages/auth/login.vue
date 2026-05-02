@@ -38,14 +38,17 @@ function handleLogin() {
 
 <style scoped>
 .login-page {
-  /* Updated to match the deeper, professional gradient */
-  background: linear-gradient(135deg, #4da9ff, #ffffff);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-image: url("/health.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: #1e293b;
 }
-
 .back-button {
   padding: 1.5rem;
   align-self: flex-start;

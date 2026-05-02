@@ -10,16 +10,19 @@
 </template>
 
 <style scoped>
-.auth-index {
-  background: linear-gradient(135deg, #4da9ff, #ffffff);
+.auth .auth-index {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-image: url("/health.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;   
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  flex-direction: column;
+  color: #1e293b;
 }
+
 
 .auth-index h1 {
   font-size: 2.8rem;
