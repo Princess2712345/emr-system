@@ -40,7 +40,6 @@ import "~/assets/styles.css";
 <style scoped>
 .home-page {
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  /* 1. Use the leading slash for the public folder */
   background-image: url("/health.jpg");
   background-size: cover;
   background-position: center;
@@ -60,8 +59,6 @@ import "~/assets/styles.css";
   justify-content: center;
   text-align: center;
   padding: 4rem 2rem;
-  /* 2. IMPORTANT: Changed from 'background' to 'background-color' 
-     or use a transparent overlay so the image behind it shows */
   background-color: rgba(30, 41, 59, 0.6); 
 }
 
@@ -70,7 +67,7 @@ import "~/assets/styles.css";
   font-weight: 800;
   margin-bottom: 1rem;
   color: #ffffff;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Stronger shadow for readability */
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
 .hero-content p {
@@ -113,27 +110,27 @@ import "~/assets/styles.css";
   color: #ffcc00;
 }
 
-/* Features Section */
+/* Features Section - EDITED TO REMOVE WHITE SHADOW/BAND */
 .features {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
   padding: 4rem 2rem;
-  /* 3. Using semi-transparent white allows the background image to peek through */
-  background-color: rgba(255, 255, 255, 0.4); 
-  backdrop-filter: blur(5px);
+  /* Removed background-color and backdrop-filter */
+  background-color: transparent; 
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.9);
+  /* Keep solid background on cards for readability */
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 2rem 1.5rem;
   width: 260px;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
 
@@ -152,6 +149,6 @@ import "~/assets/styles.css";
 .feature-card:hover {
   transform: translateY(-8px);
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 </style>
