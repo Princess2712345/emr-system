@@ -40,11 +40,16 @@ import "~/assets/styles.css";
 <style scoped>
 .home-page {
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: linear-gradient(135deg, #4da9ff, #ffffff); 
+  /* Use the provided image for the background */
+  background-image: url("health.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* This keeps the background in place while scrolling */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: #1e293b; 
+  color: #1e293b;
 }
 
 /* Hero Section */
@@ -55,6 +60,12 @@ import "~/assets/styles.css";
   justify-content: center;
   text-align: center;
   padding: 4rem 2rem;
+  /* Add a gradient overlay to make the text pop */
+  background: linear-gradient(
+    to bottom,
+    rgba(30, 41, 59, 0.7),
+    rgba(30, 41, 59, 0.9)
+  );
 }
 
 .hero-content h1 {
@@ -62,7 +73,7 @@ import "~/assets/styles.css";
   font-weight: 800;
   margin-bottom: 1rem;
   color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hero-content p {
@@ -71,7 +82,7 @@ import "~/assets/styles.css";
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
-  color: #f0f9ff; 
+  color: #f0f9ff;
 }
 
 .cta-button {
@@ -97,12 +108,12 @@ import "~/assets/styles.css";
 .arrow-icon {
   margin-left: 0.5rem;
   font-size: 1.2rem;
-  color: #ffffff; /* default arrow color */
+  color: #ffffff;
   transition: color 0.3s ease;
 }
 
 .cta-button:hover .arrow-icon {
-  color: #ffcc00; /* arrow changes color on hover */
+  color: #ffcc00;
 }
 
 /* Features Section */
@@ -112,10 +123,12 @@ import "~/assets/styles.css";
   justify-content: center;
   gap: 2rem;
   padding: 4rem 2rem;
+  /* Semi-transparent background to let the image show through subtly */
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
@@ -129,18 +142,18 @@ import "~/assets/styles.css";
 .feature-card h3 {
   font-size: 1.3rem;
   margin-bottom: 0.75rem;
-  color: #1e3a8a; 
+  color: #1e3a8a;
 }
 
 .feature-card p {
   font-size: 0.95rem;
   line-height: 1.6;
-  color: #475569; 
+  color: #475569;
 }
 
 .feature-card:hover {
   transform: translateY(-8px);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 1);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 </style>
