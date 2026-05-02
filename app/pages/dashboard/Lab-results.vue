@@ -114,7 +114,7 @@
                   </span>
                 </td>
                 <td class="text-right">
-                  <button class="view-link">
+                  <button class="view-link" @click="openDetails(lab)">
                     <Icon name="lucide:file-text" /> Details
                   </button>
                 </td>
@@ -125,6 +125,7 @@
       </section>
     </main>
 
+    <!-- Upload Modal -->
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
         <div class="modal-content">
@@ -178,6 +179,57 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Details Sidebar (New Feature) -->
+    <Transition name="slide">
+      <div v-if="isDetailOpen" class="detail-sidebar">
+        <div class="detail-sidebar-header">
+          <button class="back-btn" @click="isDetailOpen = false">
+            <Icon name="lucide:chevron-right" /> Close Details
+          </button>
+          <div class="status-wrap">
+            <span class="badge" :class="selectedLab?.status.toLowerCase()">{{ selectedLab?.status }}</span>
+          </div>
+        </div>
+
+        <div class="detail-sidebar-content" v-if="selectedLab">
+          <div class="detail-top-info">
+            <div class="patient-avatar-large" :class="selectedLab.colorClass">
+              <Icon name="lucide:beaker" />
+            </div>
+            <h2>{{ selectedLab.testName }}</h2>
+            <p>{{ selectedLab.patientName }}</p>
+          </div>
+
+          <div class="detail-list">
+            <div class="detail-item">
+              <span class="detail-label">Request ID</span>
+              <span class="detail-value id-badge">{{ selectedLab.requestId }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Category</span>
+              <span class="detail-value">{{ selectedLab.category }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Report Date</span>
+              <span class="detail-value">{{ selectedLab.date }}</span>
+            </div>
+          </div>
+
+          <div class="detail-actions-vertical">
+            <button class="action-btn-primary">
+              <Icon name="lucide:printer" /> Print Official Report
+            </button>
+            <button class="action-btn-secondary">
+              <Icon name="lucide:mail" /> Email to Patient
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+    
+    <!-- Sidebar Overlay -->
+    <div v-if="isDetailOpen" class="sidebar-overlay" @click="isDetailOpen = false"></div>
   </div>
 </template>
 
@@ -188,6 +240,10 @@ const searchQuery = ref('')
 const selectedCategory = ref('All')
 const isModalOpen = ref(false)
 const selectedFile = ref(null)
+
+// Details Logic
+const isDetailOpen = ref(false)
+const selectedLab = ref(null)
 
 const newRecord = ref({
   patientName: '',
@@ -208,6 +264,11 @@ const filteredLabs = computed(() => {
     return matchesSearch && matchesCategory
   })
 })
+
+const openDetails = (lab) => {
+  selectedLab.value = lab
+  isDetailOpen.value = true
+}
 
 const onFileChange = (e) => {
   selectedFile.value = e.target.files[0]
@@ -234,26 +295,16 @@ const handleFileUpload = () => {
 
 const resetFilters = () => { searchQuery.value = ''; selectedCategory.value = 'All' }
 
-/**
- * Functional Logout Logic
- * Clears the auth cookie and redirects to the authentication page.
- */
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
     try {
-      // 1. Clear Nuxt auth cookie
       const token = useCookie('auth_token')
       token.value = null
-      
-      // 2. Clear client-side storage
       if (process.client) {
         localStorage.clear()
         sessionStorage.clear()
       }
-
-      // 3. Navigate back to login page
       await navigateTo('/auth')
-      
     } catch (error) {
       console.error('Logout process failed:', error)
     }
@@ -262,7 +313,6 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-/* [Styles preserved exactly as provided in the original code] */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
 .sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
@@ -325,6 +375,27 @@ const handleLogout = async () => {
 .file-name { color: #2563eb; font-weight: 600; margin-top: 8px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 2rem; }
 .btn-secondary { background: #f1f5f9; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+/* Detail Sidebar Styles */
+.detail-sidebar { position: fixed; top: 0; right: 0; width: 400px; height: 100vh; background: white; z-index: 3000; padding: 2rem; box-shadow: -10px 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+.sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 2500; backdrop-filter: blur(2px); }
+.detail-sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+.back-btn { background: none; border: none; display: flex; align-items: center; gap: 5px; color: #64748b; font-weight: 700; cursor: pointer; }
+.patient-avatar-large { width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 1.5rem; }
+.detail-top-info h2 { color: #1e3a8a; margin: 0; font-size: 1.5rem; }
+.detail-top-info p { color: #64748b; margin: 5px 0 2rem 0; font-size: 1.1rem; font-weight: 500; }
+.detail-list { border-top: 1px solid #f1f5f9; padding-top: 1.5rem; }
+.detail-item { display: flex; justify-content: space-between; margin-bottom: 1.2rem; }
+.detail-label { color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+.detail-value { color: #1e293b; font-weight: 700; }
+.detail-actions-vertical { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.action-btn-primary { background: #1e3a8a; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.action-btn-secondary { background: #f1f5f9; color: #475569; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+/* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-enter-active, .slide-leave-active { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.slide-enter-from, .slide-leave-to { transform: translateX(100%); }
 </style>
