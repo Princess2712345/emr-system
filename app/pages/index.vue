@@ -9,7 +9,7 @@ import "~/assets/styles.css";
       <div class="hero-content">
         <h1>Welcome to Electronic Medical Records</h1>
         <p>Securely manage patient data, appointments, and medical history.</p>
-        <NuxtLink to="/auth" class="cta-button">
+        <NuxtLink to="/auth/login" class="cta-button">
           Get Started <span class="arrow-icon">➔</span>
         </NuxtLink>
       </div>
