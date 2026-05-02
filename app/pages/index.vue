@@ -40,12 +40,12 @@ import "~/assets/styles.css";
 <style scoped>
 .home-page {
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  /* Use the provided image for the background */
-  background-image: url("health.jpg");
+  /* 1. Use the leading slash for the public folder */
+  background-image: url("/health.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed; /* This keeps the background in place while scrolling */
+  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -60,12 +60,9 @@ import "~/assets/styles.css";
   justify-content: center;
   text-align: center;
   padding: 4rem 2rem;
-  /* Add a gradient overlay to make the text pop */
-  background: linear-gradient(
-    to bottom,
-    rgba(30, 41, 59, 0.7),
-    rgba(30, 41, 59, 0.9)
-  );
+  /* 2. IMPORTANT: Changed from 'background' to 'background-color' 
+     or use a transparent overlay so the image behind it shows */
+  background-color: rgba(30, 41, 59, 0.6); 
 }
 
 .hero-content h1 {
@@ -73,7 +70,7 @@ import "~/assets/styles.css";
   font-weight: 800;
   margin-bottom: 1rem;
   color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Stronger shadow for readability */
 }
 
 .hero-content p {
@@ -83,6 +80,7 @@ import "~/assets/styles.css";
   margin-left: auto;
   margin-right: auto;
   color: #f0f9ff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .cta-button {
@@ -104,7 +102,6 @@ import "~/assets/styles.css";
   box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23);
 }
 
-/* Arrow styling */
 .arrow-icon {
   margin-left: 0.5rem;
   font-size: 1.2rem;
@@ -123,8 +120,9 @@ import "~/assets/styles.css";
   justify-content: center;
   gap: 2rem;
   padding: 4rem 2rem;
-  /* Semi-transparent background to let the image show through subtly */
-  background-color: rgba(255, 255, 255, 0.8);
+  /* 3. Using semi-transparent white allows the background image to peek through */
+  background-color: rgba(255, 255, 255, 0.4); 
+  backdrop-filter: blur(5px);
 }
 
 .feature-card {
