@@ -9,6 +9,18 @@
     <div class="login-content">
       <h2>Electronic Medical Records Login</h2>
       <form @submit.prevent="handleLogin" class="login-form">
+        <!-- User Role Identifier -->
+        <div class="role-identifier">
+          <label class="radio-container">
+            <input type="radio" v-model="role" value="admin" name="role">
+            <span class="checkmark"></span> Admin
+          </label>
+          <label class="radio-container">
+            <input type="radio" v-model="role" value="patient" name="role">
+            <span class="checkmark"></span> Patient
+          </label>
+        </div>
+
         <label>Username</label>
         <input v-model="username" type="text" required />
 
@@ -28,10 +40,18 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const username = ref('')
 const password = ref('')
+const role = ref('admin') // Default identifier set to admin
 
 function handleLogin() {
   if (username.value && password.value) {
-    router.push('/dashboard')
+    // Directing based on the chosen identifier
+    if (role.value === 'patient') {
+      // Directs to app/pages/dashboard/patients.vue
+      router.push('/dashboard/patients')
+    } else {
+      // Directs to app/pages/dashboard/index.vue
+      router.push('/dashboard')
+    }
   }
 }
 </script>
@@ -49,10 +69,12 @@ function handleLogin() {
   flex-direction: column;
   color: #1e293b;
 }
+
 .back-button {
   padding: 1.5rem;
   align-self: flex-start;
 }
+
 .back-button a {
   font-size: 1.8rem;
   color: #1e3a8a;
@@ -60,6 +82,7 @@ function handleLogin() {
   transition: transform 0.2s ease;
   display: inline-block;
 }
+
 .back-button a:hover {
   transform: translateX(-5px);
   color: #2563eb;
@@ -95,6 +118,25 @@ function handleLogin() {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* Role Identifier Styles */
+.role-identifier {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radio-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1e3a8a;
+  gap: 0.5rem;
+}
+
 .login-form label {
   text-align: left;
   font-weight: 600;
@@ -103,7 +145,8 @@ function handleLogin() {
   margin-bottom: -0.8rem;
 }
 
-.login-form input {
+.login-form input[type="text"],
+.login-form input[type="password"] {
   padding: 0.8rem 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -137,9 +180,5 @@ function handleLogin() {
   background-color: #1d4ed8;
   transform: translateY(-1px);
   box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-}
-
-.login-form button:active {
-  transform: translateY(0);
 }
 </style>
