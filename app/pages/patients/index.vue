@@ -9,16 +9,16 @@
       
       <nav class="sidebar-nav">
         <!-- Navigation limited to patient-relevant views -->
-        <NuxtLink to="/dashboard/patients" class="nav-item active">
+        <NuxtLink to="/patients/index" class="nav-item active">
           <Icon name="lucide:user-circle" /> My Profile
         </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item">
+        <NuxtLink to="/patients/myappointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> My Appointments
         </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
+        <NuxtLink to="/patients/lab-results" class="nav-item">
           <Icon name="lucide:microscope" /> Lab Results
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
+        <NuxtLink to="/patients/billing" class="nav-item">
           <Icon name="lucide:receipt" /> My Bills
         </NuxtLink>
       </nav>

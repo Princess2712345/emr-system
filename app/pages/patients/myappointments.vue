@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-layout">
-    <!-- Sidebar (Same as Profile) -->
+    <!-- Updated Sidebar: Simplified for Patients -->
     <aside class="sidebar">
       <div class="sidebar-logo">
         <Icon name="mdi:hospital-building" class="icon-blue-light" />
@@ -8,16 +8,17 @@
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard/patients" class="nav-item">
+        <!-- Navigation limited to patient-relevant views -->
+        <NuxtLink to="/patients/index" class="nav-item active">
           <Icon name="lucide:user-circle" /> My Profile
         </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item active">
+        <NuxtLink to="/patients/myappointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> My Appointments
         </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
+        <NuxtLink to="/patients/lab-results" class="nav-item">
           <Icon name="lucide:microscope" /> Lab Results
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
+        <NuxtLink to="/patients/billing" class="nav-item">
           <Icon name="lucide:receipt" /> My Bills
         </NuxtLink>
       </nav>
@@ -28,7 +29,7 @@
         </button>
       </div>
     </aside>
-
+    
     <main class="main-content">
       <!-- Top Bar -->
       <header class="top-bar">
