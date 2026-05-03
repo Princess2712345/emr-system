@@ -40,7 +40,7 @@ import "~/assets/styles.css";
 <style scoped>
 .home-page {
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-image: url("/health.jpg");
+  background-image: url("/medical.jpeg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
