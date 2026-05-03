@@ -35,22 +35,21 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const username = ref('')
 const password = ref('')
-const role = ref('admin') // Default identifier set to admin
+const role = ref('admin') // Can be 'admin' or 'patient'
 
-function handleLogin() {
+async function handleLogin() {
   if (username.value && password.value) {
-    // Directing based on the chosen identifier
+    
     if (role.value === 'patient') {
-      // Directs to app/pages/dashboard/patients.vue
-      router.push('/dashboard/patients')
+      // Based on Screenshot (550).png, patients is a top-level folder
+      // This sends them to localhost:3000/patients
+      await navigateTo('/patients')
     } else {
-      // Directs to app/pages/dashboard/index.vue
-      router.push('/dashboard')
+      // This sends them to localhost:3000/dashboard
+      await navigateTo('/dashboard')
     }
   }
 }
