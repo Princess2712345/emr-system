@@ -1,4 +1,4 @@
-<script>
+<script setup>
 import "~/assets/styles.css";
 </script>
 
@@ -7,10 +7,11 @@ import "~/assets/styles.css";
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <h1>Welcome to Electronic Medical Records</h1>
-        <p>Securely manage patient data, appointments, and medical history.</p>
+        <h1 class="glitter-text">Welcome to Electronic Medical Records</h1>
+        <p class="sub-hero">Securely manage patient data, appointments, and medical history.</p>
         <NuxtLink to="/auth/login" class="cta-button">
-          Get Started <span class="arrow-icon">➔</span>
+          Get Started 
+          <Icon name="lucide:arrow-right" class="arrow-icon" />
         </NuxtLink>
       </div>
     </section>
@@ -18,20 +19,35 @@ import "~/assets/styles.css";
     <!-- Features Section -->
     <section class="features">
       <div class="feature-card">
+        <div class="icon-wrapper">
+          <Icon name="lucide:folder-heart" class="feature-icon" />
+        </div>
         <h3>Digital Records</h3>
-        <p>Access patient files anytime, anywhere.</p>
+        <p>Access patient files anytime, anywhere with cloud-sync technology.</p>
       </div>
+
       <div class="feature-card">
+        <div class="icon-wrapper">
+          <Icon name="lucide:stethoscope" class="feature-icon" />
+        </div>
         <h3>Doctor–Patient Care</h3>
-        <p>Enhance consultations with accurate data.</p>
+        <p>Enhance consultations with precision data and real-time history.</p>
       </div>
+
       <div class="feature-card">
+        <div class="icon-wrapper">
+          <Icon name="lucide:hospital" class="feature-icon" />
+        </div>
         <h3>Hospital Integration</h3>
-        <p>Connect seamlessly with healthcare facilities.</p>
+        <p>Connect seamlessly with modern healthcare facility networks.</p>
       </div>
+
       <div class="feature-card">
+        <div class="icon-wrapper">
+          <Icon name="lucide:shield-check" class="feature-icon" />
+        </div>
         <h3>Organized Files</h3>
-        <p>Keep medical records structured and secure.</p>
+        <p>Keep medical records structured within a secure, encrypted vault.</p>
       </div>
     </section>
   </div>
@@ -39,19 +55,17 @@ import "~/assets/styles.css";
 
 <style scoped>
 .home-page {
-  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-image: url("/medical.jpeg");
-  background-size: cover;
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  background-image: url("/health.jpg");
+  background-size: cover; 
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: #1e293b;
 }
 
-/* Hero Section */
 .hero {
   flex: 1;
   display: flex;
@@ -59,96 +73,112 @@ import "~/assets/styles.css";
   justify-content: center;
   text-align: center;
   padding: 4rem 2rem;
-  background-color: rgba(30, 41, 59, 0.6); 
 }
 
 .hero-content h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-  color: #ffffff;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  font-size: 4rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  color: #ffffff; 
+  letter-spacing: -0.02em;
+  /* Glowing effect to match image_6b220e.jpg */
+  text-shadow: 0 0 30px rgba(129, 171, 240, 0.6);
 }
 
-.hero-content p {
-  font-size: 1.25rem;
-  margin-bottom: 2.5rem;
-  max-width: 600px;
+.sub-hero {
+  font-size: 1.4rem;
+  margin-bottom: 3rem;
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
-  color: #f0f9ff;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  line-height: 1.5;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .cta-button {
-  background-color: #4f46e5;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #ffffff;
-  padding: 1rem 2rem;
-  border-radius: 8px;
+  padding: 1.1rem 2.2rem;
+  border-radius: 50px;
   text-decoration: none;
   font-weight: 600;
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
-  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: inline-flex;
   align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .cta-button:hover {
-  background-color: #4338ca;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23);
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6);
 }
 
 .arrow-icon {
-  margin-left: 0.5rem;
-  font-size: 1.2rem;
-  color: #ffffff;
-  transition: color 0.3s ease;
+  margin-left: 0.8rem;
+  font-size: 1.4rem;
+  transition: transform 0.3s ease;
 }
 
 .cta-button:hover .arrow-icon {
-  color: #ffcc00;
+  transform: translateX(5px);
 }
 
-/* Features Section - EDITED TO REMOVE WHITE SHADOW/BAND */
 .features {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
-  padding: 4rem 2rem;
-  /* Removed background-color and backdrop-filter */
-  background-color: transparent; 
+  padding: 6rem 2rem;
+  /* Dark fade at bottom to help cards pop */
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent); 
 }
 
 .feature-card {
-  /* Keep solid background on cards for readability */
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  padding: 2rem 1.5rem;
-  width: 260px;
+  background: rgba(255, 255, 255, 0.08); 
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 3rem 1.5rem;
+  width: 280px;
   text-align: center;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+}
+
+.icon-wrapper {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.feature-icon {
+  font-size: 3rem;
+  color: #60a5fa; 
+  /* Realistic glow effect */
+  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.8));
 }
 
 .feature-card h3 {
-  font-size: 1.3rem;
-  margin-bottom: 0.75rem;
-  color: #1e3a8a;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .feature-card p {
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.6;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .feature-card:hover {
-  transform: translateY(-8px);
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #3b82f6;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 </style>
