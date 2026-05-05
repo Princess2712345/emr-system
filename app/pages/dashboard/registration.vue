@@ -12,7 +12,7 @@
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
         <!-- Active link shifted to Patients/Registration -->
-        <NuxtLink to="/dashboard/registration" class="nav-item router-link-active">
+        <NuxtLink to="/dashboard/registration" class="nav-item active">
           <Icon name="lucide:user-plus" /> Registration
         </NuxtLink>
         <NuxtLink to="/dashboard/lab-results" class="nav-item">

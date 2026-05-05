@@ -14,7 +14,7 @@
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
         <NuxtLink to="/dashboard/confinement" class="nav-item">
-          <Icon name="lucide:registration" /> registration
+          <Icon name="mdi:account-plus" /> registration
         </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
