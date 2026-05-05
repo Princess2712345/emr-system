@@ -10,19 +10,19 @@
         <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
-        <NuxtLink to="/dashboard/patients" class="nav-item">
-          <Icon name="lucide:users" /> Patients
-        </NuxtLink>
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-        <NuxtLink to="/dashboard/confinement" class="nav-item">
-          <Icon name="lucide:bed" /> Confinement
+        <NuxtLink to="/dashboard/registration" class="nav-item">
+          <Icon name="mdi:account-plus" /> Registration
         </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item active">
+        <NuxtLink to="/dashboard/Disposition" class="nav-item">
+          <Icon name=lucide:file-output /> Disposition
+        </NuxtLink>
+        <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
+        <NuxtLink to="/dashboard/billing" class="nav-item active">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
         <NuxtLink to="/dashboard/appointments" class="nav-item">
@@ -30,6 +30,9 @@
         </NuxtLink>
         <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
+        </NuxtLink>
+         <NuxtLink to="/dashboard/History" class="nav-item">
+          <Icon name="lucide:history" /> history
         </NuxtLink>
       </nav>
 
@@ -39,6 +42,7 @@
         </button>
       </div>
     </aside>
+
 
     <main class="main-content">
       <header class="top-bar">

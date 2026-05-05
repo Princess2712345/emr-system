@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <aside class="sidebar">
       <div class="sidebar-logo">
-         <Icon name="mdi:hospital-building" class="icon-blue-light" />
+        <Icon name="mdi:hospital-building" class="icon-blue-light" />
         <span class="logo-text">EMR System</span>
       </div>
       
@@ -10,15 +10,15 @@
         <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
-        <NuxtLink to="/dashboard/patients" class="nav-item">
-          <Icon name="lucide:users" /> Patients
-        </NuxtLink>
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-         <NuxtLink to="/dashboard/confinement" class="nav-item">
-          <Icon name="lucide:bed" /> Confinement
-         </NuxtLink>
+        <NuxtLink to="/dashboard/registration" class="nav-item">
+          <Icon name="mdi:account-plus" /> Registration
+        </NuxtLink>
+        <NuxtLink to="/dashboard/Disposition" class="nav-item">
+          <Icon name=lucide:file-output /> Disposition
+        </NuxtLink>
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
@@ -31,12 +31,15 @@
         <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
+         <NuxtLink to="/dashboard/History" class="nav-item">
+          <Icon name="lucide:history" /> history
+        </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
-        <NuxtLink to="/auth/login" class="logout-btn">
+        <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" /> Logout
-        </NuxtLink>
+        </button>
       </div>
     </aside>
 
