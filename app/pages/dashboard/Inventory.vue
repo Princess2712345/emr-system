@@ -19,10 +19,10 @@
         <NuxtLink to="/dashboard/Disposition" class="nav-item">
           <Icon name=lucide:file-output /> Disposition
         </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
+        <NuxtLink to="/dashboard/inventory" class="nav-item active">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item active">
+        <NuxtLink to="/dashboard/billing" class="nav-item">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
         <NuxtLink to="/dashboard/appointments" class="nav-item">

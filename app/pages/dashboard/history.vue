@@ -7,7 +7,7 @@
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item active">
+        <NuxtLink to="/dashboard" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Overview
         </NuxtLink>
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
@@ -31,7 +31,7 @@
         <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
-         <NuxtLink to="/dashboard/History" class="nav-item">
+         <NuxtLink to="/dashboard/History" class="nav-item active">
           <Icon name="lucide:history" /> History
         </NuxtLink>
       </nav>

@@ -13,7 +13,7 @@
         <NuxtLink to="/dashboard/lab-results" class="nav-item">
           <Icon name="lucide:test-tube-2" /> Lab Results
         </NuxtLink>
-        <NuxtLink to="/dashboard/registration" class="nav-item">
+        <NuxtLink to="/dashboard/registration" class="nav-item active">
           <Icon name="mdi:account-plus" /> Registration
         </NuxtLink>
         <NuxtLink to="/dashboard/Disposition" class="nav-item">
@@ -22,7 +22,7 @@
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item active">
+        <NuxtLink to="/dashboard/billing" class="nav-item">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
         <NuxtLink to="/dashboard/appointments" class="nav-item">

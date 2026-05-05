@@ -22,13 +22,13 @@
         <NuxtLink to="/dashboard/inventory" class="nav-item">
           <Icon name="lucide:package" /> Inventory
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item active">
+        <NuxtLink to="/dashboard/billing" class="nav-item">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
         <NuxtLink to="/dashboard/appointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item">
+        <NuxtLink to="/dashboard/statistic" class="nav-item active">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
          <NuxtLink to="/dashboard/History" class="nav-item">
