@@ -3,7 +3,7 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="logo-icon" />
+        <Icon name="mdi:hospital-building" class="logo-icon icon-blue-light" />
         <span class="logo-text">EMR System</span>
       </div>
       
@@ -32,7 +32,6 @@
         <NuxtLink to="/dashboard/statistic" class="nav-item">
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
-        <!-- ACTIVE LINK -->
         <NuxtLink to="/dashboard/history" class="nav-item active">
           <Icon name="lucide:history" /> History
         </NuxtLink>
@@ -59,8 +58,8 @@
         </div>
       </header>
 
+      <!-- MAXIMIZED BODY SECTION -->
       <section class="dashboard-body animate-in">
-        <!-- SEARCH & FILTERS -->
         <div class="table-controls glass-card">
           <div class="search-wrapper">
             <Icon name="lucide:search" class="search-icon-svg" />
@@ -71,17 +70,18 @@
             />
           </div>
           <div class="filter-group">
-            <label>Severity:</label>
-            <select v-model="selectedSeverity" class="filter-dropdown clickable">
-              <option value="All">All Levels</option>
-              <option value="Info">Info</option>
-              <option value="Warning">Warning</option>
-              <option value="Critical">Critical</option>
-            </select>
+            <span>Severity:</span>
+            <div class="custom-select-wrapper">
+              <select v-model="selectedSeverity" class="filter-dropdown clickable">
+                <option value="All">All Levels</option>
+                <option value="Info">Info</option>
+                <option value="Warning">Warning</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- LOGS TABLE -->
         <div class="activity-card glass-card">
           <table class="custom-table">
             <thead>
@@ -124,7 +124,10 @@
                 </td>
               </tr>
               <tr v-if="filteredLogs.length === 0">
-                <td colspan="5" class="empty-state">No matching logs found.</td>
+                <td colspan="5" class="empty-state">
+                  <Icon name="lucide:database-zap" class="empty-icon" />
+                  <p>No matching logs found.</p>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -170,81 +173,83 @@ const handleLogout = () => confirm('Log out of system?')
 </script>
 
 <style scoped>
-/* CORE LAYOUT */
-.dashboard-layout { display: flex; min-height: 100vh; background: #f8fafc; color: #1e293b; }
-.main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+/* RESTORED ORIGINAL CORE STYLES */
+.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-/* SIDEBAR & LOGO */
-.sidebar { width: 280px; background: #1e3a8a; color: white; padding: 1.5rem; display: flex; flex-direction: column; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; padding-left: 0.5rem; }
-.logo-icon { font-size: 2rem; color: #93c5fd; }
-.logo-text { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
 
-/* NAV ITEMS */
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.nav-item { 
-  display: flex; align-items: center; gap: 12px; padding: 12px 16px; 
-  text-decoration: none; color: #bfdbfe; border-radius: 12px; transition: 0.3s;
+.router-link-active, .nav-item.active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+
+/* MAXIMIZED SPACE ADJUSTMENTS */
+.main-content { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  min-width: 0; 
 }
-.nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
-.nav-item.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
 
-/* TOP BAR */
-.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.welcome-msg h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-.welcome-msg p { color: #64748b; font-size: 0.95rem; }
-
-/* UTILITIES & CARDS */
-.glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-.table-controls { display: flex; justify-content: space-between; padding: 1.25rem; margin-bottom: 1.5rem; align-items: center; }
-
-/* INPUTS */
-.search-wrapper { position: relative; width: 400px; }
-.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.search-wrapper input { 
-  width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #e2e8f0; 
-  border-radius: 10px; font-size: 0.9rem; outline: none; transition: 0.2s;
+.top-bar { 
+  background: white; 
+  padding: 1rem 1.5rem; /* Tightened from 3rem */
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid #e2e8f0; 
 }
-.search-wrapper input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
-.filter-group { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
-.filter-dropdown { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; }
+.dashboard-body { 
+  padding: 1rem 1.5rem; /* Tightened from 3rem */
+  flex: 1;
+}
 
-/* TABLE STYLING */
+/* CARDS & TABLES */
+.glass-card { 
+  background: white; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px; 
+  width: 100%;
+}
+
+.table-controls { display: flex; justify-content: space-between; padding: 1.25rem; margin-bottom: 1rem; }
+.activity-card { padding: 0.5rem; }
+
 .custom-table { width: 100%; border-collapse: collapse; }
-.custom-table th { padding: 16px; text-align: left; font-size: 0.85rem; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #f1f5f9; }
-.custom-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; }
-.table-row:hover { background: #f8fafc; }
+.custom-table th { 
+  padding: 1rem; text-align: left; font-size: 0.75rem; 
+  text-transform: uppercase; color: #64748b; font-weight: 700;
+  border-bottom: 1px solid #f1f5f9;
+}
 
-/* LOG INDICATORS */
+.table-row td { padding: 1rem; border-bottom: 1px solid #f1f5f9; }
+
+/* SHARED ELEMENTS */
+.search-wrapper { position: relative; width: 100%; max-width: 500px; }
+.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-wrapper input { width: 100%; padding: 0.7rem 1rem 0.7rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
+
 .user-meta { display: flex; align-items: center; gap: 12px; }
-.log-indicator { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.log-indicator.info { background: #eff6ff; color: #3b82f6; }
-.log-indicator.warning { background: #fffbeb; color: #f59e0b; }
-.log-indicator.critical { background: #fef2f2; color: #ef4444; }
+.log-indicator { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.log-indicator.info { background: #eff6ff; color: #2563eb; }
+.log-indicator.warning { background: #fffbeb; color: #d97706; }
+.log-indicator.critical { background: #fef2f2; color: #dc2626; }
 
-.mono-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; color: #475569; }
-
-/* STATUS PILLS */
-.status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-.status-pill.info { background: #dcfce7; color: #166534; }
-.status-pill.warning { background: #fef3c7; color: #92400e; }
+.status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.status-pill.info { background: #dcfce7; color: #15803d; }
+.status-pill.warning { background: #fef3c7; color: #b45309; }
 .status-pill.critical { background: #fee2e2; color: #991b1b; }
 
-/* BUTTONS */
-.export-btn { background: #1e293b; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: none; }
-.details-btn { color: #3b82f6; font-weight: 700; background: none; border: none; font-size: 0.85rem; }
-.details-btn:hover { text-decoration: underline; }
+.mono-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; color: #475569; }
+.export-btn { background: #1e3a8a; color: white; padding: 0.7rem 1.2rem; border-radius: 10px; font-weight: 600; border: none; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.details-btn { color: #2563eb; font-weight: 700; background: none; border: none; cursor: pointer; }
 
-.clickable { cursor: pointer; transition: filter 0.2s; }
-.clickable:active { transform: scale(0.98); }
-
-/* ANIMATION */
-.animate-in { animation: slideUp 0.5s ease-out forwards; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-.text-muted { color: #94a3b8; }
-.font-bold { font-weight: 700; }
-.text-right { text-align: right; }
-.empty-state { padding: 40px; text-align: center; color: #94a3b8; }
+.animate-in { animation: fadeInUp 0.5s ease-out forwards; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 </style>
