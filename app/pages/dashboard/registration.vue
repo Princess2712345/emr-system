@@ -32,7 +32,7 @@
           <Icon name="lucide:bar-chart-3" /> Statistics
         </NuxtLink>
          <NuxtLink to="/dashboard/History" class="nav-item">
-          <Icon name="lucide:history" /> history
+          <Icon name="lucide:history" /> History
         </NuxtLink>
       </nav>
 
