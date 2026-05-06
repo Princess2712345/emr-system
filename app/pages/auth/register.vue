@@ -1,16 +1,19 @@
 <template>
   <div class="register-page">
-    <!-- Back Button -->
-    <div class="back-button">
-      <NuxtLink to="/">←</NuxtLink>
-    </div>
-
     <div class="register-content">
       <h2>Electronic Medical Records Registration</h2>
       <form @submit.prevent="handleRegister" class="register-form">
-        <label for="name">Full Name</label>
-        <input id="name" v-model="name" type="text" required />
+        <!-- Name Fields -->
+        <label for="firstName">First Name</label>
+        <input id="firstName" v-model="firstName" type="text" required />
 
+        <label for="middleName">Middle Name</label>
+        <input id="middleName" v-model="middleName" type="text" placeholder="(Optional)" />
+
+        <label for="lastName">Last Name</label>
+        <input id="lastName" v-model="lastName" type="text" required />
+
+        <!-- Contact & Security -->
         <label for="email">Email</label>
         <input id="email" v-model="email" type="email" required />
 
@@ -24,15 +27,20 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+
 const router = useRouter()
 
-const name = ref('')
+const firstName = ref('')
+const middleName = ref('')
+const lastName = ref('')
 const email = ref('')
 const password = ref('')
 
 function handleRegister() {
-  if (name.value && email.value && password.value) {
+  if (firstName.value && lastName.value && email.value && password.value) {
+    // Logic for registration goes here
     router.push('/dashboard')
   }
 }
@@ -40,27 +48,16 @@ function handleRegister() {
 
 <style scoped>
 .register-page {
-  background: linear-gradient(135deg, #4da9ff, #ffffff);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-image: url("/health.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-.back-button {
-  padding: 1.5rem;
-}
-.back-button a {
-  color: #1e3a8a;
-  text-decoration: none;
-  font-size: 1.8rem;
-  font-weight: bold;
-  transition: transform 0.2s ease, color 0.2s ease;
-  display: inline-block;
-}
-.back-button a:hover {
-  transform: translateX(-5px);
-  color: #2563eb;
+  color: #1e293b;
 }
 
 .register-content {
@@ -143,5 +140,3 @@ function handleRegister() {
   transform: translateY(0);
 }
 </style>
-
-

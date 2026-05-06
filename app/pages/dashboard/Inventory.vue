@@ -183,6 +183,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// --- STATE MANAGEMENT ---
 const searchQuery = ref('')
 const selectedCategory = ref('All')
 const isModalOpen = ref(false)
@@ -204,6 +205,7 @@ const inventoryItems = ref([
   { id: 4, name: 'Paracetamol Syrup', category: 'Medication', stock: 85, unit: 'bottles', price: '210.00', status: 'In-Stock' },
 ])
 
+// --- COMPUTED PROPERTIES ---
 const filteredInventory = computed(() => {
   return inventoryItems.value.filter(item => {
     const s = searchQuery.value.toLowerCase()
@@ -213,23 +215,23 @@ const filteredInventory = computed(() => {
   })
 })
 
+// --- METHODS ---
+
 const resetFilters = () => {
   searchQuery.value = ''
   selectedCategory.value = 'All'
 }
 
-// Open modal for a fresh item
 const openAddModal = () => {
   isEditing.value = false
   newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }
   isModalOpen.value = true
 }
 
-// Manage button logic
 const editItem = (item) => {
   isEditing.value = true
   editingId.value = item.id
-  // Clone the item so we don't edit the table directly until "Save" is clicked
+  // Shallow clone to avoid immediate mutation
   newItem.value = { ...item }
   isModalOpen.value = true
 }
@@ -241,26 +243,52 @@ const closeModal = () => {
 }
 
 const handleSave = () => {
-  const status = newItem.value.stock > 50 ? 'In-Stock' : (newItem.value.stock > 0 ? 'Low-Stock' : 'Out-of-Stock')
+  // Logic to determine status based on stock levels
+  const stockCount = parseInt(newItem.value.stock) || 0
+  const status = stockCount > 50 ? 'In-Stock' : (stockCount > 0 ? 'Low-Stock' : 'Out-of-Stock')
   
   if (isEditing.value) {
-    // Update existing
     const index = inventoryItems.value.findIndex(i => i.id === editingId.value)
     if (index !== -1) {
-      inventoryItems.value[index] = { ...newItem.value, status }
+      inventoryItems.value[index] = { ...newItem.value, stock: stockCount, status }
     }
   } else {
-    // Add new
-    inventoryItems.value.push({ ...newItem.value, id: Date.now(), status })
+    inventoryItems.value.push({ 
+      ...newItem.value, 
+      id: Date.now(), 
+      stock: stockCount,
+      status 
+    })
   }
   
   closeModal()
 }
 
 const deleteItem = () => {
-  if (confirm(`Are you sure you want to remove ${newItem.value.name}?`)) {
+  if (confirm(`Are you sure you want to remove ${newItem.value.name} from the inventory?`)) {
     inventoryItems.value = inventoryItems.value.filter(i => i.id !== editingId.value)
     closeModal()
+  }
+}
+
+/** 
+ * Functional Logout Handler 
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      const token = useCookie('auth_token')
+      token.value = null
+      
+      if (process.client) {
+        localStorage.removeItem('user_data')
+        sessionStorage.clear()
+      }
+
+      await navigateTo('/auth/login') 
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 }
 </script>

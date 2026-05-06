@@ -189,7 +189,7 @@ const handleLogout = async () => {
 
       // 3. Redirect to the Auth/Login page
       // Make sure the path matches your login route (e.g., '/', '/auth', or '/login')
-      await navigateTo('/auth') 
+      await navigateTo('/auth/login') 
       
     } catch (error) {
       console.error('Logout failed:', error)

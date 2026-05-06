@@ -177,6 +177,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// --- STATE MANAGEMENT ---
 const searchQuery = ref('')
 const selectedType = ref('All')
 const isModalOpen = ref(false)
@@ -187,6 +188,7 @@ const patients = ref([
   { id: 3, name: 'Robert Johnson', initials: 'RJ', patientId: 'P-2024-003', phone: '0915-111-2222', email: 'rob.j@hospital.com', regDate: 'May 05, 2026', type: 'Emergency' }
 ])
 
+// --- COMPUTED PROPERTIES ---
 const filteredPatients = computed(() => {
   return patients.value.filter(p => {
     const s = searchQuery.value.toLowerCase()
@@ -196,10 +198,52 @@ const filteredPatients = computed(() => {
   })
 })
 
-const viewProfile = (p) => alert(`Opening profile for ${p.name}`)
-const handleRegistration = () => { alert('Patient Registered Successfully!'); isModalOpen.value = false }
-const handleLogout = () => { if (confirm('Log out?')) alert('Goodbye!') }
+// --- METHODS ---
+
+const viewProfile = (p) => {
+  console.log("Navigating to patient profile:", p.patientId)
+  alert(`Opening clinical profile for ${p.name}`)
+}
+
+const handleRegistration = () => {
+  // Logic for adding a new patient would go here
+  alert('Patient Registered Successfully!')
+  isModalOpen.value = false
+}
+
+const deletePatient = (id) => {
+  if (confirm('Are you sure you want to remove this patient record? This action cannot be undone.')) {
+    patients.value = patients.value.filter(p => p.id !== id)
+  }
+}
+
+/** 
+ * Functional Logout Handler 
+ * Clears authentication cookies and session data
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      // 1. Clear the Auth Cookie
+      const token = useCookie('auth_token')
+      token.value = null
+      
+      // 2. Clear Client-side storage
+      if (process.client) {
+        localStorage.removeItem('user_data')
+        sessionStorage.clear()
+      }
+
+      // 3. Redirect to login page
+      await navigateTo('/auth/login') 
+      
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+}
 </script>
+
 
 <style scoped>
 /* ALL STYLES REMAIN IDENTICAL TO YOUR ORIGINAL TO PRESERVE DESIGN */

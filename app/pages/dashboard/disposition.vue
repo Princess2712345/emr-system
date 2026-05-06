@@ -163,6 +163,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+// --- STATE MANAGEMENT ---
 const searchQuery = ref('');
 const selectedCategory = ref('All');
 const isModalOpen = ref(false);
@@ -179,29 +180,78 @@ const newEntry = ref({
   physician: ''
 });
 
+// --- COMPUTED PROPERTIES ---
 const filteredDispositions = computed(() => {
   return dispositions.value.filter(d => {
-    const matchesSearch = d.patientName.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const s = searchQuery.value.toLowerCase();
+    const matchesSearch = d.patientName.toLowerCase().includes(s) || d.patientId.toLowerCase().includes(s);
     const matchesCat = selectedCategory.value === 'All' || d.type === selectedCategory.value;
     return matchesSearch && matchesCat;
   });
 });
 
+// --- METHODS ---
+
+// Submit New Disposition
 const submitNewEntry = () => {
+  if (!newEntry.value.patientName || !newEntry.value.physician) {
+    alert("Please fill in the required fields.");
+    return;
+  }
+
   const now = new Date();
-  const timeStr = now.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  dispositions.value.unshift({ id: Date.now(), ...newEntry.value, dateTime: timeStr.replace(',', ' -') });
+  const timeStr = now.toLocaleString('en-US', { 
+    month: 'short', 
+    day: '2-digit', 
+    year: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+
+  dispositions.value.unshift({ 
+    id: Date.now(), 
+    ...newEntry.value, 
+    dateTime: timeStr.replace(',', ' -') 
+  });
+
+  // Reset form and close modal
   newEntry.value = { patientName: '', patientId: '', type: 'Discharged', physician: '' };
   isModalOpen.value = false;
 };
 
-// FUNCTION FOR MANAGE CASE
+// Manage/Open Case
 const manageCase = (item) => {
   console.log("Opening case for:", item.patientName);
-  alert(`Opening file for ${item.patientName} (${item.patientId})`);
+  alert(`Accessing Electronic Health Record: ${item.patientName}`);
 };
 
-const handleLogout = () => console.log("Logout triggered");
+// Delete Entry
+const deleteEntry = (id) => {
+  if (confirm('Are you sure you want to remove this record?')) {
+    dispositions.value = dispositions.value.filter(d => d.id !== id);
+  }
+};
+
+/** 
+ * Functional Logout Handler 
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      const token = useCookie('auth_token');
+      token.value = null;
+      
+      if (process.client) {
+        localStorage.removeItem('user_data');
+        sessionStorage.clear();
+      }
+
+      await navigateTo('/auth/login'); 
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }
+};
 </script>
 
 <style scoped>

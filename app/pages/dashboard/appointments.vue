@@ -155,6 +155,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+// --- STATE MANAGEMENT ---
 const currentView = ref('list');
 const activeFilter = ref('All');
 const form = ref({ name: '', time: '', date: '', reason: '' });
@@ -165,11 +166,15 @@ const appointments = ref([
   { id: 3, date: '2026-04-03', time: '01:15 PM', duration: '15 min', patientName: 'Robert Johnson', reason: 'Follow-up: Lab Results', status: 'Pending' },
 ]);
 
+// --- COMPUTED PROPERTIES ---
 const filteredAppointments = computed(() => {
   if (activeFilter.value === 'All') return appointments.value;
   return appointments.value.filter(a => a.status === activeFilter.value);
 });
 
+// --- METHODS ---
+
+// Calendar Helper: Counts appointments for a specific date in April 2026
 const getApptsForDay = (dayNum) => {
   const formattedDay = dayNum < 10 ? `0${dayNum}` : dayNum;
   const targetDate = `2026-04-${formattedDay}`;
@@ -180,6 +185,7 @@ const toggleView = () => {
   currentView.value = currentView.value === 'list' ? 'calendar' : 'list';
 };
 
+// Status Updates
 const confirmAppt = (id) => {
   const appt = appointments.value.find(a => a.id === id);
   if (appt) appt.status = 'Confirmed';
@@ -190,11 +196,20 @@ const startVisit = (id) => {
   if (appt) appt.status = 'In Progress';
 };
 
+const cancelAppt = (id) => {
+  if (confirm('Are you sure you want to cancel this appointment?')) {
+    appointments.value = appointments.value.filter(a => a.id !== id);
+  }
+};
+
+// Form Submission
 const submitBooking = () => {
   if (!form.value.name || !form.value.time || !form.value.date) {
     alert("Please fill in the patient name, date, and time.");
     return;
   }
+
+  // Convert 24h input (HH:mm) to 12h display (hh:mm AM/PM)
   const [hours, minutes] = form.value.time.split(':');
   const h = parseInt(hours);
   const period = h >= 12 ? 'PM' : 'AM';
@@ -211,7 +226,31 @@ const submitBooking = () => {
     status: 'Pending' 
   });
   
+  // Reset Form
   form.value = { name: '', time: '', date: '', reason: '' };
+  alert("Appointment scheduled successfully.");
+};
+
+/** 
+ * Functional Logout Handler 
+ * Clears session and redirects to login
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      const token = useCookie('auth_token');
+      token.value = null;
+      
+      if (process.client) {
+        localStorage.removeItem('user_data');
+        sessionStorage.clear();
+      }
+
+      await navigateTo('/auth/login'); 
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }
 };
 </script>
 

@@ -307,7 +307,7 @@ const handleLogout = async () => {
         localStorage.clear()
         sessionStorage.clear()
       }
-      await navigateTo('/auth')
+      await navigateTo('/auth/login')
     } catch (error) {
       console.error('Logout process failed:', error)
     }

@@ -1,10 +1,5 @@
 <template>
   <div class="login-page">
-    <!-- Back Button -->
-    <div class="back-button">
-      <NuxtLink to="/">←</NuxtLink>
-    </div>
-
     <!-- Page Content -->
     <div class="login-content">
       <h2>Electronic Medical Records Login</h2>
@@ -28,6 +23,12 @@
         <input v-model="password" type="password" required />
 
         <button type="submit">Sign In</button>
+
+        <!-- Registration Link -->
+        <p class="register-text">
+          Don't have an account? 
+          <NuxtLink to="/auth/register">Register</NuxtLink>
+        </p>
       </form>
     </div>
   </div>
@@ -42,13 +43,9 @@ const role = ref('admin') // Can be 'admin' or 'patient'
 
 async function handleLogin() {
   if (username.value && password.value) {
-    
     if (role.value === 'patient') {
-      // Based on Screenshot (550).png, patients is a top-level folder
-      // This sends them to localhost:3000/patients
       await navigateTo('/patients')
     } else {
-      // This sends them to localhost:3000/dashboard
       await navigateTo('/dashboard')
     }
   }
@@ -67,24 +64,6 @@ async function handleLogin() {
   display: flex;
   flex-direction: column;
   color: #1e293b;
-}
-
-.back-button {
-  padding: 1.5rem;
-  align-self: flex-start;
-}
-
-.back-button a {
-  font-size: 1.8rem;
-  color: #1e3a8a;
-  text-decoration: none;
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-
-.back-button a:hover {
-  transform: translateX(-5px);
-  color: #2563eb;
 }
 
 .login-content {
@@ -176,8 +155,26 @@ async function handleLogin() {
 }
 
 .login-form button:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  background-color: #059669; 
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
+}
+
+.register-text {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.register-text a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.register-text a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 </style>

@@ -174,6 +174,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// --- STATE MANAGEMENT ---
 const searchQuery = ref('')
 const selectedSeverity = ref('All')
 const isModalOpen = ref(false)
@@ -186,17 +187,29 @@ const logs = ref([
   { id: 1039, user: 'Nurse_John', timestamp: 'May 04, 2026 - 11:20 PM', action: 'Failed Login Attempt', resource: 'IP: 192.168.1.45', severity: 'Critical' }
 ])
 
+// --- COMPUTED PROPERTIES ---
 const filteredLogs = computed(() => {
   return logs.value.filter(l => {
     const s = searchQuery.value.toLowerCase()
-    const matchesSearch = l.user.toLowerCase().includes(s) || l.action.toLowerCase().includes(s) || l.resource.toLowerCase().includes(s)
+    const matchesSearch = 
+      l.user.toLowerCase().includes(s) || 
+      l.action.toLowerCase().includes(s) || 
+      l.resource.toLowerCase().includes(s)
+    
     const matchesSeverity = selectedSeverity.value === 'All' || l.severity === selectedSeverity.value
     return matchesSearch && matchesSeverity
   })
 })
 
+// --- METHODS ---
+
+// Dynamic Icon Picker based on Severity
 const getLogIcon = (sev) => {
-  const icons = { Critical: 'lucide:shield-alert', Warning: 'lucide:alert-triangle', Info: 'lucide:info' }
+  const icons = { 
+    Critical: 'lucide:shield-alert', 
+    Warning: 'lucide:alert-triangle', 
+    Info: 'lucide:info' 
+  }
   return icons[sev] || 'lucide:info'
 }
 
@@ -205,10 +218,44 @@ const openModal = (log) => {
   isModalOpen.value = true
 }
 
-const closeModal = () => { isModalOpen.value = false }
-const exportLogs = () => alert('Generating CSV report...')
-const handleLogout = () => confirm('Log out of system?')
+const closeModal = () => { 
+  isModalOpen.value = false 
+  selectedLog.value = null
+}
+
+const exportLogs = () => {
+  alert('Generating CSV report for Audit History...')
+}
+
+const clearLogs = () => {
+  if (confirm('Are you sure you want to clear the audit history? This action is permanent.')) {
+    logs.value = []
+  }
+}
+
+/** 
+ * Functional Logout Handler 
+ * Ensures security by clearing session data before redirecting
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out of the EMR system?')) {
+    try {
+      const token = useCookie('auth_token')
+      token.value = null
+      
+      if (process.client) {
+        localStorage.removeItem('user_data')
+        sessionStorage.clear()
+      }
+
+      await navigateTo('/auth/login') 
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+}
 </script>
+
 
 <style scoped>
 /* COLOR VARIABLES */

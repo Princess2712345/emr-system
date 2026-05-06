@@ -154,6 +154,9 @@
 </template>
 
 <script setup>
+/**
+ * STATISTICS & ANALYTICS DATA
+ */
 const kpiData = [
   { label: 'Patient Growth', value: '2,405', trend: '+8.2%', trendType: 'up', icon: 'lucide:user-plus' },
   { label: 'Avg. Consultation', value: '18m', trend: '-2.1%', trendType: 'up', icon: 'lucide:clock' },
@@ -173,10 +176,33 @@ const departments = [
   { name: 'Pediatric Ward', patients: '361', stay: '2.5' }
 ];
 
-const handleLogout = () => {
-  console.log("Logged out");
+/** 
+ * Functional Logout Handler 
+ * Secures the system by clearing auth states and redirecting.
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out of the EMR System?')) {
+    try {
+      // 1. Clear the Auth Cookie
+      const token = useCookie('auth_token');
+      token.value = null;
+      
+      // 2. Clear user session & local storage
+      if (process.client) {
+        localStorage.removeItem('user_data');
+        sessionStorage.clear();
+      }
+
+      // 3. Redirect to the login page
+      await navigateTo('/auth/login'); 
+      
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }
 }
 </script>
+
 
 <style scoped>
 /* --- SIDEBAR (NO CHANGES TO COLOR) --- */

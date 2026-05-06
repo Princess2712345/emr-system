@@ -201,6 +201,32 @@ const downloadInvoice = (inv) => alert(`Downloading Invoice ${inv.id}...`)
 const recordPayment = (inv) => alert(`Opening payment gateway for ${inv.patientName}...`)
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
 const handleInvoice = () => { alert('Invoice generated successfully.'); isModalOpen.value = false }
+
+/** 
+ * Functional Logout Handler 
+ */
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    try {
+      // 1. Clear the Auth Token
+      const token = useCookie('auth_token')
+      token.value = null
+      
+      // 2. Clear user session/local storage
+      if (process.client) {
+        localStorage.removeItem('user_data')
+        sessionStorage.clear()
+      }
+
+      // 3. Redirect to the Auth/Login page
+      // Ensure this path exists in your pages folder
+      await navigateTo('/auth/login') 
+      
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -217,7 +243,7 @@ const handleInvoice = () => { alert('Invoice generated successfully.'); isModalO
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
 .sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; padding: 0.8rem 1rem; border-radius: 8px; transition: all 0.2s ease;}
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 .logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px);}
 
 /* --- MAIN CONTENT AREA --- */
