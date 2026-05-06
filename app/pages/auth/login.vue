@@ -19,8 +19,16 @@
         <label>Username</label>
         <input v-model="username" type="text" required />
 
-        <label>Password</label>
-        <input v-model="password" type="password" required />
+        <label>Security Credentials</label>
+        <!-- Start: Unique ID inside Password Area -->
+        <div class="password-wrapper">
+          <input v-model="password" type="password" placeholder="Password" required />
+          <div class="unique-id-section">
+            <span class="id-prefix">{{ role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+            <input v-model="uniqueId" type="text" placeholder="0000" class="id-input" required />
+          </div>
+        </div>
+        <!-- End: Unique ID inside Password Area -->
 
         <button type="submit">Sign In</button>
 
@@ -39,10 +47,12 @@ import { ref } from 'vue'
 
 const username = ref('')
 const password = ref('')
+const uniqueId = ref('') // New unique identifier ref
 const role = ref('admin') // Can be 'admin' or 'patient'
 
 async function handleLogin() {
-  if (username.value && password.value) {
+  // Added uniqueId check to the validation
+  if (username.value && password.value && uniqueId.value) {
     if (role.value === 'patient') {
       await navigateTo('/patients')
     } else {
@@ -96,7 +106,6 @@ async function handleLogin() {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Role Identifier Styles */
 .role-identifier {
   display: flex;
   justify-content: space-around;
@@ -123,17 +132,67 @@ async function handleLogin() {
   margin-bottom: -0.8rem;
 }
 
-.login-form input[type="text"],
-.login-form input[type="password"] {
+/* Updated Container for Password + ID */
+.password-wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.password-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: #ffffff;
+}
+
+.password-wrapper input[type="password"] {
+  border: none;
+  background: transparent;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.unique-id-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: rgba(226, 232, 240, 0.3);
+  border-top: 1px solid #e2e8f0;
+}
+
+.id-prefix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.id-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  width: 80px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  outline: none;
+}
+
+/* Original input style for standard text fields */
+.login-form input[type="text"]:not(.id-input) {
   padding: 0.8rem 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1rem;
   background-color: #f8fafc;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.login-form input:focus {
+.login-form input:focus:not(.id-input) {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);

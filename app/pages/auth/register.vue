@@ -3,6 +3,19 @@
     <div class="register-content">
       <h2>Electronic Medical Records Registration</h2>
       <form @submit.prevent="handleRegister" class="register-form">
+        
+        <!-- Role Selection (Added to match login logic) -->
+        <div class="role-identifier">
+          <label class="radio-container">
+            <input type="radio" v-model="role" value="admin" name="role">
+            <span class="checkmark"></span> Admin
+          </label>
+          <label class="radio-container">
+            <input type="radio" v-model="role" value="patient" name="role">
+            <span class="checkmark"></span> Patient
+          </label>
+        </div>
+
         <!-- Name Fields -->
         <label for="firstName">First Name</label>
         <input id="firstName" v-model="firstName" type="text" required />
@@ -17,8 +30,16 @@
         <label for="email">Email</label>
         <input id="email" v-model="email" type="email" required />
 
-        <label for="password">Password</label>
-        <input id="password" v-model="password" type="password" required />
+        <label>Security Credentials</label>
+        <!-- Start: Unique ID inside Password Area (Updated to match login) -->
+        <div class="password-wrapper">
+          <input v-model="password" type="password" placeholder="Password" required />
+          <div class="unique-id-section">
+            <span class="id-prefix">{{ role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+            <input v-model="uniqueId" type="text" placeholder="0000" class="id-input" required />
+          </div>
+        </div>
+        <!-- End: Unique ID inside Password Area -->
 
         <button type="submit">Sign Up</button>
       </form>
@@ -37,9 +58,11 @@ const middleName = ref('')
 const lastName = ref('')
 const email = ref('')
 const password = ref('')
+const uniqueId = ref('') // Added to match login
+const role = ref('patient') // Added to match login
 
 function handleRegister() {
-  if (firstName.value && lastName.value && email.value && password.value) {
+  if (firstName.value && lastName.value && email.value && password.value && uniqueId.value) {
     // Logic for registration goes here
     router.push('/dashboard')
   }
@@ -47,6 +70,7 @@ function handleRegister() {
 </script>
 
 <style scoped>
+/* Keeping your original layout styles */
 .register-page {
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-image: url("/health.jpg");
@@ -90,6 +114,25 @@ function handleRegister() {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+/* Role Identifier (Same as Login) */
+.role-identifier {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radio-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1e3a8a;
+  gap: 0.5rem;
+}
+
 .register-form label {
   text-align: left;
   font-weight: 600;
@@ -100,7 +143,58 @@ function handleRegister() {
   letter-spacing: 0.05em;
 }
 
-.register-form input {
+/* Updated Password + ID Container (Same as Login) */
+.password-wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.password-wrapper:focus-within {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.password-wrapper input[type="password"] {
+  border: none;
+  background: transparent;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.unique-id-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: rgba(226, 232, 240, 0.3);
+  border-top: 1px solid #e2e8f0;
+}
+
+.id-prefix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.id-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  width: 80px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  outline: none;
+}
+
+/* Original input styles for standard fields */
+.register-form input:not(.id-input):not([type="radio"]):not([type="password"]) {
   padding: 0.8rem 1rem;
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
@@ -109,7 +203,7 @@ function handleRegister() {
   transition: all 0.2s ease;
 }
 
-.register-form input:focus {
+.register-form input:focus:not(.id-input) {
   outline: none;
   border-color: #2563eb;
   background-color: #ffffff;
