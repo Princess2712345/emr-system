@@ -25,7 +25,7 @@
         <NuxtLink to="/dashboard/billing" class="nav-item">
           <Icon name="lucide:credit-card" /> Statement of Account
         </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item active">
+        <NuxtLink to="/dashboard/appointments" class="nav-item">
           <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
         <NuxtLink to="/dashboard/statistic" class="nav-item">
@@ -37,9 +37,9 @@
       </nav>
 
       <div class="sidebar-footer">
-        <NuxtLink to="/auth/login" class="logout-btn">
+        <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" /> Logout
-        </NuxtLink>
+        </button>
       </div>
     </aside>
 
@@ -237,7 +237,7 @@ const submitBooking = () => {
 .top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; font-weight: 800; }
 .subtitle { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
 
-/* --- SIDE-BY-SIDE GRID --- */
+/* --- APPOINTMENTS LAYOUT --- */
 .appointment-body { padding: 2.5rem 3rem; }
 .side-by-side-container {
   display: grid;
@@ -246,7 +246,6 @@ const submitBooking = () => {
   align-items: start;
 }
 
-/* LEFT SIDE: LIST/CALENDAR VIEW */
 .schedule-header { display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: center; }
 .date-display { display: flex; align-items: center; gap: 1.5rem; background: white; padding: 0.6rem 1.2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .current-date { font-weight: 700; color: #1e3a8a; }
@@ -281,7 +280,7 @@ const submitBooking = () => {
 .day-num { font-weight: 700; color: #94a3b8; font-size: 0.9rem; }
 .event-indicator { background: #dbeafe; color: #1e3a8a; font-size: 0.75rem; font-weight: 700; padding: 4px; border-radius: 6px; margin-top: 4px; text-align: center; }
 
-/* RIGHT SIDE: BOOKING PANEL */
+/* BOOKING PANEL */
 .booking-sidebar { position: sticky; top: 2rem; }
 .booking-card {
   background: white;
@@ -300,7 +299,7 @@ input:focus { border-color: #2563eb; }
 .submit-btn { background: #2563eb; color: white; border: none; padding: 0.9rem; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 1rem; transition: all 0.2s; }
 .submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
 
-/* SHARED ITEM STYLES */
+/* TAGS & BUTTONS */
 .time { font-weight: 800; color: #1e293b; font-size: 1rem; }
 .duration { font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; }
 .p-name { color: #1e3a8a; font-size: 1rem; margin: 0; }
