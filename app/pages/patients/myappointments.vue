@@ -8,9 +8,9 @@
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/patients/index" class="nav-item">
+        <NuxtLink to="/patients" class="nav-item">
           <Icon name="lucide:layout-dashboard" /> Dashboard
-        </NuxtLink>
+        </NuxtLink>  
         <NuxtLink to="/patients/myappointments" class="nav-item active">
           <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
