@@ -1,110 +1,155 @@
 <template>
   <div class="dashboard-layout">
-    <!-- Updated Sidebar: Simplified for Patients -->
+    <!-- SIDEBAR: Fixed position, non-scrolling -->
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">My Health Portal</span>
+        <Icon name="mdi:hospital-building" class="logo-icon" />
+        <span class="logo-text">MyHealth<span class="text-blue-400">Portal</span></span>
       </div>
       
       <nav class="sidebar-nav">
-        <!-- Navigation limited to patient-relevant views -->
         <NuxtLink to="/patients/index" class="nav-item active">
-          <Icon name="lucide:user-circle" /> My Profile
+          <Icon name="lucide:layout-dashboard" /> Dashboard
         </NuxtLink>
         <NuxtLink to="/patients/myappointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> My Appointments
+          <Icon name="lucide:calendar-days" /> Appointments
         </NuxtLink>
         <NuxtLink to="/patients/lab-results" class="nav-item">
-          <Icon name="lucide:microscope" /> Lab Results
+          <Icon name="lucide:file-heart" /> Health Records
         </NuxtLink>
         <NuxtLink to="/patients/billing" class="nav-item">
-          <Icon name="lucide:receipt" /> My Bills
+          <Icon name="lucide:credit-card" /> Billing & Payments
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout
+          <Icon name="lucide:log-out" /> Logout Account
         </button>
       </div>
     </aside>
 
+    <!-- MAIN CONTENT: Independent scrolling area -->
     <main class="main-content">
-      <!-- Top Bar: Focus on Personalized Welcome -->
+      <!-- TOP BAR: Pinned to top of main content -->
       <header class="top-bar">
         <div class="header-info">
           <h1>Welcome, {{ patientInfo.name }}</h1>
-          <p>Your centralized health overview</p>
+          <p class="current-date">{{ currentDate }}</p>
         </div>
         
         <div class="header-actions">
-          <button class="add-btn clickable" @click="printRecord">
-            <Icon name="lucide:printer" /> Print Health Record
+          <button class="action-outline clickable" @click="printRecord">
+            <Icon name="lucide:printer" /> Download E-Record
           </button>
+          <div class="profile-chip">
+            <div class="avatar-circle" :class="patientInfo.colorClass">
+              {{ patientInfo.initials }}
+            </div>
+          </div>
         </div>
       </header>
 
-      <div class="patient-body animate-in">
-        <!-- Profile Header Section -->
-        <section class="profile-header-card">
-           <div class="patient-avatar large" :class="patientInfo.colorClass">{{ patientInfo.initials }}</div>
-           <div class="detail-title-area">
-             <h2>{{ patientInfo.name }}</h2>
-             <div class="detail-sub">
-               <span class="badge active"><span class="dot"></span> {{ patientInfo.status }} Patient</span>
-               <span class="id-badge">ID: {{ patientInfo.id }}</span>
-               <span class="loc"><Icon name="lucide:heart-pulse" /> Blood Type: O+</span>
-             </div>
-           </div>
+      <div class="scrollable-body animate-in">
+        <!-- HERO SECTION -->
+        <section class="patient-hero">
+          <div class="hero-content">
+            <div class="avatar-large-container">
+              <div class="avatar-large shadow-sm" :class="patientInfo.colorClass">
+                {{ patientInfo.initials }}
+              </div>
+              <div class="status-badge-online"></div>
+            </div>
+            <div class="hero-text">
+              <div class="title-row">
+                <h2>{{ patientInfo.name }}</h2>
+                <span class="badge-status">Outpatient</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-item"><strong>ID:</strong> {{ patientInfo.id }}</span>
+                <span class="meta-item"><strong>Blood:</strong> O Positive</span>
+                <span class="meta-item"><strong>Age:</strong> 24</span>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <!-- Health Stats Grid -->
-        <div class="info-grid">
-          <div class="info-item highlight-blue">
-            <label><Icon name="lucide:calendar-check" /> NEXT APPOINTMENT</label>
-            <p>May 15, 2026</p>
-            <span class="sub-text">Dr. Santos (Opthalmology)</span>
+        <!-- DASHBOARD GRID -->
+        <div class="bento-grid">
+          <!-- Next Appointment -->
+          <div class="bento-card highlight-card">
+            <label class="label-caps"><Icon name="lucide:clock" /> Incoming Visit</label>
+            <div class="appt-details">
+              <p class="main-val">May 15</p>
+              <p class="sub-val">Opthalmology • 09:00 AM</p>
+            </div>
+            <button class="card-btn">Add to Calendar</button>
           </div>
-          <div class="info-item">
-            <label><Icon name="lucide:activity" /> RECENT BP</label>
-            <p>120/80 mmHg</p>
-            <span class="sub-text">Recorded: Oct 24, 2025</span>
+
+          <!-- Vital: BP -->
+          <div class="bento-card">
+            <label class="label-caps"><Icon name="lucide:activity" /> Blood Pressure</label>
+            <p class="main-val">120<span class="unit">/80</span></p>
+            <div class="trend-tag success">Within Normal Range</div>
           </div>
-          <div class="info-item">
-            <label><Icon name="lucide:pill" /> MEDICATIONS</label>
-            <p>2 Active</p>
-            <span class="sub-text">View Prescriptions</span>
+
+          <!-- Vital: Pulse -->
+          <div class="bento-card">
+            <label class="label-caps"><Icon name="lucide:heart" /> Heart Rate</label>
+            <p class="main-val">72 <span class="unit">bpm</span></p>
+            <div class="trend-tag info">Recorded Oct 24</div>
           </div>
-          <div class="info-item">
-            <label><Icon name="lucide:alert-circle" /> ALLERGIES</label>
-            <p class="text-danger">Aspirin</p>
+
+          <!-- Vital: Allergy -->
+          <div class="bento-card warning-bg">
+            <label class="label-caps text-red-700"><Icon name="lucide:shield-alert" /> Critical Allergy</label>
+            <p class="main-val text-red-700">Aspirin</p>
+            <p class="small-text text-red-600">Contact staff if updated</p>
           </div>
         </div>
 
-        <!-- Records & Notes Section -->
-        <div class="records-layout">
-          <section class="notes-container">
-            <div class="notes-header">
-              <h3><Icon name="lucide:history" /> My Clinical Timeline</h3>
+        <div class="bottom-layout">
+          <!-- TIMELINE -->
+          <section class="content-card timeline-card">
+            <div class="card-header">
+              <h3><Icon name="lucide:history" /> Medical Timeline</h3>
+              <button class="view-more">See All History</button>
             </div>
             
-            <div v-for="(note, index) in patientNotes" :key="index" class="note-box">
-               <div class="note-head">
-                 <span class="dr">{{ note.doctor }}</span>
-                 <span class="date">{{ note.date }}</span>
-               </div>
-               <p>{{ note.content }}</p>
+            <div class="timeline-container">
+              <div v-for="(note, index) in patientNotes" :key="index" class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="dr-name">{{ note.doctor }}</span>
+                    <span class="timeline-date">{{ note.date }}</span>
+                  </div>
+                  <p class="timeline-text">{{ note.content }}</p>
+                </div>
+              </div>
             </div>
           </section>
 
-          <!-- Sidebar Widget: Emergency Contact -->
-          <aside class="emergency-widget">
-            <h3><Icon name="lucide:phone-call" /> Emergency Contact</h3>
-            <div class="contact-card">
-              <p class="contact-name">Maria Peduhan</p>
-              <p class="contact-relation">Mother</p>
-              <p class="contact-phone">+63 912 345 6789</p>
+          <!-- SIDEBAR WIDGETS -->
+          <aside class="widget-stack">
+            <div class="emergency-card">
+              <div class="card-header-sm">
+                <Icon name="lucide:phone-call" />
+                <span>Emergency Contact</span>
+              </div>
+              <div class="contact-details">
+                <p class="c-name">Maria Peduhan</p>
+                <p class="c-rel">Mother</p>
+                <a href="tel:+639123456789" class="c-phone">+63 912 345 6789</a>
+              </div>
+            </div>
+
+            <div class="content-card insurance-card">
+              <label class="label-caps">Insurance</label>
+              <div class="provider-row">
+                <Icon name="lucide:shield-check" class="text-blue-600" />
+                <p>PhilHealth • Verified</p>
+              </div>
             </div>
           </aside>
         </div>
@@ -114,82 +159,184 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-// Since this is the Patient's view, we load ONLY their data
 const patientInfo = ref({ 
   initials: 'PRP', 
   name: 'Penny Rose Peduhan', 
   id: '#EMR-2045', 
-  status: 'Active', 
-  colorClass: 'purple' 
+  colorClass: 'purple-theme' 
 })
 
 const patientNotes = ref([
   { 
     doctor: 'Dr. Aris (Cardiology)', 
     date: 'Oct 24, 2025', 
-    content: 'Routine check-up complete. Heart rate is normal. Continue current lifestyle and balanced diet. No medication changes required.' 
+    content: 'Standard cardiac screening. Rhythm is regular. Patient encouraged to maintain current physical activity levels.' 
   },
   { 
     doctor: 'Dr. Cruz (General Medicine)', 
     date: 'Aug 12, 2025', 
-    content: 'Patient treated for mild seasonal flu. Prescribed Vitamin C and bed rest.' 
+    content: 'Seasonal influenza consultation. Prescription provided for symptoms. Bed rest advised for 3 days.' 
   }
 ])
 
-const handleLogout = async () => {
-  if (confirm('Are you sure you want to log out?')) {
-    await navigateTo('/auth')
+const currentDate = computed(() => {
+  return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+})
+
+const handleLogout = () => {
+  if (confirm('Sign out from MyHealth Portal?')) {
+    // navigateTo is a Nuxt utility
+    navigateTo('/auth/login')
   }
 }
 
-const printRecord = () => {
-  window.print()
-}
+const printRecord = () => { window.print() }
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* --- LAYOUT STRUCTURE (Fixes Sidebar Scroll) --- */
+.dashboard-layout { 
+  display: flex; 
+  height: 100vh; /* Locks viewport to screen height */
+  background-color: #f1f5f9; 
+  font-family: 'Inter', sans-serif; 
+  overflow: hidden; /* Prevents whole-page scrollbars */
+}
 
-/* Inherit your existing layout styles from previous version */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; }
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 2rem 1.5rem; 
+  height: 100vh; 
+  flex-shrink: 0; /* Ensures sidebar doesn't compress */
+  z-index: 20;
+}
+
+.main-content { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  height: 100vh; 
+  overflow-y: auto; /* This allows ONLY the main area to scroll */
+}
+
+/* --- TOP BAR (Fixes Download Alignment) --- */
+.top-bar { 
+  background: white; 
+  padding: 1.2rem 2.5rem; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-actions { 
+  display: flex; 
+  align-items: center; 
+  gap: 1.5rem; 
+}
+
+.action-outline { 
+  background: white; 
+  border: 1.5px solid #e2e8f0; 
+  padding: 0.6rem 1rem; 
+  border-radius: 10px; 
+  font-weight: 700; 
+  color: #475569; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.avatar-circle { 
+  width: 42px; 
+  height: 42px; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-weight: 800; 
+  font-size: 0.85rem;
+}
+
+/* --- SIDEBAR COMPONENTS --- */
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
-.nav-item.active { background: #2563eb; color: white; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
-.main-content { flex: 1; display: flex; flex-direction: column; }
-.top-bar { background: white; padding: 1.5rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+/* --- HERO & DASHBOARD --- */
+.scrollable-body { padding: 2rem 2.5rem; }
+.patient-hero { background: white; padding: 2rem; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.hero-content { display: flex; align-items: center; gap: 24px; }
+.avatar-large-container { position: relative; }
+.avatar-large { width: 85px; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; }
+.status-badge-online { width: 14px; height: 14px; background: #22c55e; border: 3px solid white; border-radius: 50%; position: absolute; bottom: -2px; right: -2px; }
+.purple-theme { background: #f3e8ff; color: #7e22ce; }
 
-.patient-body { padding: 2rem 2.5rem; }
+.title-row { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
+.title-row h2 { font-size: 1.6rem; color: #1e3a8a; margin: 0; }
+.badge-status { background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #dbeafe; }
+.meta-row { display: flex; gap: 20px; font-size: 0.9rem; color: #64748b; }
 
-.profile-header-card { display: flex; gap: 24px; align-items: center; background: white; padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 2rem; }
-.patient-avatar.large { width: 80px; height: 80px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; }
-.purple { background: #f3e8ff; color: #7e22ce; }
+.bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 2rem; }
+.bento-card { background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #e2e8f0; }
+.highlight-card { background: #1e3a8a; color: white; border: none; }
+.highlight-card .label-caps { color: #93c5fd; }
+.highlight-card .main-val { color: white; }
+.card-btn { background: #2563eb; color: white; border: none; width: 100%; padding: 8px; border-radius: 8px; margin-top: 15px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
 
-.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 2rem; }
-.info-item { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; }
-.info-item label { font-size: 10px; font-weight: 800; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-.info-item p { font-size: 1.25rem; font-weight: 800; margin: 0; color: #1e3a8a; }
-.sub-text { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; }
-.text-danger { color: #dc2626 !important; }
+.label-caps { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.main-val { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; }
+.unit { font-size: 0.9rem; color: #94a3b8; font-weight: 500; }
+.trend-tag { font-size: 0.7rem; font-weight: 700; margin-top: 10px; display: inline-block; padding: 2px 8px; border-radius: 5px; }
+.trend-tag.success { background: #dcfce7; color: #166534; }
+.trend-tag.info { background: #f1f5f9; color: #475569; }
+.warning-bg { background: #fff1f2; border-color: #fecaca; }
 
-.records-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
-.notes-container { background: white; padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; }
-.note-box { background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #f1f5f9; }
+/* --- TIMELINE & WIDGETS --- */
+.bottom-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+.content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.view-more { background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
 
-.emergency-widget { background: #fff1f2; padding: 1.5rem; border-radius: 16px; border: 1px solid #fecaca; height: fit-content; }
-.emergency-widget h3 { font-size: 1rem; color: #9f1239; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
-.contact-card p { margin: 4px 0; font-weight: 600; }
-.contact-name { font-size: 1.1rem; color: #1e293b; }
+.timeline-item { display: flex; gap: 15px; margin-bottom: 1.5rem; position: relative; }
+.timeline-marker { width: 3px; background: #e2e8f0; position: relative; margin-top: 10px; }
+.timeline-marker::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: #2563eb; border-radius: 50%; }
+.timeline-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.dr-name { font-weight: 700; color: #1e3a8a; }
+.timeline-date { font-size: 0.8rem; color: #94a3b8; }
+.timeline-text { font-size: 0.9rem; color: #475569; line-height: 1.5; }
 
-.badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #dcfce7; color: #15803d; }
-.id-badge { background: #f1f5f9; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #1e3a8a; }
+.widget-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+.emergency-card { background: #be123c; color: white; padding: 1.5rem; border-radius: 20px; }
+.card-header-sm { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.85rem; margin-bottom: 1rem; }
+.c-name { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+.c-rel { font-size: 0.85rem; opacity: 0.8; margin-bottom: 12px; }
+.c-phone { display: block; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; text-align: center; color: white; text-decoration: none; font-weight: 700; }
+.provider-row { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #1e293b; margin-top: 10px; }
 
-.animate-in { animation: fadeIn 0.5s ease-out; }
+.animate-in { animation: fadeIn 0.6s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Print optimization */
+@media print {
+  .sidebar, .top-bar, .card-btn, .view-more { display: none; }
+  .main-content { overflow: visible; height: auto; }
+  .dashboard-layout { display: block; }
+}
 </style>
