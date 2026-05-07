@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-layout">
-    <!-- SIDEBAR (Refined CSS Applied) -->
+    <!-- RESTORED ORIGINAL SIDEBAR COLOR/STYLE -->
     <aside class="sidebar">
       <div class="sidebar-logo">
         <Icon name="mdi:hospital-building" class="icon-blue-light" />
