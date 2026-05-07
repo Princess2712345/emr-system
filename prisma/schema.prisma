@@ -1,0 +1,17 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  // The 'url' line is removed from here
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Patient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
