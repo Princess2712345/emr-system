@@ -1,10 +1,8 @@
 <template>
   <div class="login-page">
-    <!-- Page Content -->
     <div class="login-content">
       <h2>Electronic Medical Records Login</h2>
       <form @submit.prevent="handleLogin" class="login-form">
-        <!-- User Role Identifier -->
         <div class="role-identifier">
           <label class="radio-container">
             <input type="radio" v-model="role" value="admin" name="role">
@@ -20,7 +18,6 @@
         <input v-model="username" type="text" required />
 
         <label>Security Credentials</label>
-        <!-- Start: Unique ID inside Password Area -->
         <div class="password-wrapper">
           <input v-model="password" type="password" placeholder="Password" required />
           <div class="unique-id-section">
@@ -28,11 +25,8 @@
             <input v-model="uniqueId" type="text" placeholder="0000" class="id-input" required />
           </div>
         </div>
-        <!-- End: Unique ID inside Password Area -->
-
         <button type="submit">Sign In</button>
 
-        <!-- Registration Link -->
         <p class="register-text">
           Don't have an account? 
           <NuxtLink to="/auth/register">Register</NuxtLink>
@@ -47,11 +41,10 @@ import { ref } from 'vue'
 
 const username = ref('')
 const password = ref('')
-const uniqueId = ref('') // New unique identifier ref
-const role = ref('admin') // Can be 'admin' or 'patient'
+const uniqueId = ref('') 
+const role = ref('admin') 
 
 async function handleLogin() {
-  // Added uniqueId check to the validation
   if (username.value && password.value && uniqueId.value) {
     if (role.value === 'patient') {
       await navigateTo('/patients')
@@ -73,6 +66,9 @@ async function handleLogin() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Darkened overlay for contrast */
+  background-color: rgba(0, 0, 0, 0.25);
+  background-blend-mode: overlay;
   color: #1e293b;
 }
 
@@ -90,8 +86,9 @@ async function handleLogin() {
   font-size: 2.2rem;
   margin-bottom: 2rem;
   font-weight: 800;
-  color: #1e3a8a;
+  color: #ffffff;
   letter-spacing: -0.5px;
+  text-shadow: 0 4px 6px rgba(0,0,0,0.4);
 }
 
 .login-form {
@@ -100,10 +97,43 @@ async function handleLogin() {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  background: rgba(255, 255, 255, 0.9);
+  
+  /* --- Glassmorphism Core --- */
+  background: rgba(255, 255, 255, 0.5); 
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* Beveled edge effect */
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-right-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.2);
+  
   padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-radius: 24px;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glass Surface Shine Overlay */
+.login-form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.0) 40%,
+    rgba(100, 200, 255, 0.05) 60%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  pointer-events: none;
 }
 
 .role-identifier {
@@ -111,7 +141,8 @@ async function handleLogin() {
   justify-content: space-around;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
 .radio-container {
@@ -122,31 +153,38 @@ async function handleLogin() {
   font-size: 0.9rem;
   color: #1e3a8a;
   gap: 0.5rem;
+  z-index: 1;
 }
 
 .login-form label {
   text-align: left;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #475569;
+  color: #334155;
   margin-bottom: -0.8rem;
+  z-index: 1;
 }
 
-/* Updated Container for Password + ID */
+/* Translucent Glass Inputs */
+.password-wrapper,
+.login-form input[type="text"]:not(.id-input) {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  z-index: 1;
+}
+
 .password-wrapper {
   display: flex;
   flex-direction: column;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background-color: #f8fafc;
   overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
 }
 
 .password-wrapper:focus-within {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .password-wrapper input[type="password"] {
@@ -163,40 +201,38 @@ async function handleLogin() {
   justify-content: space-between;
   padding: 0.5rem 1rem;
   background: rgba(226, 232, 240, 0.3);
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .id-prefix {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: #475569;
   text-transform: uppercase;
 }
 
 .id-input {
-  border: 1px solid #cbd5e1;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   width: 80px;
   padding: 2px 8px;
   font-size: 0.85rem;
   font-family: monospace;
   outline: none;
+  background: rgba(255, 255, 255, 0.5);
 }
 
-/* Original input style for standard text fields */
 .login-form input[type="text"]:not(.id-input) {
   padding: 0.8rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
   font-size: 1rem;
-  background-color: #f8fafc;
+  transition: all 0.2s ease;
 }
 
 .login-form input:focus:not(.id-input) {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .login-form button {
@@ -211,6 +247,7 @@ async function handleLogin() {
   margin-top: 0.5rem;
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  z-index: 1;
 }
 
 .login-form button:hover {
@@ -222,18 +259,17 @@ async function handleLogin() {
 .register-text {
   margin-top: 1rem;
   font-size: 0.85rem;
-  color: #64748b;
+  color: #334155;
+  z-index: 1;
 }
 
 .register-text a {
-  color: #2563eb;
+  color: #1e40af;
   text-decoration: none;
   font-weight: 700;
-  transition: color 0.2s ease;
 }
 
 .register-text a:hover {
-  color: #1d4ed8;
   text-decoration: underline;
 }
 </style>

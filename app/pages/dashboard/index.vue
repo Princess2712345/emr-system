@@ -1,45 +1,37 @@
 <template>
-  <div class="dashboard-layout">
-    <!-- RESTORED ORIGINAL SIDEBAR COLOR/STYLE -->
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">EMR System</span>
+      <div class="sidebar-header">
+        <div class="sidebar-logo" v-if="!isCollapsed">
+          <Icon name="mdi:hospital-building" class="icon-blue-light" />
+          <span class="logo-text">EMR System</span>
+        </div>
+        <!-- HAMBURGER TOGGLE -->
+        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
+        </button>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item active">
-          <Icon name="lucide:layout-dashboard" /> Overview
-        </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
-          <Icon name="lucide:test-tube-2" /> Lab Results
-        </NuxtLink>
-        <NuxtLink to="/dashboard/registration" class="nav-item">
-          <Icon name="mdi:account-plus" /> Registration
-        </NuxtLink>
-        <NuxtLink to="/dashboard/Disposition" class="nav-item">
-          <Icon name="lucide:file-output" /> Disposition
-        </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
-          <Icon name="lucide:package" /> Inventory
-        </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Statement of Account
-        </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item">
-          <Icon name="lucide:bar-chart-3" /> Statistics
-        </NuxtLink>
-         <NuxtLink to="/dashboard/History" class="nav-item">
-          <Icon name="lucide:history" /> History
+        <NuxtLink 
+          v-for="link in navLinks" 
+          :key="link.to" 
+          :to="link.to" 
+          class="nav-item"
+          :title="isCollapsed ? link.label : ''"
+        >
+          <Icon :name="link.icon" />
+          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
+          <!-- Floating Tooltip for Collapsed State -->
+          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout
+          <Icon name="lucide:log-out" />
+          <span v-if="!isCollapsed">Logout</span>
         </button>
       </div>
     </aside>
@@ -118,7 +110,7 @@
             </div>
           </div>
 
-          <!-- ENHANCED QUICK ACTIONS (MAXIMIZING SPACE) -->
+          <!-- ENHANCED QUICK ACTIONS -->
           <div class="quick-actions-card">
             <div class="section-header">
               <h3>Quick Actions</h3>
@@ -170,10 +162,25 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// Sidebar State
+const isCollapsed = ref(false)
+
 const doctorName = ref('Dr. Smith')
 const userInitials = ref('JS')
 const searchQuery = ref('')
 const hasNotifications = ref(true)
+
+const navLinks = [
+  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
+  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
+  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
+  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
+  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
+  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+]
 
 const stats = ref([
   { label: 'Total Patients', value: '1,284', trendText: '+12% this month', trendClass: 'positive' },
@@ -223,30 +230,119 @@ const refreshData = () => { alert('Data refreshed!') }
 </script>
 
 <style scoped>
-/* SIDEBAR (REMAINING ORIGINAL COLOR/FUNCTION) */
+/* BASE LAYOUT */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px);}
 
-/* MAIN CONTENT */
-.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* SIDEBAR CORE & TRANSITION */
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 1.5rem 1rem; 
+  height: 100vh; 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
+
+/* SIDEBAR HEADER & TOGGLE */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding: 0 0.5rem;
+}
+.is-collapsed .sidebar-header { justify-content: center; padding: 0; }
+
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
+.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+
+.menu-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* NAVIGATION ITEMS */
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.nav-item { 
+  position: relative;
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-weight: 500; 
+  transition: all 0.2s ease; 
+  white-space: nowrap;
+}
+
+/* ACCURATE HOVER STATES */
+.nav-item:hover { 
+  background: rgba(255, 255, 255, 0.1); 
+  color: white; 
+  padding-left: 1.25rem; /* Slide effect when open */
+}
+
+.is-collapsed .nav-item:hover { padding-left: 1rem; }
+
+.is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
+
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+/* TOOLTIP FOR COLLAPSED SIDEBAR */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 15px;
+  background: #0f172a;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+
+/* SIDEBAR FOOTER */
+.sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; }
+.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; }
+.is-collapsed .logout-btn { justify-content: center; }
+
+/* MAIN CONTENT AREA */
+.main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.3s; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
 
+/* USER PROFILE & NOTIFS */
 .user-profile { display: flex; align-items: center; gap: 1.5rem; }
 .notification-wrapper { position: relative; font-size: 1.3rem; color: #64748b; padding: 4px; display: flex; }
 .notification-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid white; }
 .avatar { width: 40px; height: 40px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
+/* BODY & STATS */
 .dashboard-body { padding: 2rem 3rem; }
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 1.5rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 500px; }
@@ -255,8 +351,7 @@ const refreshData = () => { alert('Data refreshed!') }
 .search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 .filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; height: 44px; }
 
-/* STATS GRID */
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; perspective: 1000px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
 @keyframes fadeInUp {
   0% { opacity: 0; transform: scale(0.8) translateY(10px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -272,7 +367,7 @@ const refreshData = () => { alert('Data refreshed!') }
 .negative { color: #dc2626; }
 .next-appt { color: #2563eb; }
 
-/* MAIN GRID (MODIFIED FOR ENHANCEMENT) */
+/* MAIN GRID */
 .dashboard-main-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 2rem; }
 .activity-card, .quick-actions-card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; }
 
@@ -290,7 +385,7 @@ const refreshData = () => { alert('Data refreshed!') }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 
-/* ENHANCED ACTIONS GRID (REPLACING PROMO) */
+/* QUICK ACTIONS */
 .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
 .action-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem 1rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; transition: all 0.2s; }
 .action-item span { font-size: 0.8rem; font-weight: 700; color: #475569; }

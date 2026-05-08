@@ -54,6 +54,7 @@ import "~/assets/styles.css";
 </template>
 
 <style scoped>
+/* --- Original Desktop Styles --- */
 .home-page {
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
   background-image: url("/health.jpg");
@@ -81,7 +82,6 @@ import "~/assets/styles.css";
   margin-bottom: 1.5rem;
   color: #ffffff; 
   letter-spacing: -0.02em;
-  /* Glowing effect to match image_6b220e.jpg */
   text-shadow: 0 0 30px rgba(129, 171, 240, 0.6);
 }
 
@@ -133,7 +133,6 @@ import "~/assets/styles.css";
   justify-content: center;
   gap: 2rem;
   padding: 6rem 2rem;
-  /* Dark fade at bottom to help cards pop */
   background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent); 
 }
 
@@ -158,7 +157,6 @@ import "~/assets/styles.css";
 .feature-icon {
   font-size: 3rem;
   color: #60a5fa; 
-  /* Realistic glow effect */
   filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.8));
 }
 
@@ -180,5 +178,58 @@ import "~/assets/styles.css";
   background: rgba(255, 255, 255, 0.12);
   border-color: #3b82f6;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Mobile & Tablet Responsiveness --- */
+
+@media (max-width: 1024px) {
+  .hero-content h1 {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 6rem 1.5rem 3rem 1.5rem;
+  }
+
+  .hero-content h1 {
+    font-size: 2.4rem;
+    line-height: 1.1;
+  }
+
+  .sub-hero {
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+    padding: 0 10px;
+  }
+
+  .features {
+    padding: 4rem 1.5rem;
+    gap: 1.5rem;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 70%, transparent); 
+  }
+
+  .feature-card {
+    width: 100%; /* Stacks cards vertically */
+    max-width: 450px;
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .cta-button {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+  }
 }
 </style>

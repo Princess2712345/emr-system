@@ -1,45 +1,31 @@
 <template>
-  <div class="dashboard-layout">
-    <!-- RESTORED ORIGINAL SIDEBAR COLOR/STYLE -->
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">EMR System</span>
+      <div class="sidebar-header">
+        <div class="sidebar-logo" v-if="!isCollapsed">
+          <Icon name="mdi:hospital-building" class="icon-blue-light" />
+          <span class="logo-text">EMR System</span>
+        </div>
+        <!-- HAMBURGER TOGGLE -->
+        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
+        </button>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Overview
-        </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
-          <Icon name="lucide:test-tube-2" /> Lab Results
-        </NuxtLink>
-        <NuxtLink to="/dashboard/registration" class="nav-item">
-          <Icon name="mdi:account-plus" /> Registration
-        </NuxtLink>
-        <NuxtLink to="/dashboard/Disposition" class="nav-item active">
-          <Icon name="lucide:file-output" /> Disposition
-        </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
-          <Icon name="lucide:package" /> Inventory
-        </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Statement of Account
-        </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item">
-          <Icon name="lucide:bar-chart-3" /> Statistics
-        </NuxtLink>
-        <NuxtLink to="/dashboard/History" class="nav-item">
-          <Icon name="lucide:history" /> History
+        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
+          <Icon :name="link.icon" />
+          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
+          <!-- Floating Tooltip for Collapsed State -->
+          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout
+          <Icon name="lucide:log-out" />
+          <span v-if="!isCollapsed">Logout</span>
         </button>
       </div>
     </aside>
@@ -52,25 +38,22 @@
           <p>Finalize patient status and discharge summaries.</p>
         </div>
         <div class="header-actions">
-           <button class="export-btn clickable" @click="isModalOpen = true">
+           <button class="add-btn clickable" @click="isModalOpen = true">
              <Icon name="lucide:plus" /> New Disposition
            </button>
         </div>
       </header>
 
       <section class="dashboard-body animate-in">
-        <!-- SEARCH & INLINE CATEGORY FILTER (Verbatim from image_03d43a.png) -->
-        <div class="table-controls glass-card">
+        <div class="table-controls">
           <div class="search-wrapper">
             <Icon name="lucide:search" class="search-icon-svg" />
-            <input v-model="searchQuery" type="text" placeholder="Search patient..." />
+            <input v-model="searchQuery" type="text" placeholder="Search patient name or ID..." />
           </div>
           
           <div class="filter-group">
-            <div class="select-wrapper" :class="selectedCategory.toLowerCase()">
-              <span class="inline-label">Category</span>
-              <div class="divider"></div>
-              <Icon name="lucide:filter" class="filter-icon-svg" />
+            <div class="select-wrapper">
+              <Icon name="lucide:filter" class="filter-icon" />
               <select v-model="selectedCategory" class="filter-dropdown clickable">
                 <option value="All">All Categories</option>
                 <option value="Discharged">Discharged</option>
@@ -81,9 +64,8 @@
           </div>
         </div>
 
-        <!-- DISPOSITION TABLE -->
-        <div class="activity-card glass-card">
-          <table class="custom-table">
+        <div class="table-container">
+          <table class="patient-table">
             <thead>
               <tr>
                 <th>Patient Information</th>
@@ -94,22 +76,27 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in filteredDispositions" :key="item.id" class="table-row">
+              <tr v-for="item in filteredDispositions" :key="item.id">
                 <td>
-                  <div class="user-meta">
-                    <div class="disposition-icon"><Icon name="lucide:user" /></div>
+                  <div class="patient-info">
+                    <div class="patient-avatar purple">
+                      <Icon name="lucide:user" />
+                    </div>
                     <div>
-                      <p class="patient-name">{{ item.patientName }}</p>
-                      <p class="patient-id">{{ item.patientId }}</p>
+                      <p class="p-name">{{ item.patientName }}</p>
+                      <p class="p-email">{{ item.patientId }}</p>
                     </div>
                   </div>
                 </td>
-                <td><span class="status-pill" :class="item.type.toLowerCase()">{{ item.type }}</span></td>
+                <td>
+                  <span class="status-pill" :class="item.type.toLowerCase()">
+                    {{ item.type }}
+                  </span>
+                </td>
                 <td><p class="physician-name">Dr. {{ item.physician }}</p></td>
                 <td><p class="date-text">{{ item.dateTime }}</p></td>
                 <td class="text-right">
-                  <!-- FIXED: Function Call Linked -->
-                  <button class="manage-btn clickable" @click="manageCase(item)">
+                  <button class="view-link clickable" @click="manageCase(item)">
                     Manage Case
                   </button>
                 </td>
@@ -121,52 +108,70 @@
     </main>
 
     <!-- NEW DISPOSITION MODAL -->
-    <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
-      <div class="modal-box glass-card">
-        <div class="modal-head">
-          <h3>Add New Disposition</h3>
-          <button @click="isModalOpen = false" class="close-x">✕</button>
-        </div>
-        <form @submit.prevent="submitNewEntry">
-          <div class="form-body">
-            <div class="field">
+    <Transition name="fade">
+      <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="header-with-icon">
+              <Icon name="lucide:file-output" class="modal-title-icon" />
+              <h3>New Disposition</h3>
+            </div>
+            <button @click="isModalOpen = false" class="close-modal">✕</button>
+          </div>
+          <form @submit.prevent="submitNewEntry">
+            <div class="form-group">
               <label>Patient Name</label>
               <input v-model="newEntry.patientName" type="text" required placeholder="Enter name..." />
             </div>
-            <div class="field">
+            <div class="form-group">
               <label>Patient ID</label>
               <input v-model="newEntry.patientId" type="text" required placeholder="P-2026-XXXX" />
             </div>
-            <div class="field">
+            <div class="form-group">
               <label>Disposition Type</label>
-              <select v-model="newEntry.type">
+              <select v-model="newEntry.type" class="modal-select">
                 <option value="Discharged">Discharged</option>
                 <option value="Admitted">Admitted</option>
                 <option value="Transferred">Transferred</option>
               </select>
             </div>
-            <div class="field">
+            <div class="form-group">
               <label>Physician</label>
               <input v-model="newEntry.physician" type="text" required placeholder="Dr. Name" />
             </div>
-          </div>
-          <div class="form-footer">
-            <button type="button" class="btn-clear" @click="isModalOpen = false">Cancel</button>
-            <button type="submit" class="btn-save">Confirm</button>
-          </div>
-        </form>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary clickable" @click="isModalOpen = false">Cancel</button>
+              <button type="submit" class="add-btn clickable">Confirm Entry</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 
-// --- STATE MANAGEMENT ---
+// Layout State
+const isCollapsed = ref(false);
+
+// Disposition Logic
 const searchQuery = ref('');
 const selectedCategory = ref('All');
 const isModalOpen = ref(false);
+
+const navLinks = [
+  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
+  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
+  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
+  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
+  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
+  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+];
 
 const dispositions = ref([
   { id: 1, patientName: 'Juan Dela Cruz', patientId: 'P-2026-0412', type: 'Discharged', physician: 'Santos', dateTime: 'May 05, 2026 - 09:00 AM' },
@@ -180,7 +185,6 @@ const newEntry = ref({
   physician: ''
 });
 
-// --- COMPUTED PROPERTIES ---
 const filteredDispositions = computed(() => {
   return dispositions.value.filter(d => {
     const s = searchQuery.value.toLowerCase();
@@ -190,22 +194,10 @@ const filteredDispositions = computed(() => {
   });
 });
 
-// --- METHODS ---
-
-// Submit New Disposition
 const submitNewEntry = () => {
-  if (!newEntry.value.patientName || !newEntry.value.physician) {
-    alert("Please fill in the required fields.");
-    return;
-  }
-
   const now = new Date();
   const timeStr = now.toLocaleString('en-US', { 
-    month: 'short', 
-    day: '2-digit', 
-    year: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
+    month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
   });
 
   dispositions.value.unshift({ 
@@ -214,96 +206,162 @@ const submitNewEntry = () => {
     dateTime: timeStr.replace(',', ' -') 
   });
 
-  // Reset form and close modal
   newEntry.value = { patientName: '', patientId: '', type: 'Discharged', physician: '' };
   isModalOpen.value = false;
 };
 
-// Manage/Open Case
 const manageCase = (item) => {
-  console.log("Opening case for:", item.patientName);
   alert(`Accessing Electronic Health Record: ${item.patientName}`);
 };
 
-// Delete Entry
-const deleteEntry = (id) => {
-  if (confirm('Are you sure you want to remove this record?')) {
-    dispositions.value = dispositions.value.filter(d => d.id !== id);
-  }
-};
-
-/** 
- * Functional Logout Handler 
- */
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
-    try {
-      const token = useCookie('auth_token');
-      token.value = null;
-      
-      if (process.client) {
-        localStorage.removeItem('user_data');
-        sessionStorage.clear();
-      }
-
-      await navigateTo('/auth/login'); 
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    const token = useCookie('auth_token');
+    token.value = null;
+    await navigateTo('/auth/login');
   }
 };
 </script>
 
 <style scoped>
-/* REFINED LAYOUT & SIDEBAR */
+/* BASE LAYOUT */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; box-shadow: 4px 0 10px rgba(0,0,0,0.05); }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; letter-spacing: -0.5px; }
+/* SIDEBAR CORE */
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 1.5rem 1rem; 
+  height: 100vh; 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding: 0 0.5rem;
+}
+.is-collapsed .sidebar-header { justify-content: center; padding: 0; }
+
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.nav-item.active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+.menu-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  cursor: pointer;
+}
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
-.logout-btn:hover { color: #f87171; transform: translateX(5px); }
+/* NAVIGATION */
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+.nav-item { 
+  position: relative;
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-weight: 500; 
+  transition: all 0.2s ease; 
+  white-space: nowrap;
+}
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; padding-left: 1.25rem; }
+.is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
+.is-collapsed .nav-item:hover { padding-left: 0.8rem; }
 
-/* MAIN CONTENT STYLES (Restored for image_03d43a.png compliance) */
-.main-content { flex: 1; padding: 2rem; overflow-y: auto; }
-.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.welcome-msg h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0; }
-.select-wrapper { display: flex; align-items: center; background: white; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 46px; }
-.inline-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-right: 10px; }
-.divider { width: 1px; height: 20px; background: #e2e8f0; margin-right: 12px; }
-.filter-dropdown { background: transparent; border: none; font-weight: 700; color: #1e293b; outline: none; font-size: 0.95rem; cursor: pointer; }
-.glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.table-controls { display: flex; justify-content: space-between; padding: 1rem 1.25rem; margin-bottom: 1.5rem; align-items: center; }
-.search-wrapper { position: relative; width: 320px; }
-.search-wrapper input { width: 100%; height: 46px; padding: 0 12px 0 42px; border: 1.5px solid #e2e8f0; border-radius: 12px; outline: none; }
-.search-icon-svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.custom-table { width: 100%; border-collapse: collapse; }
-.custom-table th { padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #f1f5f9; font-weight: 800; }
-.table-row td { padding: 16px; border-bottom: 1px solid #f1f5f9; }
-.status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-.status-pill.discharged { background: #dcfce7; color: #166534; }
+.router-link-active { background: #2563eb !important; color: white !important; }
+
+/* TOOLTIP */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 15px;
+  background: #0f172a;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+
+.sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; }
+.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; }
+.is-collapsed .logout-btn { justify-content: center; }
+
+
+/* MAIN CONTENT */
+.main-content { flex: 1; display: flex; flex-direction: column; transition: all 0.3s; }
+.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
+.top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
+
+/* TABLE STYLING */
+.dashboard-body { padding: 2rem 3rem; }
+.table-controls { display: flex; justify-content: space-between; margin-bottom: 1.5rem; gap: 1.5rem; }
+.search-wrapper { position: relative; flex: 1; max-width: 500px; }
+.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; }
+.search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+
+.select-wrapper { position: relative; display: flex; align-items: center; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0 12px; }
+.filter-icon { color: #64748b; margin-right: 8px; }
+.filter-dropdown { border: none; height: 44px; font-weight: 600; color: #475569; outline: none; background: transparent; }
+
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+.patient-table { width: 100%; border-collapse: collapse; }
+.patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
+.patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+
+.patient-info { display: flex; align-items: center; gap: 12px; }
+.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
+
+.p-name { font-weight: 700; color: #1e293b; margin: 0; }
+.p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
+
+.status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.status-pill.discharged { background: #dcfce7; color: #15803d; }
 .status-pill.admitted { background: #dbeafe; color: #1e40af; }
 .status-pill.transferred { background: #fef3c7; color: #92400e; }
-.manage-btn { color: #2563eb; font-weight: 700; background: #eff6ff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-.manage-btn:hover { background: #2563eb; color: white; }
-.export-btn { background: #1e3a8a; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
-/* MODAL STYLES */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(4px); }
-.modal-box { width: 450px; padding: 2rem; border: none; }
-.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.close-x { background: none; border: none; font-size: 1.2rem; color: #94a3b8; cursor: pointer; }
-.form-body { display: flex; flex-direction: column; gap: 1rem; }
-.field label { display: block; font-size: 0.75rem; font-weight: 800; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-.field input, .field select { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-family: inherit; }
-.form-footer { margin-top: 2rem; display: flex; gap: 10px; }
-.btn-save { flex: 1; background: #1e3a8a; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-.btn-clear { background: #f1f5f9; color: #64748b; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.view-link { color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; border: none; }
+.add-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.modal-content { background: white; width: 450px; border-radius: 16px; padding: 2rem; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.header-with-icon { display: flex; align-items: center; gap: 12px; color: #1e3a8a; }
+.form-group { margin-bottom: 1.25rem; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #475569; }
+.form-group input, .modal-select { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 2rem; }
+.btn-secondary { background: #f1f5f9; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; }
+
+.clickable { cursor: pointer; transition: transform 0.2s; }
+.clickable:active { transform: scale(0.95); }
+
+/* Transitions */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
