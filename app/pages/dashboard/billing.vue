@@ -1,44 +1,33 @@
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+    <!-- SIDEBAR (Synced with other pages) -->
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">EMR System</span>
+      <div class="sidebar-header">
+        <div class="sidebar-logo" v-if="!isCollapsed">
+          <Icon name="mdi:hospital-building" class="icon-blue-light" />
+          <span class="logo-text">EMR System</span>
+        </div>
+        <!-- HAMBURGER TOGGLE -->
+        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
+        </button>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Overview
-        </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
-          <Icon name="lucide:test-tube-2" /> Lab Results
-        </NuxtLink>
-        <NuxtLink to="/dashboard/registration" class="nav-item">
-          <Icon name="mdi:account-plus" /> Registration
-        </NuxtLink>
-        <NuxtLink to="/dashboard/Disposition" class="nav-item">
-          <Icon name=lucide:file-output /> Disposition
-        </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
-          <Icon name="lucide:package" /> Inventory
-        </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item active">
-          <Icon name="lucide:credit-card" /> Statement of Account
-        </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item">
-          <Icon name="lucide:bar-chart-3" /> Statistics
-        </NuxtLink>
-         <NuxtLink to="/dashboard/History" class="nav-item">
-          <Icon name="lucide:history" /> History
+        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
+          <Icon :name="link.icon" />
+          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
+          <!-- Floating Tooltip for Collapsed State -->
+          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout
+          <Icon name="lucide:log-out" />
+          <span v-if="!isCollapsed">Logout</span>
+          <!-- Floating Tooltip for Collapsed State -->
+          <span v-if="isCollapsed" class="sidebar-tooltip">Logout</span>
         </button>
       </div>
     </aside>
@@ -50,7 +39,9 @@
           <p>Manage patient billing, insurance claims, and payment processing.</p>
         </div>
         <div class="header-actions">
-          <button class="add-btn" @click="isModalOpen = true">+ Create New Invoice</button>
+          <button class="add-btn clickable" @click="isModalOpen = true">
+            <Icon name="lucide:plus" /> Create New Invoice
+          </button>
         </div>
       </header>
 
@@ -86,7 +77,9 @@
               <option value="Unpaid">Unpaid</option>
               <option value="Partial">Partial</option>
             </select>
-            <button class="filter-btn" @click="resetFilters">Reset</button>
+            <button class="filter-btn clickable" @click="resetFilters">
+              <Icon name="lucide:rotate-ccw" /> Reset
+            </button>
           </div>
         </div>
 
@@ -129,10 +122,10 @@
                 </td>
                 <td class="text-right">
                   <div class="action-btns">
-                    <button class="icon-btn" title="Download PDF" @click="downloadInvoice(invoice)">
+                    <button class="icon-btn clickable" title="Download PDF" @click="downloadInvoice(invoice)">
                       <Icon name="lucide:download" />
                     </button>
-                    <button class="view-link" @click="recordPayment(invoice)">Pay</button>
+                    <button class="view-link clickable" @click="recordPayment(invoice)">Pay</button>
                   </div>
                 </td>
               </tr>
@@ -142,12 +135,13 @@
       </section>
     </main>
 
+    <!-- MODAL (Synced) -->
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
         <div class="modal-content">
           <div class="modal-header">
             <h3>Generate New Statement</h3>
-            <button class="close-modal" @click="isModalOpen = false">
+            <button class="close-modal clickable" @click="isModalOpen = false">
               <Icon name="lucide:x" />
             </button>
           </div>
@@ -164,8 +158,8 @@
               </div>
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn-secondary" @click="isModalOpen = false">Cancel</button>
-              <button type="submit" class="add-btn">Create Statement</button>
+              <button type="button" class="btn-secondary clickable" @click="isModalOpen = false">Cancel</button>
+              <button type="submit" class="add-btn clickable">Create Statement</button>
             </div>
           </form>
         </div>
@@ -177,9 +171,23 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+// Layout State
+const isCollapsed = ref(false)
 const searchQuery = ref('')
 const selectedStatus = ref('All')
 const isModalOpen = ref(false)
+
+const navLinks = [
+  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
+  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
+  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
+  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
+  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
+  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+]
 
 const invoices = ref([
   { id: '#INV-2045', patientName: 'John Doe', total: '₱1,250.00', balance: '₱0.00', dueDate: 'Oct 24, 2023', status: 'Paid' },
@@ -202,26 +210,16 @@ const recordPayment = (inv) => alert(`Opening payment gateway for ${inv.patientN
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
 const handleInvoice = () => { alert('Invoice generated successfully.'); isModalOpen.value = false }
 
-/** 
- * Functional Logout Handler 
- */
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
     try {
-      // 1. Clear the Auth Token
       const token = useCookie('auth_token')
       token.value = null
-      
-      // 2. Clear user session/local storage
       if (process.client) {
-        localStorage.removeItem('user_data')
+        localStorage.clear()
         sessionStorage.clear()
       }
-
-      // 3. Redirect to the Auth/Login page
-      // Ensure this path exists in your pages folder
       await navigateTo('/auth/login') 
-      
     } catch (error) {
       console.error('Logout failed:', error)
     }
@@ -230,30 +228,145 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-/* --- CORE LAYOUT --- */
+/* --- CORE LAYOUT & SIDEBAR (Synced) --- */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 1.5rem 1rem; 
+  height: 100vh; 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding: 0 0.5rem;
+}
+.is-collapsed .sidebar-header { justify-content: center; padding: 0; }
+
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+.menu-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
+
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.nav-item { 
+  position: relative;
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-weight: 500; 
+  transition: all 0.2s ease; 
+  white-space: nowrap;
+}
+
+.nav-item:hover { 
+  background: rgba(255, 255, 255, 0.1); 
+  color: white; 
+  padding-left: 1.25rem; 
+}
+
+.is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
+.is-collapsed .nav-item:hover { padding-left: 0.8rem; }
 
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px);}
+/* TOOLTIP */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 15px;
+  background: #0f172a;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+
+/* SIDEBAR FOOTER */
+/* SIDEBAR FOOTER */
+.sidebar-footer { 
+  padding-top: 1rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+}
+
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  position: relative; /* Necessary for tooltip positioning */
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover { 
+  background: rgba(252, 165, 165, 0.1); 
+  color: #f87171; 
+  transform: translateX(5px); 
+}
+
+/* Center icon and handle hover when sidebar is collapsed */
+.is-collapsed .logout-btn { 
+  justify-content: center; 
+}
+
+.is-collapsed .logout-btn:hover { 
+  transform: none; /* Prevent sliding when collapsed */
+}
+
+/* Trigger tooltip visibility on hover when collapsed */
+.logout-btn:hover .sidebar-tooltip { 
+  opacity: 1; 
+  margin-left: 10px; 
+}
 
 /* --- MAIN CONTENT AREA --- */
-.main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
+.main-content { flex: 1; display: flex; flex-direction: column; width: 100%; transition: all 0.3s; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-.top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; }
-.top-bar p { color: #64748b; margin-top: 4px; }
+.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
+.top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
 .billing-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
 
-/* --- FINANCIAL STATS (LIFT & DARKEN HOVER) --- */
+/* --- FINANCIAL STATS --- */
 .billing-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
 
 @keyframes fadeInUp {
@@ -269,23 +382,15 @@ const handleLogout = async () => {
   animation: fadeInUp 0.6s ease-out forwards;
   opacity: 0;
   cursor: pointer;
-  /* Decoupled lift: works independently of the entrance animation */
   transform: translateY(0);
   transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Individual Gradient Setup */
 .b-stat-card.blue { background: linear-gradient(135deg, #3b82f6, #1e3a8a); animation-delay: 0.1s; }
 .b-stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); animation-delay: 0.2s; }
 .b-stat-card.green { background: linear-gradient(135deg, #10b981, #059669); animation-delay: 0.3s; }
 
-/* THE LIFT EFFECT: Darkens and moves up 5px */
-.b-stat-card:hover {
-  transform: translateY(-5px); 
-  filter: brightness(90%);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-}
-
+.b-stat-card:hover { transform: translateY(-5px); filter: brightness(90%); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
 .b-label { font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; font-weight: 600; }
 .b-value { font-size: 1.8rem; font-weight: 800; margin: 5px 0 0; }
 
@@ -295,7 +400,7 @@ const handleLogout = async () => {
 .search-wrapper input { width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; font-size: 0.95rem; }
 .search-icon-svg { position: absolute; left: 15px; color: #94a3b8; font-size: 1.2rem; }
 .filter-group { display: flex; gap: 12px; }
-.filter-dropdown, .filter-btn { padding: 0 1.2rem; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #475569; font-weight: 600; cursor: pointer; }
+.filter-dropdown, .filter-btn { padding: 0 1.2rem; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #475569; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
 /* --- DATA TABLE --- */
 .table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden; }
@@ -319,11 +424,11 @@ const handleLogout = async () => {
 
 /* --- BUTTONS --- */
 .action-btns { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
-.icon-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; color: #64748b; }
+.icon-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; color: #64748b; }
 .icon-btn:hover { background: #e2e8f0; color: #1e3a8a; }
 .view-link { color: white; background: #2563eb; padding: 0.5rem 1.2rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
 .view-link:hover { background: #1e40af; }
-.add-btn { background-color: #2563eb; color: white; border: none; padding: 0.8rem 1.6rem; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.add-btn { background-color: #2563eb; color: white; border: none; padding: 0.8rem 1.6rem; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .text-right { text-align: right; }
 
 /* --- MODAL --- */
@@ -338,6 +443,9 @@ const handleLogout = async () => {
 .item-list input { flex: 1; background: #f8fafc; color: #64748b; font-weight: 600; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.5rem; }
 .btn-secondary { background: #f1f5f9; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
+.clickable { cursor: pointer; transition: all 0.2s ease; }
+.clickable:active { transform: scale(0.96); }
 
 /* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }

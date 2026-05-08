@@ -1,48 +1,35 @@
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+    <!-- SIDEBAR (Synced with Collapsible Logic) -->
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">EMR System</span>
+      <div class="sidebar-header">
+        <div class="sidebar-logo" v-if="!isCollapsed">
+          <Icon name="mdi:hospital-building" class="icon-blue-light" />
+          <span class="logo-text">EMR System</span>
+        </div>
+        <!-- HAMBURGER TOGGLE -->
+        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
+        </button>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Overview
-        </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
-          <Icon name="lucide:test-tube-2" /> Lab Results
-        </NuxtLink>
-        <NuxtLink to="/dashboard/registration" class="nav-item">
-          <Icon name="mdi:account-plus" /> Registration
-        </NuxtLink>
-        <NuxtLink to="/dashboard/Disposition" class="nav-item">
-          <Icon name=lucide:file-output /> Disposition
-        </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item">
-          <Icon name="lucide:package" /> Inventory
-        </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Statement of Account
-        </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item active">
-          <Icon name="lucide:bar-chart-3" /> Statistics
-        </NuxtLink>
-         <NuxtLink to="/dashboard/History" class="nav-item">
-          <Icon name="lucide:history" /> History
+        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
+          <Icon :name="link.icon" />
+          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
+          <!-- Floating Tooltip for Collapsed State -->
+          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout
+          <Icon name="lucide:log-out" />
+          <span v-if="!isCollapsed">Logout</span>
+          <span v-if="isCollapsed" class="sidebar-tooltip">Logout</span>
         </button>
       </div>
     </aside>
-
 
     <main class="main-content">
       <header class="top-bar">
@@ -56,7 +43,7 @@
             <span class="pulse-dot"></span>
             Live Updates
           </div>
-          <button class="export-btn">
+          <button class="export-btn clickable">
             <Icon name="lucide:download" /> Download Full Report
           </button>
         </div>
@@ -154,9 +141,22 @@
 </template>
 
 <script setup>
-/**
- * STATISTICS & ANALYTICS DATA
- */
+import { ref } from 'vue'
+
+const isCollapsed = ref(false)
+
+const navLinks = [
+  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
+  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
+  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
+  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
+  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
+  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+]
+
 const kpiData = [
   { label: 'Patient Growth', value: '2,405', trend: '+8.2%', trendType: 'up', icon: 'lucide:user-plus' },
   { label: 'Avg. Consultation', value: '18m', trend: '-2.1%', trendType: 'up', icon: 'lucide:clock' },
@@ -176,26 +176,16 @@ const departments = [
   { name: 'Pediatric Ward', patients: '361', stay: '2.5' }
 ];
 
-/** 
- * Functional Logout Handler 
- * Secures the system by clearing auth states and redirecting.
- */
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out of the EMR System?')) {
     try {
-      // 1. Clear the Auth Cookie
       const token = useCookie('auth_token');
       token.value = null;
-      
-      // 2. Clear user session & local storage
       if (process.client) {
         localStorage.removeItem('user_data');
         sessionStorage.clear();
       }
-
-      // 3. Redirect to the login page
       await navigateTo('/auth/login'); 
-      
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -203,17 +193,9 @@ const handleLogout = async () => {
 }
 </script>
 
-
 <style scoped>
-/* --- SIDEBAR (NO CHANGES TO COLOR) --- */
-.dashboard-layout { 
-  display: flex; 
-  height: 100vh; /* Fixed height */
-  background: #f8fafc; 
-  font-family: 'Inter', sans-serif; 
-  color: #1e293b; 
-  overflow: hidden; /* Prevent global scroll */
-}
+/* --- CORE LAYOUT & SIDEBAR (Synced) --- */
+.dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; color: #1e293b; overflow: hidden; }
 
 .sidebar { 
   width: 260px; 
@@ -221,120 +203,144 @@ const handleLogout = async () => {
   color: white; 
   display: flex; 
   flex-direction: column; 
-  padding: 2rem 1.5rem; 
+  padding: 1.5rem 1rem; 
   height: 100vh; 
   position: sticky; 
   top: 0; 
-  z-index: 10; 
+  z-index: 100; 
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.main-content { 
-  flex: 1; 
-  display: flex; 
-  flex-direction: column; 
-  height: 100vh; /* Fixed height */
-  overflow: hidden; 
-}
+.is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
 
-.top-bar { 
-  background: white; 
-  padding: 1.25rem 2.5rem; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  border-bottom: 1px solid #e2e8f0; 
-  flex-shrink: 0; /* Header won't shrink or scroll */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding: 0 0.5rem;
 }
+.is-collapsed .sidebar-header { justify-content: center; padding: 0; }
 
-/* Renamed from .patient-body to .stats-body to match template */
-.stats-body { 
-  flex: 1; 
-  overflow-y: auto; /* Independent scroll enabled */
-  padding: 2rem 2.5rem; 
-}
-
-/* --- SIDEBAR STYLING --- */
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.nav-item.active { background: #2563eb; color: white; }
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px);}
 
-/* --- ENHANCED CONTENT --- */
-.breadcrumb { font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 1px; }
-.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 800; }
-.top-bar p { color: #64748b; margin: 4px 0 0; font-size: 0.9rem; }
-
-.status-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; color: #10b981; margin-right: 1.5rem; }
-.pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
-
-/* KPI CARDS ENHANCEMENT */
-.kpi-grid { 
-  display: grid; 
-  grid-template-columns: repeat(4, 1fr); 
-  gap: 1.5rem; 
-  margin-bottom: 2rem; 
-}
-
-.kpi-card { 
-  background: white; 
-  padding: 1.5rem; 
-  border-radius: 12px; 
-  border: 1px solid #e2e8f0; 
-  border-top: 4px solid #2563eb; 
-  position: relative; 
-  overflow: hidden;
-  /* Added for the lifting effect */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.menu-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background 0.2s;
+}
+.menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
+
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.nav-item { 
+  position: relative;
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-weight: 500; 
+  transition: all 0.2s ease; 
+  white-space: nowrap;
 }
 
-/* Hover Lift Effect */
-.kpi-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  border-top-color: #3b82f6;
-}
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; padding-left: 1.25rem; }
+.is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
+.is-collapsed .nav-item:hover { padding-left: 0.8rem; }
 
-/* Click Press Effect */
-.kpi-card:active {
-  transform: translateY(-2px);
-  transition: all 0.1s ease;
-}
+.router-link-active { background: #2563eb !important; color: white !important; }
 
-.kpi-top { display: flex; justify-content: space-between; align-items: center; }
-
-.kpi-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-
-.kpi-icon-bg { 
-  position: absolute; 
-  right: -10px; 
-  top: -10px; 
-  font-size: 4rem; 
-  opacity: 0.03; 
-  color: #1e3a8a; 
+/* TOOLTIP */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 15px;
+  background: #0f172a;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  opacity: 0;
   pointer-events: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+
+/* SIDEBAR FOOTER */
+.sidebar-footer { 
+  padding-top: 1rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
 }
 
-.kpi-value { 
-  font-size: 2rem; 
-  font-weight: 800; 
-  margin: 1rem 0; 
-  color: #1e293b; 
-  letter-spacing: -1px; 
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  position: relative; /* Necessary for tooltip positioning */
+  transition: all 0.2s ease;
 }
 
-/* BAR CHART ENHANCEMENT */
+.logout-btn:hover { 
+  background: rgba(252, 165, 165, 0.1); 
+  color: #f87171; 
+  transform: translateX(5px); 
+}
+
+/* Center icon and handle hover when sidebar is collapsed */
+.is-collapsed .logout-btn { 
+  justify-content: center; 
+}
+
+.is-collapsed .logout-btn:hover { 
+  transform: none; /* Prevent sliding when collapsed */
+}
+
+/* Trigger tooltip visibility on hover when collapsed */
+.logout-btn:hover .sidebar-tooltip { 
+  opacity: 1; 
+  margin-left: 10px; 
+}
+
+/* --- MAIN CONTENT AREA --- */
+.main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
+.stats-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
+
+/* KPI CARDS */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+.kpi-card { 
+  background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid #2563eb; 
+  position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.kpi-card:hover { transform: translateY(-6px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1); border-top-color: #3b82f6; }
+.kpi-top { display: flex; justify-content: space-between; align-items: center; }
+.kpi-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+.kpi-icon-bg { position: absolute; right: -10px; top: -10px; font-size: 4rem; opacity: 0.03; color: #1e3a8a; pointer-events: none; }
+.kpi-value { font-size: 2rem; font-weight: 800; margin: 1rem 0; color: #1e293b; letter-spacing: -1px; }
+
+/* CHARTS */
 .charts-container { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; }
 .chart-box { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
 .chart-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e3a8a; }
-.chart-sub { font-size: 0.8rem; color: #94a3b8; margin: 4px 0 0; }
 
 .visual-placeholder { background: #f8fafc; border-radius: 8px; height: 300px; display: flex; align-items: flex-end; justify-content: space-around; padding: 1.5rem 1rem; border: 1px solid #f1f5f9; }
 .bar-wrapper { width: 7%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
@@ -342,33 +348,21 @@ const handleLogout = async () => {
 .bar:hover { filter: brightness(1.2); }
 .bar-tooltip { position: absolute; top: -30px; background: #1e293b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; opacity: 0; transition: 0.2s; }
 .bar-wrapper:hover .bar-tooltip { opacity: 1; transform: translateY(-5px); }
-.bar-label { font-size: 10px; color: #94a3b8; margin-top: 8px; font-weight: 600; }
 
-/* PIE CHART ENHANCEMENT */
+.circle { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(#2563eb 0% 40%, #10b981 40% 70%, #f59e0b 70% 100%); mask: radial-gradient(transparent 55%, black 56%); }
 .pie-container { display: flex; flex-direction: column; align-items: center; gap: 2rem; margin-top: 1rem; }
 .pie-visual { position: relative; }
 .inner-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: flex; flex-direction: column; }
-.inner-label strong { font-size: 1.2rem; color: #1e293b; }
-.inner-label span { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
-.circle { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(#2563eb 0% 40%, #10b981 40% 70%, #f59e0b 70% 100%); mask: radial-gradient(transparent 55%, black 56%); }
 
-.chart-legend { width: 100%; list-style: none; padding: 0; }
-.chart-legend li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
-.legend-info { display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 500; }
-
-.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.dot.cardio { background: #2563eb; }
-.dot.neuro { background: #10b981; }
-.dot.ped { background: #f59e0b; }
-
-/* DATA TABLE */
 .full-width-table { grid-column: span 2; }
 .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 .data-table th { text-align: left; padding: 12px; font-size: 0.8rem; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
 .data-table td { padding: 12px; font-size: 0.9rem; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
-.status-pill { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+
+.export-btn { background: #1e3a8a; color: white; padding: 0.7rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; cursor: pointer; }
+.clickable { cursor: pointer; transition: all 0.2s ease; }
+.clickable:active { transform: scale(0.96); }
 
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-.export-btn { background: #1e3a8a; color: white; padding: 0.7rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; cursor: pointer; }
-.export-btn:hover { background: #1e40af; }
+.pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
 </style>

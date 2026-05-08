@@ -1,57 +1,47 @@
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="icon-blue-light" />
-        <span class="logo-text">EMR System</span>
+      <div class="sidebar-header">
+        <div class="sidebar-logo" v-if="!isCollapsed">
+          <Icon name="mdi:hospital-building" class="icon-blue-light" />
+          <span class="logo-text">EMR System</span>
+        </div>
+        <!-- HAMBURGER TOGGLE -->
+        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
+        </button>
       </div>
       
       <nav class="sidebar-nav">
-        <NuxtLink to="/dashboard" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Overview
-        </NuxtLink>
-        <NuxtLink to="/dashboard/lab-results" class="nav-item">
-          <Icon name="lucide:test-tube-2" /> Lab Results
-        </NuxtLink>
-        <NuxtLink to="/dashboard/registration" class="nav-item">
-          <Icon name="mdi:account-plus" /> Registration
-        </NuxtLink>
-        <NuxtLink to="/dashboard/Disposition" class="nav-item">
-          <Icon name=lucide:file-output /> Disposition
-        </NuxtLink>
-        <NuxtLink to="/dashboard/inventory" class="nav-item active">
-          <Icon name="lucide:package" /> Inventory
-        </NuxtLink>
-        <NuxtLink to="/dashboard/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Statement of Account
-        </NuxtLink>
-        <NuxtLink to="/dashboard/appointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/dashboard/statistic" class="nav-item">
-          <Icon name="lucide:bar-chart-3" /> Statistics
-        </NuxtLink>
-         <NuxtLink to="/dashboard/History" class="nav-item">
-          <Icon name="lucide:history" /> History
+        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
+          <Icon :name="link.icon" />
+          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
+          <!-- Floating Tooltip for Collapsed State -->
+          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout
+          <Icon name="lucide:log-out" />
+          <span v-if="!isCollapsed">Logout</span>
+          <span v-if="isCollapsed" class="sidebar-tooltip">Logout</span>
         </button>
       </div>
     </aside>
 
-
     <main class="main-content">
       <header class="top-bar">
         <div class="welcome-msg">
+          <span class="breadcrumb">SUPPLY CHAIN</span>
           <h1>Inventory Management</h1>
           <p>Monitor medical supplies, equipment stock levels, and procurement alerts.</p>
         </div>
         <div class="header-actions">
-          <button class="add-btn" @click="openAddModal">+ Add New Item</button>
+          <button class="add-btn clickable" @click="openAddModal">
+            <Icon name="lucide:plus" /> Add New Item
+          </button>
         </div>
       </header>
 
@@ -72,7 +62,7 @@
               <option value="Equipment">Equipment</option>
               <option value="Disposables">Disposables</option>
             </select>
-            <button class="filter-btn" @click="resetFilters">Reset</button>
+            <button class="filter-btn clickable" @click="resetFilters">Reset</button>
           </div>
         </div>
 
@@ -88,7 +78,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in filteredInventory" :key="item.id">
+              <tr v-for="item in filteredInventory" :key="item.id" class="table-row">
                 <td>
                   <div class="item-info">
                     <div class="category-badge" :class="item.status.toLowerCase()">
@@ -113,7 +103,7 @@
                   </span>
                 </td>
                 <td class="text-right">
-                  <button class="view-link" @click="editItem(item)">
+                  <button class="view-link clickable" @click="editItem(item)">
                     Manage
                   </button>
                 </td>
@@ -128,6 +118,7 @@
       </section>
     </main>
 
+    <!-- MODAL -->
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
@@ -169,8 +160,8 @@
             <div class="modal-actions">
               <button v-if="isEditing" type="button" class="btn-delete" @click="deleteItem">Delete Item</button>
               <div class="right-actions">
-                <button type="button" class="btn-secondary" @click="closeModal">Cancel</button>
-                <button type="submit" class="add-btn">{{ isEditing ? 'Update Stock' : 'Add to Stock' }}</button>
+                <button type="button" class="btn-secondary clickable" @click="closeModal">Cancel</button>
+                <button type="submit" class="add-btn clickable">{{ isEditing ? 'Update Stock' : 'Add to Stock' }}</button>
               </div>
             </div>
           </form>
@@ -183,12 +174,24 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// --- STATE MANAGEMENT ---
+const isCollapsed = ref(false)
 const searchQuery = ref('')
 const selectedCategory = ref('All')
 const isModalOpen = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+
+const navLinks = [
+  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
+  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
+  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
+  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
+  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
+  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+]
 
 const newItem = ref({
   name: '',
@@ -205,7 +208,6 @@ const inventoryItems = ref([
   { id: 4, name: 'Paracetamol Syrup', category: 'Medication', stock: 85, unit: 'bottles', price: '210.00', status: 'In-Stock' },
 ])
 
-// --- COMPUTED PROPERTIES ---
 const filteredInventory = computed(() => {
   return inventoryItems.value.filter(item => {
     const s = searchQuery.value.toLowerCase()
@@ -215,52 +217,20 @@ const filteredInventory = computed(() => {
   })
 })
 
-// --- METHODS ---
-
-const resetFilters = () => {
-  searchQuery.value = ''
-  selectedCategory.value = 'All'
-}
-
-const openAddModal = () => {
-  isEditing.value = false
-  newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }
-  isModalOpen.value = true
-}
-
-const editItem = (item) => {
-  isEditing.value = true
-  editingId.value = item.id
-  // Shallow clone to avoid immediate mutation
-  newItem.value = { ...item }
-  isModalOpen.value = true
-}
-
-const closeModal = () => {
-  isModalOpen.value = false
-  isEditing.value = false
-  editingId.value = null
-}
+const resetFilters = () => { searchQuery.value = ''; selectedCategory.value = 'All'; }
+const openAddModal = () => { isEditing.value = false; newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }; isModalOpen.value = true; }
+const editItem = (item) => { isEditing.value = true; editingId.value = item.id; newItem.value = { ...item }; isModalOpen.value = true; }
+const closeModal = () => { isModalOpen.value = false; isEditing.value = false; editingId.value = null; }
 
 const handleSave = () => {
-  // Logic to determine status based on stock levels
   const stockCount = parseInt(newItem.value.stock) || 0
   const status = stockCount > 50 ? 'In-Stock' : (stockCount > 0 ? 'Low-Stock' : 'Out-of-Stock')
-  
   if (isEditing.value) {
     const index = inventoryItems.value.findIndex(i => i.id === editingId.value)
-    if (index !== -1) {
-      inventoryItems.value[index] = { ...newItem.value, stock: stockCount, status }
-    }
+    if (index !== -1) inventoryItems.value[index] = { ...newItem.value, stock: stockCount, status }
   } else {
-    inventoryItems.value.push({ 
-      ...newItem.value, 
-      id: Date.now(), 
-      stock: stockCount,
-      status 
-    })
+    inventoryItems.value.push({ ...newItem.value, id: Date.now(), stock: stockCount, status })
   }
-  
   closeModal()
 }
 
@@ -271,97 +241,152 @@ const deleteItem = () => {
   }
 }
 
-/** 
- * Functional Logout Handler 
- */
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
-    try {
-      const token = useCookie('auth_token')
-      token.value = null
-      
-      if (process.client) {
-        localStorage.removeItem('user_data')
-        sessionStorage.clear()
-      }
-
-      await navigateTo('/auth/login') 
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
+    const token = useCookie('auth_token'); token.value = null;
+    if (process.client) { localStorage.removeItem('user_data'); sessionStorage.clear(); }
+    await navigateTo('/auth/login');
   }
 }
 </script>
 
 <style scoped>
-/* --- CORE LAYOUT --- (Unchanged) */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; position: sticky; top: 0; z-index: 10; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
+/* --- CORE LAYOUT & SIDEBAR (Synced) --- */
+.dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; color: #1e293b; overflow: hidden; }
+
+.sidebar { 
+  width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; 
+  padding: 1.5rem 1rem; height: 100vh; position: sticky; top: 0; z-index: 100; 
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
+
+.sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; padding: 0 0.5rem; }
+.is-collapsed .sidebar-header { justify-content: center; padding: 0; }
+
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px);}
 
-.main-content { flex: 1; display: flex; flex-direction: column; width: 100%; }
-.top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-.top-bar h1 { font-size: 1.8rem; color: #1e3a8a; margin: 0; }
-.top-bar p { color: #64748b; margin-top: 4px; }
-.inventory-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
+.menu-toggle {
+  background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 8px; border-radius: 8px; 
+  display: flex; cursor: pointer; transition: background 0.2s;
+}
 
-/* --- CONTROLS --- (Unchanged) */
-.table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 2rem; }
-.search-wrapper { position: relative; flex: 1; max-width: 600px; }
-.search-wrapper input { width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; font-size: 0.95rem; }
-.search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); }
-.filter-group { display: flex; gap: 12px; }
-.filter-dropdown, .filter-btn { padding: 0 1.2rem; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #475569; font-weight: 600; cursor: pointer; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
 
-/* --- TABLE --- (Unchanged) */
-.table-container { background: white; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+.nav-item { 
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
+  color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; 
+}
+
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(4px); }
+.is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
+.is-collapsed .nav-item:hover { transform: none; }
+
+.router-link-active { background: #2563eb !important; color: white !important; }
+
+/* TOOLTIP */
+.sidebar-tooltip {
+  position: absolute; left: 100%; margin-left: 15px; background: #0f172a; color: white; 
+  padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; opacity: 0; pointer-events: none; 
+  transition: all 0.2s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 1000;
+}
+.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+
+/* SIDEBAR FOOTER */
+.sidebar-footer { 
+  padding-top: 1rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+}
+
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  position: relative; /* Necessary for tooltip positioning */
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover { 
+  background: rgba(252, 165, 165, 0.1); 
+  color: #f87171; 
+  transform: translateX(5px); 
+}
+
+/* Center icon and handle hover when sidebar is collapsed */
+.is-collapsed .logout-btn { 
+  justify-content: center; 
+}
+
+.is-collapsed .logout-btn:hover { 
+  transform: none; /* Prevent sliding when collapsed */
+}
+
+/* Trigger tooltip visibility on hover when collapsed */
+.logout-btn:hover .sidebar-tooltip { 
+  opacity: 1; 
+  margin-left: 10px; 
+}
+
+/* MAIN CONTENT */
+.main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+.breadcrumb { font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 1px; }
+.top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 800; }
+.inventory-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
+
+/* CONTROLS */
+.table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 1.5rem; }
+.search-wrapper { position: relative; flex: 1; max-width: 500px; }
+.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+
+/* TABLE STYLING */
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
 .inventory-table { width: 100%; border-collapse: collapse; }
-.inventory-table th { background-color: #f8fafc; padding: 1.2rem 1.5rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.05em; }
-.inventory-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.item-info { display: flex; align-items: center; gap: 16px; }
-.category-badge { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; }
+.inventory-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+.inventory-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+
+.item-info { display: flex; align-items: center; gap: 12px; }
+.category-badge { 
+  width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; 
+  justify-content: center; font-weight: 800; 
+}
 .category-badge.in-stock { background: #dcfce7; color: #15803d; }
 .category-badge.low-stock { background: #fef3c7; color: #b45309; }
 .category-badge.out-of-stock { background: #fee2e2; color: #991b1b; }
-.i-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 1rem; }
-.i-subtext { font-size: 0.8rem; color: #94a3b8; margin: 0; }
-.stock-info { display: flex; flex-direction: column; }
-.main-stock { font-weight: 600; color: #334155; }
-.sub-stock { font-size: 0.75rem; color: #94a3b8; }
-.price-tag { background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; color: #1e3a8a; }
 
-/* --- BADGES & BUTTONS --- */
-.badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; display: inline-block; }
-.badge.in-stock { background: #dcfce7; color: #15803d; }
-.badge.low-stock { background: #fef3c7; color: #b45309; }
+.price-tag { background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-weight: 700; color: #1e3a8a; font-size: 0.85rem; }
+
+/* BADGES */
+.badge { padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.badge.in-stock { background: #dcfce7; color: #166534; }
+.badge.low-stock { background: #fef3c7; color: #92400e; }
 .badge.out-of-stock { background: #fee2e2; color: #991b1b; }
-.view-link { color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-.view-link:hover { background: #2563eb; color: white; }
-.add-btn { background-color: #2563eb; color: white; border: none; padding: 0.8rem 1.6rem; border-radius: 12px; font-weight: 700; cursor: pointer; }
-.text-right { text-align: right; }
-.empty-state { text-align: center; color: #94a3b8; padding: 4rem !important; font-style: italic; }
 
-/* --- MODAL IMPROVEMENTS --- */
+/* BUTTONS */
+.add-btn { background: #1e3a8a; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.add-btn:hover { background: #1e40af; }
+.view-link { color: #2563eb; background: #eff6ff; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; }
+.view-link:hover { background: #2563eb; color: white; }
+
+/* MODAL */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.modal-content { background: white; width: 500px; border-radius: 20px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8; }
-.form-group { margin-bottom: 1.25rem; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
-.form-group input, .modal-select { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
-.right-actions { display: flex; gap: 12px; }
-.btn-secondary { background: #f1f5f9; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
-.btn-delete { background: none; border: none; color: #ef4444; font-weight: 700; cursor: pointer; padding: 0; font-size: 0.9rem; text-decoration: underline; }
+.modal-content { background: white; width: 480px; border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+.form-group input, .modal-select { width: 100%; padding: 0.7rem; border: 1px solid #e2e8f0; border-radius: 8px; }
+
+.clickable { cursor: pointer; transition: 0.2s; }
+.clickable:active { transform: scale(0.97); }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

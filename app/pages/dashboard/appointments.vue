@@ -314,6 +314,48 @@ const handleLogout = async () => {
 }
 .nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
 
+/* SIDEBAR FOOTER */
+.sidebar-footer { 
+  padding-top: 1rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+}
+
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  position: relative; /* Necessary for tooltip positioning */
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover { 
+  background: rgba(252, 165, 165, 0.1); 
+  color: #f87171; 
+  transform: translateX(5px); 
+}
+
+/* Center icon and handle hover when sidebar is collapsed */
+.is-collapsed .logout-btn { 
+  justify-content: center; 
+}
+
+.is-collapsed .logout-btn:hover { 
+  transform: none; /* Prevent sliding when collapsed */
+}
+
+/* Trigger tooltip visibility on hover when collapsed */
+.logout-btn:hover .sidebar-tooltip { 
+  opacity: 1; 
+  margin-left: 10px; 
+}
+
 /* MAIN CONTENT */
 .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
