@@ -1,14 +1,18 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <!-- SIDEBAR -->
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
+    
+    <!-- SIDEBAR OVERLAY: Only visible on mobile when menu is active -->
+    <div class="sidebar-overlay" @click="isMobileOpen = false"></div>
+
+    <!-- SIDEBAR: Preserves original hover/collapse logic -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed">
+        <div class="sidebar-logo" v-if="!isCollapsed || isMobileOpen">
           <Icon name="mdi:hospital-building" class="icon-blue-light" />
           <span class="logo-text">EMR System</span>
         </div>
-        <!-- HAMBURGER TOGGLE -->
-        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+        <!-- Toggle button hidden on mobile to avoid layout clutter -->
+        <button class="menu-toggle desktop-only clickable" @click="isCollapsed = !isCollapsed">
           <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
         </button>
       </div>
@@ -19,25 +23,36 @@
           :key="link.to" 
           :to="link.to" 
           class="nav-item"
+          @click="isMobileOpen = false"
           :title="isCollapsed ? link.label : ''"
         >
           <Icon :name="link.icon" />
-          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <!-- Floating Tooltip for Collapsed State -->
-          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
+          <span v-if="!isCollapsed || isMobileOpen" class="nav-label">{{ link.label }}</span>
+          <!-- Original Floating Tooltip -->
+          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed">Logout</span>
+          <span v-if="!isCollapsed || isMobileOpen">Logout</span>
         </button>
       </div>
     </aside>
 
     <main class="main-content">
-      <header class="top-bar">
+      <!-- NEW MOBILE TOP BAR: Only visible on phones -->
+      <header class="mobile-nav-bar mobile-only">
+        <button class="mobile-menu-toggle" @click="isMobileOpen = true">
+          <Icon name="lucide:menu" />
+        </button>
+        <div class="mobile-logo-text">EMR System</div>
+        <div class="avatar-sm clickable" @click="goToProfile">{{ userInitials }}</div>
+      </header>
+
+      <!-- ORIGINAL TOP BAR: Hidden on mobile to save vertical space -->
+      <header class="top-bar desktop-only">
         <div class="welcome-msg">
           <h1>Welcome back, {{ doctorName }}</h1>
           <p>Here is what's happening with your clinic today.</p>
@@ -57,6 +72,7 @@
       </header>
 
       <section class="dashboard-body">
+        <!-- Search & Filter logic preserved -->
         <div class="table-controls">
           <div class="search-wrapper">
             <Icon name="lucide:search" class="search-icon-svg" />
@@ -66,13 +82,14 @@
               placeholder="Search patients or lab tests..." 
             />
           </div>
-          <div class="filter-group">
+          <div class="filter-group desktop-only">
             <button class="filter-btn clickable" @click="refreshData">
               <Icon name="lucide:calendar" /> {{ currentDate }}
             </button>
           </div>
         </div>
 
+        <!-- Grid system: 4 cols on desktop, 2 on tablet, 1 on phone -->
         <div class="stats-grid">
           <div 
             v-for="(stat, index) in stats" 
@@ -87,7 +104,6 @@
         </div>
 
         <div class="dashboard-main-grid">
-          <!-- MAIN ACTIVITY CARD -->
           <div class="activity-card">
             <div class="section-header">
               <h3>Recent Lab Updates</h3>
@@ -110,7 +126,6 @@
             </div>
           </div>
 
-          <!-- ENHANCED QUICK ACTIONS -->
           <div class="quick-actions-card">
             <div class="section-header">
               <h3>Quick Actions</h3>
@@ -120,25 +135,25 @@
                 <div class="action-icon-circle blue">
                   <Icon name="lucide:user-plus" />
                 </div>
-                <span>Register Patient</span>
+                <span>Register</span>
               </div>
               <div class="action-item clickable" @click="navigateTo('/dashboard/appointments')">
                 <div class="action-icon-circle green">
                   <Icon name="lucide:calendar-plus" />
                 </div>
-                <span>Add Appointment</span>
+                <span>Appointment</span>
               </div>
               <div class="action-item clickable" @click="navigateTo('/dashboard/lab-results')">
                 <div class="action-icon-circle purple">
                   <Icon name="lucide:file-text" />
                 </div>
-                <span>New Lab Request</span>
+                <span>Lab Test</span>
               </div>
               <div class="action-item clickable" @click="navigateTo('/dashboard/billing')">
                 <div class="action-icon-circle orange">
                   <Icon name="lucide:credit-card" />
                 </div>
-                <span>Create Invoice</span>
+                <span>Billing</span>
               </div>
             </div>
             
@@ -162,8 +177,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// Sidebar State
 const isCollapsed = ref(false)
+const isMobileOpen = ref(false) // Added for responsive menu toggle
 
 const doctorName = ref('Dr. Smith')
 const userInitials = ref('JS')
@@ -230,10 +245,9 @@ const refreshData = () => { alert('Data refreshed!') }
 </script>
 
 <style scoped>
-/* BASE LAYOUT */
+/* --- ORIGINAL BASE STYLES PRESERVED --- */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
-/* SIDEBAR CORE & TRANSITION */
 .sidebar { 
   width: 260px; 
   background: #1e3a8a; 
@@ -244,40 +258,22 @@ const refreshData = () => { alert('Data refreshed!') }
   height: 100vh; 
   position: sticky; 
   top: 0; 
-  z-index: 100; 
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1001; 
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
 }
 
 .is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
 
-/* SIDEBAR HEADER & TOGGLE */
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2.5rem;
-  padding: 0 0.5rem;
-}
+.sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; padding: 0 0.5rem; }
 .is-collapsed .sidebar-header { justify-content: center; padding: 0; }
 
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
 
-.menu-toggle {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  display: flex;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+.menu-toggle { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 8px; border-radius: 8px; display: flex; cursor: pointer; transition: background 0.2s; }
 .menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
 
-/* NAVIGATION ITEMS */
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
-
 .nav-item { 
   position: relative;
   display: flex; 
@@ -292,57 +288,73 @@ const refreshData = () => { alert('Data refreshed!') }
   white-space: nowrap;
 }
 
-/* ACCURATE HOVER STATES */
 .nav-item:hover { 
   background: rgba(255, 255, 255, 0.1); 
   color: white; 
-  padding-left: 1.25rem; /* Slide effect when open */
+  padding-left: 1.25rem; 
 }
-
 .is-collapsed .nav-item:hover { padding-left: 1rem; }
-
 .is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
-
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-/* TOOLTIP FOR COLLAPSED SIDEBAR */
 .sidebar-tooltip {
-  position: absolute;
-  left: 100%;
-  margin-left: 15px;
-  background: #0f172a;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
-  z-index: 1000;
+  position: absolute; left: 100%; margin-left: 15px; background: #0f172a; color: white; padding: 6px 12px;
+  border-radius: 6px; font-size: 0.75rem; opacity: 0; pointer-events: none; transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 1000;
+}
+.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+/* SIDEBAR FOOTER */
+.sidebar-footer { 
+  padding-top: 1rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
 }
 
-.nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  position: relative; /* Necessary for tooltip positioning */
+  transition: all 0.2s ease;
+}
 
-/* SIDEBAR FOOTER */
-.sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; }
-.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; }
-.is-collapsed .logout-btn { justify-content: center; }
+.logout-btn:hover { 
+  background: rgba(252, 165, 165, 0.1); 
+  color: #f87171; 
+  transform: translateX(5px); 
+}
 
-/* MAIN CONTENT AREA */
+/* Center icon and handle hover when sidebar is collapsed */
+.is-collapsed .logout-btn { 
+  justify-content: center; 
+}
+
+.is-collapsed .logout-btn:hover { 
+  transform: none; /* Prevent sliding when collapsed */
+}
+
+/* Trigger tooltip visibility on hover when collapsed */
+.logout-btn:hover .sidebar-tooltip { 
+  opacity: 1; 
+  margin-left: 10px; 
+}
+
 .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.3s; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
 
-/* USER PROFILE & NOTIFS */
 .user-profile { display: flex; align-items: center; gap: 1.5rem; }
 .notification-wrapper { position: relative; font-size: 1.3rem; color: #64748b; padding: 4px; display: flex; }
 .notification-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid white; }
 .avatar { width: 40px; height: 40px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-/* BODY & STATS */
 .dashboard-body { padding: 2rem 3rem; }
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 1.5rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 500px; }
@@ -352,11 +364,6 @@ const refreshData = () => { alert('Data refreshed!') }
 .filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; height: 44px; }
 
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
-@keyframes fadeInUp {
-  0% { opacity: 0; transform: scale(0.8) translateY(10px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-.animate-in { opacity: 0; animation: fadeInUp 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; }
 .stat-card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; transition: transform 0.4s ease, box-shadow 0.4s ease; }
 .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px -5px rgba(30, 58, 138, 0.1); }
 .stat-card h3 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700; }
@@ -367,7 +374,6 @@ const refreshData = () => { alert('Data refreshed!') }
 .negative { color: #dc2626; }
 .next-appt { color: #2563eb; }
 
-/* MAIN GRID */
 .dashboard-main-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 2rem; }
 .activity-card, .quick-actions-card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; }
 
@@ -385,12 +391,10 @@ const refreshData = () => { alert('Data refreshed!') }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 
-/* QUICK ACTIONS */
-.actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-.action-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem 1rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; transition: all 0.2s; }
-.action-item span { font-size: 0.8rem; font-weight: 700; color: #475569; }
+.actions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.action-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; transition: all 0.2s; }
+.action-item span { font-size: 0.75rem; font-weight: 700; color: #475569; }
 .action-item:hover { background: #eff6ff; border-color: #2563eb; transform: translateY(-3px); }
-
 .action-icon-circle { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 .action-icon-circle.blue { background: #dbeafe; color: #2563eb; }
 .action-icon-circle.green { background: #dcfce7; color: #16a34a; }
@@ -406,5 +410,51 @@ const refreshData = () => { alert('Data refreshed!') }
 
 .clickable { cursor: pointer; transition: all 0.2s ease; }
 .clickable:active { transform: scale(0.96); }
-.empty-results { padding: 2rem; text-align: center; color: #94a3b8; font-style: italic; }
+
+@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+.animate-in { opacity: 0; animation: fadeInUp 0.5s cubic-bezier(0.26, 1.36, 0.74, 1) forwards; }
+
+/* --- RESPONSIVE / MOBILE OVERRIDES --- */
+.desktop-only { display: flex; }
+.mobile-only { display: none; }
+
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-main-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex; }
+
+  /* Mobile Nav Bar */
+  .mobile-nav-bar {
+    background: #1e3a8a; color: white; padding: 0.75rem 1.5rem; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 1000;
+  }
+  .mobile-menu-toggle { background: none; border: none; color: white; font-size: 1.5rem; display: flex; }
+  .mobile-logo-text { font-weight: 800; font-size: 1.1rem; }
+  .avatar-sm { width: 32px; height: 32px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; }
+
+  /* Sidebar Transformation into Drawer */
+  .sidebar {
+    position: fixed; top: 0; left: 0; height: 100vh; width: 280px; z-index: 2000;
+    transform: translateX(-100%); transition: transform 0.3s ease;
+  }
+  .mobile-open .sidebar { transform: translateX(0); }
+  .sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999;
+    backdrop-filter: blur(2px); display: none;
+  }
+  .mobile-open .sidebar-overlay { display: block; }
+
+  /* Content Padding Adjustments */
+  .dashboard-body { padding: 1.25rem; }
+  .table-controls { flex-direction: column; }
+  .search-wrapper { max-width: 100%; }
+  .stats-grid { grid-template-columns: 1fr; }
+  
+  .activity-item { flex-wrap: wrap; }
+  .badge { margin-left: 52px; margin-top: 8px; width: fit-content; }
+}
 </style>

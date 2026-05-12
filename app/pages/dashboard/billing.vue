@@ -169,10 +169,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+// Inside <script setup>
+import { ref, computed, onMounted } from 'vue'
+
+const isCollapsed = ref(false)
+
+onMounted(() => {
+  // Collapse sidebar by default on mobile screens
+  if (window.innerWidth < 1024) {
+    isCollapsed.value = true
+  }
+})
 
 // Layout State
-const isCollapsed = ref(false)
 const searchQuery = ref('')
 const selectedStatus = ref('All')
 const isModalOpen = ref(false)
@@ -450,4 +459,95 @@ const handleLogout = async () => {
 /* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* --- MOBILE & TABLET RESPONSIVENESS --- */
+
+@media (max-width: 1024px) {
+  /* 1. Force Sidebar to overlay or hide */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%); /* Hidden by default on mobile */
+    transition: transform 0.3s ease;
+  }
+
+  /* When "collapsed" on desktop, we use that state to "show" on mobile */
+  /* Or you can create a new ref 'isMobileMenuOpen' */
+  .is-collapsed .sidebar {
+    width: 260px; /* Keep full width when sliding out on mobile */
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* 2. Adjust Top Bar padding */
+  .top-bar {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* 3. Adjust Billing Body padding */
+  .billing-body {
+    padding: 1.5rem;
+  }
+
+  /* 4. Stack Table Controls */
+  .table-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .search-wrapper {
+    max-width: 100%;
+  }
+
+  .filter-group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  /* 5. Responsive Table (Scrollable) */
+  .table-container {
+    overflow-x: auto; /* Allows horizontal swipe */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .billing-table {
+    min-width: 700px; /* Prevents columns from squishing too much */
+  }
+
+  /* 6. Modal resizing */
+  .modal-content {
+    width: 90%;
+    margin: 10px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Stack Stat Cards 1 per row on very small screens */
+  .billing-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .top-bar h1 {
+    font-size: 1.3rem;
+  }
+}
 </style>

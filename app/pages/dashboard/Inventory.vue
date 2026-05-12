@@ -17,7 +17,6 @@
         <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
           <Icon :name="link.icon" />
           <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <!-- Floating Tooltip for Collapsed State -->
           <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
@@ -34,7 +33,7 @@
     <main class="main-content">
       <header class="top-bar">
         <div class="welcome-msg">
-          <span class="breadcrumb">SUPPLY CHAIN</span>
+          <!-- BREADCRUMB REMOVED -->
           <h1>Inventory Management</h1>
           <p>Monitor medical supplies, equipment stock levels, and procurement alerts.</p>
         </div>
@@ -62,7 +61,9 @@
               <option value="Equipment">Equipment</option>
               <option value="Disposables">Disposables</option>
             </select>
-            <button class="filter-btn clickable" @click="resetFilters">Reset</button>
+            <button class="filter-btn clickable" @click="resetFilters">
+              <Icon name="lucide:rotate-ccw" size="16" /> Reset
+            </button>
           </div>
         </div>
 
@@ -108,7 +109,6 @@
                   </button>
                 </td>
               </tr>
-              
               <tr v-if="filteredInventory.length === 0">
                 <td colspan="5" class="empty-state">No inventory items found matching your search.</td>
               </tr>
@@ -156,12 +156,17 @@
                 <input type="text" v-model="newItem.unit" placeholder="pcs, caps, boxes" required />
               </div>
             </div>
-            
             <div class="modal-actions">
-              <button v-if="isEditing" type="button" class="btn-delete" @click="deleteItem">Delete Item</button>
+              <div class="left-actions">
+                <button v-if="isEditing" type="button" class="btn-delete clickable" @click="deleteItem">
+                  <Icon name="lucide:trash-2" /> Delete Item
+                </button>
+              </div>
               <div class="right-actions">
                 <button type="button" class="btn-secondary clickable" @click="closeModal">Cancel</button>
-                <button type="submit" class="add-btn clickable">{{ isEditing ? 'Update Stock' : 'Add to Stock' }}</button>
+                <button type="submit" class="add-btn clickable">
+                  {{ isEditing ? 'Update Stock' : 'Add to Stock' }}
+                </button>
               </div>
             </div>
           </form>
@@ -251,7 +256,7 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-/* --- CORE LAYOUT & SIDEBAR (Synced) --- */
+/* --- CORE LAYOUT & SIDEBAR --- */
 .dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; color: #1e293b; overflow: hidden; }
 
 .sidebar { 
@@ -286,7 +291,6 @@ const handleLogout = async () => {
 
 .router-link-active { background: #2563eb !important; color: white !important; }
 
-/* TOOLTIP */
 .sidebar-tooltip {
   position: absolute; left: 100%; margin-left: 15px; background: #0f172a; color: white; 
   padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; opacity: 0; pointer-events: none; 
@@ -294,79 +298,52 @@ const handleLogout = async () => {
 }
 .nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
 
-/* SIDEBAR FOOTER */
-.sidebar-footer { 
-  padding-top: 1rem; 
-  border-top: 1px solid rgba(255, 255, 255, 0.1); 
-}
-
+.sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { 
-  background: none; 
-  border: none; 
-  width: 100%; 
-  text-align: left; 
-  color: #fca5a5; 
-  font-weight: 600; 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 0.8rem 1rem; 
-  position: relative; /* Necessary for tooltip positioning */
-  transition: all 0.2s ease;
+  background: none; border: none; width: 100%; text-align: left; color: #fca5a5; 
+  font-weight: 600; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
+  position: relative; transition: all 0.2s ease;
 }
-
-.logout-btn:hover { 
-  background: rgba(252, 165, 165, 0.1); 
-  color: #f87171; 
-  transform: translateX(5px); 
-}
-
-/* Center icon and handle hover when sidebar is collapsed */
-.is-collapsed .logout-btn { 
-  justify-content: center; 
-}
-
-.is-collapsed .logout-btn:hover { 
-  transform: none; /* Prevent sliding when collapsed */
-}
-
-/* Trigger tooltip visibility on hover when collapsed */
-.logout-btn:hover .sidebar-tooltip { 
-  opacity: 1; 
-  margin-left: 10px; 
-}
+.logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px); }
+.is-collapsed .logout-btn { justify-content: center; }
+.is-collapsed .logout-btn:hover { transform: none; }
+.logout-btn:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
 
 /* MAIN CONTENT */
 .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-.breadcrumb { font-size: 0.7rem; font-weight: 800; color: #64748b; letter-spacing: 1px; }
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 800; }
 .inventory-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
 
 /* CONTROLS */
-.table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 1.5rem; }
+.table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1.5rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 500px; }
-.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
+.search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; background: white; }
 .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+
+.filter-group { display: flex; align-items: center; gap: 0.75rem; }
+.filter-dropdown { padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; background: white; color: #475569; font-weight: 500; outline: none; min-width: 160px; cursor: pointer; }
+.filter-btn { display: flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+.filter-btn:hover { background: #e2e8f0; color: #1e3a8a; }
 
 /* TABLE STYLING */
 .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
 .inventory-table { width: 100%; border-collapse: collapse; }
 .inventory-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
 .inventory-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+.i-name { font-weight: 700; margin: 0; color: #1e293b; }
+.i-subtext { font-size: 0.75rem; color: #64748b; margin: 0; }
+.stock-info { display: flex; flex-direction: column; }
+.main-stock { font-weight: 700; color: #1e293b; }
+.sub-stock { font-size: 0.7rem; color: #94a3b8; }
+.text-right { text-align: right; }
 
-.item-info { display: flex; align-items: center; gap: 12px; }
-.category-badge { 
-  width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; 
-  justify-content: center; font-weight: 800; 
-}
+/* BADGES */
+.category-badge { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
 .category-badge.in-stock { background: #dcfce7; color: #15803d; }
 .category-badge.low-stock { background: #fef3c7; color: #b45309; }
 .category-badge.out-of-stock { background: #fee2e2; color: #991b1b; }
-
 .price-tag { background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-weight: 700; color: #1e3a8a; font-size: 0.85rem; }
-
-/* BADGES */
 .badge { padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 .badge.in-stock { background: #dcfce7; color: #166534; }
 .badge.low-stock { background: #fef3c7; color: #92400e; }
@@ -378,12 +355,27 @@ const handleLogout = async () => {
 .view-link { color: #2563eb; background: #eff6ff; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; }
 .view-link:hover { background: #2563eb; color: white; }
 
-/* MODAL */
+/* MODAL STYLING */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
 .modal-content { background: white; width: 480px; border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.modal-header h3 { color: #1e3a8a; font-weight: 800; margin: 0; }
+.close-modal { background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; }
+
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
-.form-group input, .modal-select { width: 100%; padding: 0.7rem; border: 1px solid #e2e8f0; border-radius: 8px; }
+.form-group input, .modal-select { width: 100%; padding: 0.7rem; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; }
+.form-group input:focus, .modal-select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+.modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; }
+.right-actions { display: flex; gap: 0.75rem; }
+
+.btn-secondary { background: #f1f5f9; color: #475569; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; }
+.btn-secondary:hover { background: #e2e8f0; }
+
+.btn-delete { background: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; padding: 0.7rem 1rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.btn-delete:hover { background: #be123c; color: white; }
 
 .clickable { cursor: pointer; transition: 0.2s; }
 .clickable:active { transform: scale(0.97); }

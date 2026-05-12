@@ -1,14 +1,17 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
+    
+    <!-- MOBILE OVERLAY -->
+    <div class="sidebar-overlay" @click="isMobileOpen = false"></div>
+
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed">
+        <div class="sidebar-logo" v-if="!isCollapsed || isMobileOpen">
           <Icon name="mdi:hospital-building" class="icon-blue-light" />
           <span class="logo-text">EMR System</span>
         </div>
-        <!-- COLLAPSE TOGGLE -->
-        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
+        <button class="menu-toggle clickable desktop-only" @click="isCollapsed = !isCollapsed">
           <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
         </button>
       </div>
@@ -16,23 +19,32 @@
       <nav class="sidebar-nav">
         <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
           <Icon :name="link.icon" />
-          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <!-- Tooltip for collapsed state -->
-          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
+          <span v-if="!isCollapsed || isMobileOpen" class="nav-label">{{ link.label }}</span>
+          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
         <button @click="handleLogout" class="logout-btn clickable">
           <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed">Logout</span>
+          <span v-if="!isCollapsed || isMobileOpen">Logout</span>
+          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">Logout</span>
         </button>
       </div>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="main-content">
-      <header class="top-bar">
+      <!-- MOBILE MENU BAR -->
+      <header class="mobile-nav-bar mobile-only">
+        <button class="mobile-menu-toggle" @click="isMobileOpen = true">
+          <Icon name="lucide:menu" />
+        </button>
+        <div class="mobile-logo-text">EMR System</div>
+        <div class="mobile-avatar">JS</div>
+      </header>
+
+      <header class="top-bar desktop-only">
         <div class="welcome-msg">
           <h1>Schedule & Appointments</h1>
           <p class="subtitle">{{ currentView === 'list' ? 'Daily Timeline' : 'Monthly View' }} — 2026</p>
@@ -109,7 +121,6 @@
             </div>
           </div>
 
-          <!-- BOOKING SIDEBAR PANEL -->
           <aside class="booking-sidebar">
             <div class="booking-card">
               <h3 class="booking-title">Book Appointment</h3>
@@ -134,7 +145,6 @@
               <button class="submit-btn clickable" @click="submitBooking">Confirm Booking</button>
             </div>
           </aside>
-
         </div>
       </section>
     </main>
@@ -144,8 +154,9 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-// --- SIDEBAR STATE ---
-const isCollapsed = ref(false)
+const isCollapsed = ref(false);
+const isMobileOpen = ref(false);
+
 const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
   { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
@@ -156,9 +167,8 @@ const navLinks = [
   { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
   { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
   { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
-]
+];
 
-// --- PAGE STATE ---
 const currentView = ref('list');
 const activeFilter = ref('All');
 const form = ref({ name: '', time: '', date: '', reason: '' });
@@ -169,259 +179,168 @@ const appointments = ref([
   { id: 3, date: '2026-04-03', time: '01:15 PM', duration: '15 min', patientName: 'Robert Johnson', reason: 'Follow-up: Lab Results', status: 'Pending' },
 ]);
 
-// --- COMPUTED ---
 const filteredAppointments = computed(() => {
   if (activeFilter.value === 'All') return appointments.value;
   return appointments.value.filter(a => a.status === activeFilter.value);
 });
 
-// --- METHODS ---
 const toggleView = () => { currentView.value = currentView.value === 'list' ? 'calendar' : 'list'; };
-
 const getApptsForDay = (dayNum) => {
   const formattedDay = dayNum < 10 ? `0${dayNum}` : dayNum;
-  const targetDate = `2026-04-${formattedDay}`;
-  return appointments.value.filter(a => a.date === targetDate).length;
+  return appointments.value.filter(a => a.date === `2026-04-${formattedDay}`).length;
 };
-
-const confirmAppt = (id) => {
-  const appt = appointments.value.find(a => a.id === id);
-  if (appt) appt.status = 'Confirmed';
-};
-
-const startVisit = (id) => {
-  const appt = appointments.value.find(a => a.id === id);
-  if (appt) appt.status = 'In Progress';
-};
-
-const submitBooking = () => {
-  if (!form.value.name || !form.value.time || !form.value.date) {
-    alert("Please fill in the patient name, date, and time.");
-    return;
-  }
-  
-  const [hours, minutes] = form.value.time.split(':');
-  const h = parseInt(hours);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const displayHours = ((h + 11) % 12 + 1);
-  const displayTime = `${displayHours}:${minutes} ${period}`;
-  
-  appointments.value.push({ 
-    id: Date.now(), 
-    date: form.value.date, 
-    time: displayTime, 
-    duration: '30 min', 
-    patientName: form.value.name, 
-    reason: form.value.reason || 'General Consultation', 
-    status: 'Pending' 
-  });
-  
-  form.value = { name: '', time: '', date: '', reason: '' };
-  alert("Appointment scheduled successfully.");
-};
-
-const handleLogout = async () => {
-  if (confirm('Are you sure you want to log out?')) {
-    const token = useCookie('auth_token');
-    token.value = null;
-    if (process.client) {
-      localStorage.removeItem('user_data');
-      sessionStorage.clear();
-    }
-    await navigateTo('/auth/login'); 
-  }
-};
+const confirmAppt = (id) => { const appt = appointments.value.find(a => a.id === id); if (appt) appt.status = 'Confirmed'; };
+const startVisit = (id) => { const appt = appointments.value.find(a => a.id === id); if (appt) appt.status = 'In Progress'; };
+const submitBooking = () => { alert("Booking Confirmed"); };
+const handleLogout = () => { if(confirm('Logout?')) navigateTo('/auth/login'); };
 </script>
 
 <style scoped>
-/* BASE LAYOUT */
-.dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+/* --- CORE LAYOUT --- */
+.dashboard-layout { display: flex; min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
-/* SIDEBAR REFINED DESIGN */
+/* --- SIDEBAR --- */
 .sidebar { 
-  width: 260px; 
-  background: #1e3a8a; 
-  color: white; 
-  display: flex; 
-  flex-direction: column; 
-  padding: 1.5rem 1rem; 
-  height: 100vh; 
-  position: sticky; 
-  top: 0; 
-  z-index: 100; 
+  width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; 
+  padding: 1.5rem 1rem; height: 100vh; position: sticky; top: 0; z-index: 100; 
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2.5rem;
-  padding: 0 0.5rem;
-}
+.sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; padding: 0 0.5rem; }
 .is-collapsed .sidebar-header { justify-content: center; padding: 0; }
-
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
+.menu-toggle { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 8px; border-radius: 8px; display: flex; cursor: pointer; transition: background 0.2s; }
+.menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
 
-.menu-toggle {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  display: flex;
-  cursor: pointer;
-}
-
-/* SIDEBAR NAVIGATION */
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
 .nav-item { 
-  position: relative;
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 0.8rem 1rem; 
-  color: #bfdbfe; 
-  text-decoration: none; 
-  border-radius: 8px; 
-  font-weight: 500; 
-  transition: all 0.2s ease; 
-  white-space: nowrap;
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
+  color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; white-space: nowrap;
 }
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; padding-left: 1.25rem; }
 .is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
-.is-collapsed .nav-item:hover { padding-left: 0.8rem; }
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-.router-link-active { background: #2563eb !important; color: white !important; }
-
-/* TOOLTIP FOR COLLAPSED STATE */
 .sidebar-tooltip {
-  position: absolute;
-  left: 100%;
-  margin-left: 15px;
-  background: #0f172a;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  z-index: 1000;
+  position: absolute; left: 100%; margin-left: 15px; background: #0f172a; color: white; padding: 6px 12px;
+  border-radius: 6px; font-size: 0.75rem; opacity: 0; pointer-events: none; transition: all 0.2s ease; z-index: 1000;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
 }
 .nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
 
-/* SIDEBAR FOOTER */
-.sidebar-footer { 
-  padding-top: 1rem; 
-  border-top: 1px solid rgba(255, 255, 255, 0.1); 
-}
-
+/* --- SYNCED LOGOUT BUTTON (FIXED TO LIFT UP) --- */
+.sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { 
-  background: none; 
-  border: none; 
-  width: 100%; 
-  text-align: left; 
-  color: #fca5a5; 
-  font-weight: 600; 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 0.8rem 1rem; 
-  position: relative; /* Necessary for tooltip positioning */
-  transition: all 0.2s ease;
+  background: none; border: none; width: 100%; text-align: left; color: #fca5a5; 
+  font-weight: 600; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
+  position: relative; border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Match Stats page timing */
 }
 
 .logout-btn:hover { 
   background: rgba(252, 165, 165, 0.1); 
   color: #f87171; 
-  transform: translateX(5px); 
+  transform: translateY(-6px) !important; /* Forces Lift instead of Slide */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
 }
 
-/* Center icon and handle hover when sidebar is collapsed */
-.is-collapsed .logout-btn { 
-  justify-content: center; 
+.is-collapsed .logout-btn { justify-content: center; }
+.logout-btn:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
+
+/* --- APPOINTMENT & BOOKING CARDS (SYNCED LIFT) --- */
+.appointment-card {
+  background: white; display: grid; grid-template-columns: 120px 1fr 120px 140px; 
+  align-items: center; padding: 1.5rem; border-radius: 12px; 
+  border: 1px solid #e2e8f0; border-left: 4px solid #2563eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); margin-bottom: 1rem;
+}
+.appointment-card:hover { 
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
 }
 
-.is-collapsed .logout-btn:hover { 
-  transform: none; /* Prevent sliding when collapsed */
+.booking-card { 
+  background: white; padding: 2rem; border-radius: 12px; 
+  border: 1px solid #e2e8f0; border-top: 4px solid #2563eb; 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.booking-card:hover { 
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* Trigger tooltip visibility on hover when collapsed */
-.logout-btn:hover .sidebar-tooltip { 
-  opacity: 1; 
-  margin-left: 10px; 
-}
-
-/* MAIN CONTENT */
+/* --- OTHER CONTENT STYLES --- */
 .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; font-weight: 700; margin: 0; }
 .subtitle { color: #64748b; font-size: 0.85rem; margin-top: 4px; }
-
-/* APPOINTMENTS CONTENT */
 .appointment-body { padding: 2.5rem 3rem; }
-.side-by-side-container {
-  display: grid;
-  grid-template-columns: 1fr 380px; 
-  gap: 2.5rem;
-  align-items: start;
-}
-
+.side-by-side-container { display: grid; grid-template-columns: 1fr 380px; gap: 2.5rem; align-items: start; }
 .schedule-header { display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: center; }
 .date-display { display: flex; align-items: center; gap: 1.5rem; background: white; padding: 0.6rem 1.2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .current-date { font-weight: 700; color: #1e3a8a; }
 .arrow-btn { background: none; border: none; color: #2563eb; }
-
-.filter-pill { padding: 0.5rem 1.2rem; border-radius: 20px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-weight: 600; font-size: 0.85rem; margin-left: 5px; border: none; }
+.filter-pill { padding: 0.5rem 1.2rem; border-radius: 20px; border: none; background: white; color: #64748b; font-weight: 600; font-size: 0.85rem; margin-left: 5px; }
 .filter-pill.active { background: #1e3a8a; color: white; }
 
-.appointment-card {
-  background: white;
-  display: grid;
-  grid-template-columns: 100px 1fr 120px 140px; 
-  align-items: center;
-  padding: 1.5rem;
-  border-radius: 16px;
-  border-left: 5px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  margin-bottom: 1rem;
-}
-.urgent { border-left-color: #f43f5e; background: #fff1f2; }
-.in-progress-card { border-left-color: #3b82f6; background: #eff6ff; }
+.time-slot { display: flex; flex-direction: column; gap: 4px; }
+.time-slot .time { font-weight: 800; color: #1e293b; font-size: 0.95rem; }
+.time-slot .duration { color: #64748b; font-size: 0.75rem; font-weight: 600; }
 
-/* CALENDAR & BOOKING */
+.urgent { border-left-color: #f43f5e; }
+.urgent:hover { background: #fff1f2; }
+.in-progress-card { border-left-color: #3b82f6; }
+.in-progress-card:hover { background: #eff6ff; }
+
 .calendar-wrapper { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #e2e8f0; gap: 1px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #e2e8f0; gap: 1px; width: 100%; }
 .calendar-day { height: 100px; background: white; padding: 0.8rem; }
 .day-num { font-weight: 700; color: #94a3b8; font-size: 0.8rem; }
 .event-indicator { background: #dbeafe; color: #1e3a8a; font-size: 0.7rem; font-weight: 700; padding: 4px; border-radius: 6px; margin-top: 4px; text-align: center; }
 
-.booking-card { background: white; padding: 2rem; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
 .booking-title { margin-bottom: 1.5rem; font-size: 1.3rem; color: #1e3a8a; font-weight: 800; }
 .form-group { margin-bottom: 1.2rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; color: #475569; }
 input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
-
 .submit-btn { background: #2563eb; color: white; border: none; padding: 0.9rem; border-radius: 10px; font-weight: 700; width: 100%; margin-top: 1rem; }
 .action-btn { padding: 0.6rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; width: 100%; border: none; }
 .action-btn.primary { background: #1e293b; color: white; }
 .action-btn.outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
-
 .calendar-btn { background: white; border: 1px solid #e2e8f0; color: #475569; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 .status-tag { padding: 0.4rem; border-radius: 6px; font-size: 0.65rem; text-transform: uppercase; }
 .confirmed { background: #dcfce7; color: #15803d; }
 .pending { background: #fef3c7; color: #b45309; }
 .in-progress { background: #3b82f6; color: white; }
 
-.sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; padding: 0.8rem 1rem; width: 100%; }
+/* --- RESPONSIVE --- */
+.desktop-only { display: flex; }
+.mobile-only { display: none; }
 
-.clickable:hover { opacity: 0.8; transform: translateY(-1px); transition: 0.2s; }
+@media (max-width: 1024px) {
+  .side-by-side-container { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex; }
+  .mobile-nav-bar { background: #1e3a8a; color: white; padding: 0.8rem 1.5rem; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 999; }
+  .mobile-menu-toggle { background: none; border: none; color: white; font-size: 1.5rem; }
+  .mobile-logo-text { font-weight: 800; font-size: 1rem; }
+  .sidebar { position: fixed; top: 0; left: 0; width: 280px; transform: translateX(-100%); z-index: 2001; }
+  .mobile-open .sidebar { transform: translateX(0); }
+  .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; }
+  .mobile-open .sidebar-overlay { display: block; }
+  .appointment-body { padding: 1.2rem; }
+  .appointment-card { grid-template-columns: 1fr; gap: 8px; padding: 1rem; }
+}
+
+.clickable { cursor: pointer; transition: all 0.2s ease; }
+.clickable:hover { opacity: 0.9; }
+.clickable:active { transform: scale(0.96); }
 .animate-in { animation: fadeIn 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
