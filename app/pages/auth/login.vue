@@ -63,13 +63,14 @@ async function handleLogin() {
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  min-height: 100vh;
+  /* Use dvh for better mobile browser support */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  /* Darkened overlay for contrast */
   background-color: rgba(0, 0, 0, 0.25);
   background-blend-mode: overlay;
   color: #1e293b;
+  overflow-y: auto;
 }
 
 .login-content {
@@ -97,42 +98,25 @@ async function handleLogin() {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  
-  /* --- Glassmorphism Core --- */
   background: rgba(255, 255, 255, 0.5); 
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  
-  /* Beveled edge effect */
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-right-color: rgba(255, 255, 255, 0.2);
   border-bottom-color: rgba(255, 255, 255, 0.2);
-  
   padding: 2.5rem;
   border-radius: 24px;
-  box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   position: relative;
   overflow: hidden;
 }
 
-/* Glass Surface Shine Overlay */
 .login-form::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.0) 40%,
-    rgba(100, 200, 255, 0.05) 60%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.0) 40%, rgba(100, 200, 255, 0.05) 60%, rgba(255, 255, 255, 0.1) 100%);
   pointer-events: none;
 }
 
@@ -165,7 +149,6 @@ async function handleLogin() {
   z-index: 1;
 }
 
-/* Translucent Glass Inputs */
 .password-wrapper,
 .login-form input[type="text"]:not(.id-input) {
   background-color: rgba(255, 255, 255, 0.4) !important;
@@ -271,5 +254,59 @@ async function handleLogin() {
 
 .register-text a:hover {
   text-decoration: underline;
+}
+
+/* --- Responsive Media Queries --- */
+
+@media (max-width: 480px) {
+  .login-content {
+    padding: 1rem;
+    justify-content: flex-start; /* Better for smaller devices with keyboards */
+    padding-top: 10vh;
+  }
+
+  .login-content h2 {
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .login-form {
+    width: 95%; /* Small margin on edges */
+    padding: 1.5rem;
+    gap: 1rem;
+    border-radius: 18px; /* Slightly tighter corners for mobile */
+  }
+
+  .role-identifier {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.8rem;
+  }
+
+  .radio-container {
+    font-size: 0.85rem;
+  }
+
+  .id-input {
+    width: 65px;
+  }
+
+  .login-form button {
+    padding: 0.75rem;
+  }
+}
+
+/* Landscape/Short Screen handling */
+@media (max-height: 650px) {
+  .login-content {
+    padding-top: 2rem;
+    justify-content: flex-start;
+  }
+  .login-content h2 {
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+  }
+  .login-form {
+    padding: 1.2rem 1.5rem;
+  }
 }
 </style>
