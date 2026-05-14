@@ -2,16 +2,65 @@
 
 datasource db {
   provider = "postgresql"
-  // The 'url' line is removed from here
+  url      = env("DATABASE_URL") // Crucial: This links to your .env file
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
-model Patient {
-  id        Int      @id @default(autoincrement())
-  name      String
+// 1. User Authentication (For login.vue and register.vue)
+model User {
+  id        String   @id @default(cuid())
   email     String   @unique
+  password  String
+  role      Role     @default(STAFF) // ADMIN, DOCTOR, or STAFF
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  STAFF
+}
+
+// 2. Patient Management (The core of your EMR)
+model Patient {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  phone        String?
+  appointments Appointment[]
+  labResults   LabResult[]
+  bills        Invoice[]
+  createdAt    DateTime      @default(now())
+}
+
+// 3. Appointments (For appointments.vue)
+model Appointment {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  status    String   @default("SCHEDULED") // e.g., PENDING, COMPLETED, CANCELLED
+  patientId Int
+  patient   Patient  @relation(fields: [patientId], references: [id])
+}
+
+// 4. Lab Results (For lab-results.vue)
+model LabResult {
+  id         Int      @id @default(autoincrement())
+  testName   String
+  result     String
+  patientId  Int
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+// 5. Billing & Invoices (For billing.vue)
+model Invoice {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  isPaid    Boolean  @default(false)
+  patientId Int
+  patient   Patient  @relation(fields: [patientId], references: [id])
   createdAt DateTime @default(now())
 }
