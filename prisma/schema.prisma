@@ -2,7 +2,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // Crucial: This links to your .env file
+  // The url line is gone!
 }
 
 generator client {
