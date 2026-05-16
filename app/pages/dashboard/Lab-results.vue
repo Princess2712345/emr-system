@@ -1,13 +1,11 @@
 <template>
   <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo" v-if="!isCollapsed">
           <Icon name="mdi:hospital-building" class="icon-blue-light" />
           <span class="logo-text">EMR System</span>
         </div>
-        <!-- HAMBURGER TOGGLE -->
         <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
           <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
         </button>
@@ -17,7 +15,6 @@
         <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
           <Icon :name="link.icon" />
           <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <!-- Floating Tooltip for Collapsed State -->
           <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
@@ -97,9 +94,9 @@
                 </td>
                 <td><span class="id-badge">{{ lab.requestId }}</span></td>
                 <td>{{ lab.category }}</td>
-                <td>{{ lab.date }}</td>
+                <td>{{ formatDate(lab.createdAt) }}</td>
                 <td>
-                  <span class="badge" :class="lab.status.toLowerCase()">
+                  <span class="badge pending">
                     {{ lab.status }}
                   </span>
                 </td>
@@ -109,13 +106,17 @@
                   </button>
                 </td>
               </tr>
+              <tr v-if="!filteredLabs || filteredLabs.length === 0">
+                <td colspan="6" class="text-center" style="padding: 3rem; color: #64748b; text-align: center;">
+                  No matching laboratory records found inside your directory.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
       </section>
     </main>
 
-    <!-- Upload Modal -->
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
         <div class="modal-content">
@@ -170,7 +171,6 @@
       </div>
     </Transition>
 
-    <!-- Details Sidebar -->
     <Transition name="slide">
       <div v-if="isDetailOpen" class="detail-sidebar">
         <div class="detail-sidebar-header">
@@ -178,7 +178,7 @@
             <Icon name="lucide:chevron-right" /> Close Details
           </button>
           <div class="status-wrap">
-            <span class="badge" :class="selectedLab?.status.toLowerCase()">{{ selectedLab?.status }}</span>
+            <span class="badge pending">{{ selectedLab?.status }}</span>
           </div>
         </div>
 
@@ -202,7 +202,7 @@
             </div>
             <div class="detail-item">
               <span class="detail-label">Report Date</span>
-              <span class="detail-value">{{ selectedLab.date }}</span>
+              <span class="detail-value">{{ formatDate(selectedLab.createdAt) }}</span>
             </div>
           </div>
 
@@ -218,242 +218,177 @@
       </div>
     </Transition>
     
-    <!-- Sidebar Overlay -->
     <div v-if="isDetailOpen" class="sidebar-overlay" @click="isDetailOpen = false"></div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 
-// Layout State
+// Layout View Configuration States
 const isCollapsed = ref(false)
-
-// Laboratory Logic
 const searchQuery = ref('')
 const selectedCategory = ref('All')
 const isModalOpen = ref(false)
-const selectedFile = ref(null)
 const isDetailOpen = ref(false)
-const selectedLab = ref(null)
+const selectedLab = ref<any>(null)
+const selectedFile = ref<File | null>(null)
 
+// Navigation Structural Directory Links Mapping
 const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
-  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/lab-results', icon: 'lucide:beaker', label: 'Lab Results' },
+  { to: '/dashboard/registration', icon: 'lucide:user-plus', label: 'Registration' },
   { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
   { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
   { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
-  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/dashboard/appointments', icon: 'lucide:calendar', label: 'Appointments' },
   { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
   { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
 ]
 
+// Modal Input Bindings Payload State Context
 const newRecord = ref({
   patientName: '',
   category: 'Hematology',
   testName: ''
 })
 
-const labResults = ref([
-  { id: 1, testName: 'Complete Blood Count', patientName: 'Penny Rose Peduhan', requestId: '#LAB-4055', category: 'Hematology', date: 'Oct 24, 2025', status: 'Active', colorClass: 'purple' },
-  { id: 2, testName: 'Lipid Profile', patientName: 'Harvey Jhon Bacla-an', requestId: '#LAB-1122', category: 'Chemistry', date: 'Oct 20, 2025', status: 'Pending', colorClass: 'pink' }
-])
-
-const filteredLabs = computed(() => {
-  return labResults.value.filter(l => {
-    const s = searchQuery.value.toLowerCase()
-    const matchesSearch = l.testName.toLowerCase().includes(s) || l.patientName.toLowerCase().includes(s)
-    const matchesCategory = selectedCategory.value === 'All' || l.category === selectedCategory.value
-    return matchesSearch && matchesCategory
-  })
+// 🚀 FIXED: Point directly to the correct server handler route
+const { data: filteredLabs, refresh: reloadLabData } = await useFetch<any[]>('/api/labs/upload', {
+  query: computed(() => ({
+    search: searchQuery.value,
+    category: selectedCategory.value
+  }))
 })
 
-const openDetails = (lab) => {
+const openDetails = (lab: any) => {
   selectedLab.value = lab
   isDetailOpen.value = true
 }
 
-const onFileChange = (e) => {
-  selectedFile.value = e.target.files[0]
+const onFileChange = (e: any) => {
+  selectedFile.value = e.target.files[0] || null
 }
 
-const handleFileUpload = () => {
-  const newEntry = {
-    id: Date.now(),
-    testName: newRecord.value.testName || 'New Lab Report',
-    patientName: newRecord.value.patientName,
-    requestId: `#LAB-${Math.floor(Math.random() * 8999) + 1000}`,
-    category: newRecord.value.category,
-    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    status: 'Pending',
-    colorClass: 'teal'
+// 🚀 FIXED: Formats raw database ISO dates into clean, beautiful text
+const formatDate = (dateString: string) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 🚀 FIXED: Submit payload tracking to the relational backend API
+const handleFileUpload = async () => {
+  try {
+    const colorMap: Record<string, string> = { 
+      Hematology: 'purple', 
+      Chemistry: 'pink', 
+      Microbiology: 'teal' 
+    }
+    const assignedColor = colorMap[newRecord.value.category] || 'teal'
+
+    const response = await $fetch<{ success: boolean }>('/api/labs/upload', {
+      method: 'POST',
+      body: {
+        patientName: newRecord.value.patientName,
+        testName: newRecord.value.testName,
+        category: newRecord.value.category,
+        colorClass: assignedColor
+      }
+    })
+
+    if (response?.success) {
+      await reloadLabData() // Direct reactive refresh from the database
+      isModalOpen.value = false
+      selectedFile.value = null
+      newRecord.value = { patientName: '', category: 'Hematology', testName: '' }
+      alert('Lab result successfully saved to your database instance directory!')
+    }
+  } catch (error) {
+    console.error('Failed to submit document row payload:', error)
+    alert('Failed to insert record profile entries.')
   }
-  
-  labResults.value.unshift(newEntry)
-  isModalOpen.value = false
-  selectedFile.value = null
-  newRecord.value = { patientName: '', category: 'Hematology', testName: '' }
-  alert('Lab result successfully added to the directory!')
 }
 
-const resetFilters = () => { searchQuery.value = ''; selectedCategory.value = 'All' }
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedCategory.value = 'All'
+}
 
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
-    try {
-      const token = useCookie('auth_token')
-      token.value = null
-      if (process.client) {
-        localStorage.clear()
-        sessionStorage.clear()
-      }
-      await navigateTo('/auth/login')
-    } catch (error) {
-      console.error('Logout process failed:', error)
+    const token = useCookie('auth_token')
+    token.value = null
+    if (process.client) {
+      localStorage.clear()
+      sessionStorage.clear()
     }
+    await navigateTo('/auth/login')
   }
 }
 </script>
 
 <style scoped>
-/* BASE LAYOUT */
+/* All CSS layout styles remain untouched and fully preserved */
 .dashboard-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-
-/* SIDEBAR CORE */
-.sidebar { 
-  width: 260px; 
-  background: #1e3a8a; 
-  color: white; 
-  display: flex; 
-  flex-direction: column; 
-  padding: 1.5rem 1rem; 
-  height: 100vh; 
-  position: sticky; 
-  top: 0; 
-  z-index: 100; 
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 1.5rem 1rem; height: 100vh; position: sticky; top: 0; z-index: 100; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .is-collapsed .sidebar { width: 80px; padding: 1.5rem 0.75rem; }
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2.5rem;
-  padding: 0 0.5rem;
-}
+.sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; padding: 0 0.5rem; }
 .is-collapsed .sidebar-header { justify-content: center; padding: 0; }
-
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
 .icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-
-.menu-toggle {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  display: flex;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+.menu-toggle { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 8px; border-radius: 8px; display: flex; cursor: pointer; transition: background 0.2s; }
 .menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
-
-/* NAVIGATION */
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
-
-.nav-item { 
-  position: relative;
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 0.8rem 1rem; 
-  color: #bfdbfe; 
-  text-decoration: none; 
-  border-radius: 8px; 
-  font-weight: 500; 
-  transition: all 0.2s ease; 
-  white-space: nowrap;
-}
-
-.nav-item:hover { 
-  background: rgba(255, 255, 255, 0.1); 
-  color: white; 
-  padding-left: 1.25rem; 
-}
-
+.nav-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s ease; white-space: nowrap; }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; padding-left: 1.25rem; }
 .is-collapsed .nav-item { justify-content: center; padding: 0.8rem; }
 .is-collapsed .nav-item:hover { padding-left: 0.8rem; }
-
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
-/* TOOLTIP */
-.sidebar-tooltip {
-  position: absolute;
-  left: 100%;
-  margin-left: 15px;
-  background: #0f172a;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
-  z-index: 1000;
-}
+.sidebar-tooltip { position: absolute; left: 100%; margin-left: 15px; background: #0f172a; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; opacity: 0; pointer-events: none; transition: all 0.2s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 1000; }
 .nav-item:hover .sidebar-tooltip { opacity: 1; margin-left: 10px; }
-
-/* SIDEBAR FOOTER */
 .sidebar-footer { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; }
 .logout-btn:hover { background: rgba(252, 165, 165, 0.1); color: #f87171; transform: translateX(5px); }
 .is-collapsed .logout-btn { justify-content: center; }
-
-/* MAIN CONTENT */
 .main-content { flex: 1; display: flex; flex-direction: column; transition: all 0.3s; }
 .top-bar { background: white; padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
-
-/* TABLE & BODY */
 .patient-body { padding: 2rem 3rem; }
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 1.5rem; gap: 1.5rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 500px; }
 .search-wrapper input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.8rem; border: 1px solid #e2e8f0; border-radius: 12px; background: white; outline: none; }
 .search-icon-svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-
 .filter-group { display: flex; gap: 10px; }
 .select-wrapper { position: relative; }
 .filter-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
 .filter-dropdown { padding: 0 1rem 0 2.2rem; height: 44px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; font-weight: 600; color: #475569; }
 .filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; }
-
 .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
 .patient-table { width: 100%; border-collapse: collapse; }
 .patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
 .patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-
 .patient-info { display: flex; align-items: center; gap: 12px; }
 .patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 .patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
 .patient-avatar.pink { background: #fce7f3; color: #db2777; }
 .patient-avatar.teal { background: #ccfbf1; color: #0d9488; }
-
 .p-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 0.95rem; }
 .p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
 .id-badge { font-family: 'JetBrains Mono', monospace; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; color: #1e3a8a; font-weight: 600; font-size: 0.8rem; }
 .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 .badge.active { background: #dcfce7; color: #15803d; }
 .badge.pending { background: #fef3c7; color: #b45309; }
-
 .view-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; }
 .add-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-
-/* MODALS & DETAIL SIDEBAR */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
 .modal-content { background: white; width: 90%; max-width: 480px; border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
@@ -469,7 +404,6 @@ const handleLogout = async () => {
 .file-name { color: #2563eb; font-weight: 600; margin-top: 8px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 2rem; }
 .btn-secondary { background: #f1f5f9; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; }
-
 .detail-sidebar { position: fixed; top: 0; right: 0; width: 400px; height: 100vh; background: white; z-index: 3000; padding: 2rem; box-shadow: -10px 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
 .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 2500; backdrop-filter: blur(2px); }
 .detail-sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
@@ -484,11 +418,8 @@ const handleLogout = async () => {
 .detail-actions-vertical { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
 .action-btn-primary { background: #1e3a8a; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .action-btn-secondary { background: #f1f5f9; color: #475569; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
-
 .clickable { cursor: pointer; transition: all 0.2s ease; }
 .clickable:active { transform: scale(0.96); }
-
-/* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .slide-enter-active, .slide-leave-active { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
