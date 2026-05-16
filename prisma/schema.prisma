@@ -13,16 +13,18 @@ generator client {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  username  String   @unique  // Add this line
   password  String
-  role      Role     @default(STAFF) // ADMIN, DOCTOR, or STAFF
+  role      Role     @default(PATIENT)
+  uniqueId  String   @unique  // Add this line (for Staff # or MRN #)
   createdAt DateTime @default(now())
 }
 
 enum Role {
   ADMIN
-  DOCTOR
-  STAFF
+  PATIENT
 }
+
 
 // 2. Patient Management (The core of your EMR)
 model Patient {

@@ -42,15 +42,38 @@ import { ref } from 'vue'
 const username = ref('')
 const password = ref('')
 const uniqueId = ref('') 
-const role = ref('admin') 
+const role = ref('admin') // Values: 'admin' or 'patient'
+const isLoading = ref(false)
 
 async function handleLogin() {
-  if (username.value && password.value && uniqueId.value) {
+  console.log("Login attempt started...")
+  isLoading.value = true
+  
+  try {
+    // We send the data to our server API
+    const response = await $fetch('/api/auth/login', {
+      method: 'POST',
+      body: {
+        username: username.value,
+        password: password.value,
+        uniqueId: uniqueId.value,
+        role: role.value // Sent as lowercase, handled by backend
+      }
+    })
+
+    console.log("Login successful:", response)
+
+    // Redirect based on role
     if (role.value === 'patient') {
       await navigateTo('/patients')
     } else {
       await navigateTo('/dashboard')
     }
+  } catch (err: any) {
+    console.error("Login error:", err)
+    alert(err.data?.statusMessage || "Login failed. Please check your credentials.")
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
