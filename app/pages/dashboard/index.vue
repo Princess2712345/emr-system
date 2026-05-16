@@ -175,16 +175,80 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const isCollapsed = ref(false)
-const isMobileOpen = ref(false) // Added for responsive menu toggle
+const isMobileOpen = ref(false) 
 
-const doctorName = ref('Dr. Smith')
-const userInitials = ref('JS')
+// 🚀 CHANGE 1: Turn these into empty reactive references
+const doctorName = ref('User') 
+const userInitials = ref('U')
 const searchQuery = ref('')
 const hasNotifications = ref(true)
 
+// 🚀 CHANGE 2: Read the logged-in user's details when the component loads on the client
+onMounted(() => {
+  if (process.client) {
+    const storedData = localStorage.getItem('user_data')
+    if (storedData) {
+      try {
+        const user = JSON.parse(storedData)
+        
+        // Assuming your backend login returns an object containing firstName and lastName
+        if (user.firstName) {
+          doctorName.value = user.firstName
+          
+          // Generate initials automatically (e.g., "Penny Rose" -> "PR")
+          const firstLetter = user.firstName.charAt(0).toUpperCase()
+          const lastLetter = user.lastName ? user.lastName.charAt(0).toUpperCase() : ''
+          userInitials.value = firstLetter + lastLetter
+        } else if (user.username) {
+          // Fallback if firstName isn't available
+          doctorName.value = user.username
+          userInitials.value = user.username.slice(0, 2).toUpperCase()
+        }
+      } catch (error) {
+        console.error("Error parsing logged-in user data:", error)
+      }
+    }
+  }
+})
+
+// Fetch live database counts directly from your stats API endpoint
+const { data: metricsResponse, refresh: refreshData } = await useFetch('/api/dashboard/stats')
+
+// Compute stats block dynamically from database metrics
+const stats = computed(() => {
+  const dbMetrics = metricsResponse.value?.data
+  return [
+    { 
+      label: 'Total Patients', 
+      value: dbMetrics?.totalPatients !== undefined ? dbMetrics.totalPatients.toLocaleString() : '0', 
+      trendText: 'Live registered list', 
+      trendClass: 'positive' 
+    },
+    { 
+      label: 'Pending Lab Results', 
+      value: dbMetrics?.pendingLabs || '0', 
+      trendText: 'Requires validation', 
+      trendClass: 'warning' 
+    },
+    { 
+      label: 'Today\'s Appointments', 
+      value: dbMetrics?.todayAppointments || '0', 
+      trendText: 'Scheduled today', 
+      trendClass: 'next-appt' 
+    },
+    { 
+      label: 'Unpaid Invoices', 
+      value: dbMetrics?.unpaidInvoices || '0', 
+      trendText: 'Requires follow-up', 
+      trendClass: 'negative' 
+    }
+  ]
+})
+
+// Navigation links configuration matching your original list
 const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
   { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
@@ -196,13 +260,6 @@ const navLinks = [
   { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
   { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
 ]
-
-const stats = ref([
-  { label: 'Total Patients', value: '1,284', trendText: '+12% this month', trendClass: 'positive' },
-  { label: 'Pending Lab Results', value: '14', trendText: '6 Urgent requests', trendClass: 'warning' },
-  { label: 'Today\'s Appointments', value: '24', trendText: 'Next at 2:00 PM', trendClass: 'next-appt' },
-  { label: 'Unpaid Invoices', value: '8', trendText: 'Requires follow-up', trendClass: 'negative' }
-])
 
 const recentLabs = ref([
   { id: 1, test: 'CBC Panel', patient: 'John Doe', time: '10 mins ago', status: 'Active' },
@@ -241,7 +298,6 @@ const handleLogout = async () => {
 
 const clearNotifications = () => { hasNotifications.value = false }
 const goToProfile = () => { alert('Navigating to profile...') }
-const refreshData = () => { alert('Data refreshed!') }
 </script>
 
 <style scoped>

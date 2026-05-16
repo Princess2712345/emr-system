@@ -5,24 +5,24 @@
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="role-identifier">
           <label class="radio-container">
-            <input type="radio" v-model="role" value="admin" name="role">
+            <input type="radio" v-model="loginData.role" value="admin" name="role">
             <span class="checkmark"></span> Admin
           </label>
           <label class="radio-container">
-            <input type="radio" v-model="role" value="patient" name="role">
+            <input type="radio" v-model="loginData.role" value="patient" name="role">
             <span class="checkmark"></span> Patient
           </label>
         </div>
 
         <label>Username</label>
-        <input v-model="username" type="text" required />
+        <input v-model="loginData.username" type="text" required />
 
         <label>Security Credentials</label>
         <div class="password-wrapper">
-          <input v-model="password" type="password" placeholder="Password" required />
+          <input v-model="loginData.password" type="password" placeholder="Password" required />
           <div class="unique-id-section">
-            <span class="id-prefix">{{ role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input v-model="uniqueId" type="text" placeholder="0000" class="id-input" required />
+            <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+            <input v-model="loginData.uniqueId" type="text" placeholder="0000" class="id-input" required />
           </div>
         </div>
         <button type="submit">Sign In</button>
@@ -36,44 +36,34 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue'
 
-const username = ref('')
-const password = ref('')
-const uniqueId = ref('') 
-const role = ref('admin') // Values: 'admin' or 'patient'
-const isLoading = ref(false)
+// Grouped state structure initialization
+const loginData = ref({
+  username: '',
+  password: '',
+  uniqueId: '',
+  role: 'patient' // Matches your lower-case template value defaults
+})
 
-async function handleLogin() {
-  console.log("Login attempt started...")
-  isLoading.value = true
-  
+const handleLogin = async () => {
   try {
-    // We send the data to our server API
     const response = await $fetch('/api/auth/login', {
       method: 'POST',
-      body: {
-        username: username.value,
-        password: password.value,
-        uniqueId: uniqueId.value,
-        role: role.value // Sent as lowercase, handled by backend
-      }
+      body: loginData.value // Securely passes the entire updated credential payload object
     })
 
-    console.log("Login successful:", response)
-
-    // Redirect based on role
-    if (role.value === 'patient') {
-      await navigateTo('/patients')
-    } else {
+    if (response.authenticated) {
+      // 🌟 Save the actual user metadata object payload locally to feed your dynamic text headers
+      localStorage.setItem('user_data', JSON.stringify(response.user))
+      
+      // Redirect straight to the live database analytics panel view
       await navigateTo('/dashboard')
     }
-  } catch (err: any) {
-    console.error("Login error:", err)
-    alert(err.data?.statusMessage || "Login failed. Please check your credentials.")
-  } finally {
-    isLoading.value = false
+  } catch (error) {
+    console.error('Authentication processing failure:', error)
+    alert(error.statusMessage || 'Invalid database credentials.')
   }
 }
 </script>
@@ -284,7 +274,7 @@ async function handleLogin() {
 @media (max-width: 480px) {
   .login-content {
     padding: 1rem;
-    justify-content: flex-start; /* Better for smaller devices with keyboards */
+    justify-content: flex-start;
     padding-top: 10vh;
   }
 
@@ -294,10 +284,10 @@ async function handleLogin() {
   }
 
   .login-form {
-    width: 95%; /* Small margin on edges */
+    width: 95%;
     padding: 1.5rem;
     gap: 1rem;
-    border-radius: 18px; /* Slightly tighter corners for mobile */
+    border-radius: 18px;
   }
 
   .role-identifier {

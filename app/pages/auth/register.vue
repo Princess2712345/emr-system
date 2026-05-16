@@ -1,46 +1,49 @@
 <template>
   <div class="register-page">
     <div class="register-content">
-      <h2>Electronic Medical Records Registration</h2>
+      <h2>Create Your EMR Account</h2>
       <form @submit.prevent="handleRegister" class="register-form">
         
         <div class="role-identifier">
           <label class="radio-container">
-            <input type="radio" v-model="role" value="admin" name="role">
-            <span class="checkmark"></span> Admin
+            <input type="radio" v-model="registerData.role" value="admin" name="role">
+            <span class="checkmark"></span> Admin Staff
           </label>
           <label class="radio-container">
-            <input type="radio" v-model="role" value="patient" name="role">
+            <input type="radio" v-model="registerData.role" value="patient" name="role">
             <span class="checkmark"></span> Patient
           </label>
         </div>
 
         <label for="firstName">First Name</label>
-        <input id="firstName" v-model="firstName" type="text" required />
+        <input id="firstName" v-model="registerData.firstName" type="text" required />
 
         <label for="middleName">Middle Name</label>
-        <input id="middleName" v-model="middleName" type="text" placeholder="(Optional)" />
+        <input id="middleName" v-model="registerData.middleName" type="text" placeholder="(Optional)" />
 
         <label for="lastName">Last Name</label>
-        <input id="lastName" v-model="lastName" type="text" required />
+        <input id="lastName" v-model="registerData.lastName" type="text" required />
 
-        <label for="email">Email</label>
-        <input id="email" v-model="email" type="email" required />
+        <label for="email">Email Address</label>
+        <input id="email" v-model="registerData.email" type="email" required />
+
+        <label for="username">Username</label>
+        <input id="username" v-model="registerData.username" type="text" required />
 
         <label>Security Credentials</label>
         <div class="password-wrapper">
-          <input v-model="password" type="password" placeholder="Password" required />
+          <input v-model="registerData.password" type="password" placeholder="Password" required />
           <div class="unique-id-section">
-            <span class="id-prefix">{{ role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input v-model="uniqueId" type="text" placeholder="0000" class="id-input" required />
+            <span class="id-prefix">{{ registerData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+            <input v-model="registerData.uniqueId" type="text" placeholder="0000" class="id-input" required />
           </div>
         </div>
 
-        <button type="submit">Sign Up</button>
-
-        <p class="login-link">
+        <button type="submit">Complete Registration</button>
+        
+        <p class="login-text">
           Already have an account? 
-          <router-link to="/auth/login">Login</router-link>
+          <NuxtLink to="/auth/login">Sign In Instead</NuxtLink>
         </p>
       </form>
     </div>
@@ -49,22 +52,33 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
+// 🚀 Grouped State Object Map synced seamlessly with layout models
+const registerData = ref({
+  username: '',
+  email: '',
+  password: '',
+  firstName: '',
+  middleName: '',
+  lastName: '',
+  uniqueId: '',
+  role: 'patient' 
+})
 
-const firstName = ref('')
-const middleName = ref('')
-const lastName = ref('')
-const email = ref('')
-const password = ref('')
-const uniqueId = ref('') 
-const role = ref('patient')
+const handleRegister = async () => {
+  try {
+    const response = await $fetch<{ success: boolean }>('/api/auth/register', {
+      method: 'POST',
+      body: registerData.value
+    })
 
-function handleRegister() {
-  if (firstName.value && lastName.value && email.value && password.value && uniqueId.value) {
-    // Logic for registration goes here
-    router.push('/dashboard')
+    if (response.success) {
+      alert('Registration successful! Redirecting to login page...')
+      await navigateTo('/auth/login')
+    }
+  } catch (error: any) {
+    console.error('Registration processing failure:', error)
+    alert(error.data?.statusMessage || error.statusMessage || 'Registration failed. Please review your credentials.')
   }
 }
 </script>
@@ -80,7 +94,6 @@ function handleRegister() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* Darkened blend mode to help the white text and glass elements pop */
   background-color: rgba(0, 0, 0, 0.25);
   background-blend-mode: overlay;
   color: #1e293b;
@@ -102,7 +115,6 @@ function handleRegister() {
   color: #ffffff; 
   font-weight: 800;
   letter-spacing: -0.5px;
-  /* Stronger shadow for bright background */
   text-shadow: 0 4px 6px rgba(0,0,0,0.4);
 }
 
@@ -112,53 +124,35 @@ function handleRegister() {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  
-  /* --- ADVANCED GLASSMORPHISM STYLES (Ice/Premium Effect) --- */
-  
-  /* 1. Translucent Base with a slight cool tint */
   background: rgba(255, 255, 255, 0.5); 
-  
-  /* 2. Heavy Background Blur */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  
-  /* 3. The 'Premium Edge' (Beveled look) */
-  /* Top/Left are bright highlight; Bottom/Right are slight shadow */
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-right-color: rgba(255, 255, 255, 0.2);
   border-bottom-color: rgba(255, 255, 255, 0.2);
-  
-  /* 4. Rounded Corners (like polished glass) */
   border-radius: 24px;
-  
-  /* 5. Realistic Shadow (Diffuse + Contact shadow) */
   box-shadow: 
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 25px 50px -12px rgba(0, 0, 0, 0.15),
-    inset 0 0 10px rgba(255, 255, 255, 0.1); /* Subtle inner light */
-
-  padding: 3rem; /* Slightly more padding for the premium feel */
+    inset 0 0 10px rgba(255, 255, 255, 0.1);
+  padding: 3rem;
   position: relative;
   overflow: hidden;
 }
 
-/* Glass Shine Overlay (pseudo-element) */
 .register-form::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* Creates the iridescent surface reflections seen in the reference image */
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.1) 0%,
     rgba(255, 255, 255, 0.0) 40%,
-    rgba(100, 200, 255, 0.05) 60%, /* Subtle blue refraction */
+    rgba(100, 200, 255, 0.05) 60%, 
     rgba(255, 255, 255, 0.1) 100%
   );
-  pointer-events: none; /* Make sure it doesn't block inputs */
+  pointer-events: none;
 }
 
 .role-identifier {
@@ -167,7 +161,7 @@ function handleRegister() {
   margin-bottom: 0.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  z-index: 1; /* Keep content above shine */
+  z-index: 1;
 }
 
 .radio-container {
@@ -192,7 +186,6 @@ function handleRegister() {
   z-index: 1;
 }
 
-/* Inputs that feel integrated into the glass surface */
 .register-form input:not(.id-input):not([type="radio"]):not([type="password"]),
 .password-wrapper {
   background-color: rgba(255, 255, 255, 0.4) !important;
@@ -206,6 +199,7 @@ function handleRegister() {
   overflow: hidden;
   transition: all 0.2s ease;
   z-index: 1;
+  border-radius: 8px;
 }
 
 .password-wrapper:focus-within {
@@ -289,22 +283,21 @@ function handleRegister() {
   transform: translateY(0);
 }
 
-.login-link {
+.login-text {
   margin-top: 1.2rem;
   font-size: 0.9rem;
   color: #334155;
   z-index: 1;
 }
 
-.login-link a {
+.login-text a {
   color: #1e40af;
   text-decoration: none;
   font-weight: 700;
   margin-left: 0.3rem;
-  transition: color 0.2s ease;
 }
 
-.login-link a:hover {
+.login-text a:hover {
   color: #1e3a8a;
   text-decoration: underline;
 }

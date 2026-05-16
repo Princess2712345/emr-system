@@ -2,7 +2,6 @@
 
 datasource db {
   provider = "postgresql"
-  // The url line is gone!
 }
 
 generator client {
@@ -11,20 +10,22 @@ generator client {
 
 // 1. User Authentication (For login.vue and register.vue)
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique  // Add this line
-  password  String
-  role      Role     @default(PATIENT)
-  uniqueId  String   @unique  // Add this line (for Staff # or MRN #)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  email      String   @unique
+  username   String   @unique
+  password   String
+  firstName  String   
+  middleName String?  
+  lastName   String   
+  role       Role     @default(PATIENT)
+  uniqueId   String   @unique  
+  createdAt  DateTime @default(now())
 }
 
 enum Role {
   ADMIN
   PATIENT
 }
-
 
 // 2. Patient Management (The core of your EMR)
 model Patient {
@@ -42,19 +43,19 @@ model Patient {
 model Appointment {
   id        Int      @id @default(autoincrement())
   date      DateTime
-  status    String   @default("SCHEDULED") // e.g., PENDING, COMPLETED, CANCELLED
+  status    String   @default("SCHEDULED") 
   patientId Int
   patient   Patient  @relation(fields: [patientId], references: [id])
 }
 
 // 4. Lab Results (For lab-results.vue)
 model LabResult {
-  id         Int      @id @default(autoincrement())
-  testName   String
-  result     String
-  patientId  Int
-  patient    Patient  @relation(fields: [patientId], references: [id])
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  testName  String
+  result    String
+  patientId Int
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 // 5. Billing & Invoices (For billing.vue)
