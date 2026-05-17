@@ -1,78 +1,73 @@
-// prisma/schema.prisma
-
 datasource db {
-  provider = "postgresql" // 🚀 Leave ONLY the provider here
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // <-- Make sure this line is here!
 }
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/db-client"
 }
 
-// 1. User Authentication (For login.vue and register.vue)
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
   username   String   @unique
   password   String
-  firstName  String   
-  middleName String?  
-  lastName   String   
+  firstName  String
+  middleName String?
+  lastName   String
   role       Role     @default(PATIENT)
-  uniqueId   String   @unique  
+  uniqueId   String   @unique
   createdAt  DateTime @default(now())
 }
 
-enum Role {
-  ADMIN
-  PATIENT
-}
-
-// 2. Patient Management (The core of your EMR - Shifted to UUID IDs)
 model Patient {
   id           String        @id @default(uuid())
   name         String
   email        String        @unique
   phone        String        @default("N/A")
-  appointments Appointment[]
-  labResults   LabResult[]
-  bills        Invoice[]
   createdAt    DateTime      @default(now())
+  appointments Appointment[]
+  bills        Invoice[]
+  labResults   LabResult[]
 }
 
-// 3. Appointments (Updated patientId to String to match the new Patient definition)
 model Appointment {
   id        Int      @id @default(autoincrement())
   date      DateTime
-  status    String   @default("SCHEDULED") 
-  patientId String   // 🚀 Fixed: Changed from Int to String
+  status    String   @default("SCHEDULED")
+  patientId String
   patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 }
 
-// 4. Lab Results (For lab-results.vue - Completely converted to UUID relational structure)
 model LabResult {
   id           String   @id @default(uuid())
   testName     String
-  patientName  String   // Combined layout tracking variable
-  requestId    String   @unique // e.g., #LAB-4055
-  category     String   // Hematology, Chemistry, Microbiology, etc.
-  dateReported DateTime @default(now())
-  status       String   @default("Pending") // Pending, Active, Validated
-  filePath     String?  // Storage path reference string for uploaded PDFs/Images
-  colorClass   String   @default("teal") // Layout custom color decoration identifier
-  uploadedBy   String?
+  patientId    String
   createdAt    DateTime @default(now())
-
-  // Relational linking field constraints
-  patientId    String   // 🚀 Fixed: Changed from Int to String
+  category     String
+  colorClass   String   @default("teal")
+  dateReported DateTime @default(now())
+  filePath     String?
+  patientName  String
+  requestId    String   @unique
+  status       String   @default("Pending")
+  uploadedBy   String?
   patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 }
 
-// 5. Billing & Invoices (Updated patientId to String to match the new Patient definition)
 model Invoice {
   id        Int      @id @default(autoincrement())
   amount    Float
   isPaid    Boolean  @default(false)
-  patientId String   // 🚀 Fixed: Changed from Int to String
-  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
   createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  HR
+  REGISTRAR
+  PATIENT
 }

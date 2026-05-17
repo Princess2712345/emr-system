@@ -1,25 +1,36 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import pg from 'pg'
+// server/api/auth/register.post.ts
+import { prisma } from '../../utils/prisma' // Up two levels from auth/ to reach utils
+import bcrypt from 'bcryptjs'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
-  const { username, email, password, firstName, middleName, lastName, uniqueId, role } = body
-
-  const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:admin123@localhost:5433/emr_db"
-  
-  const pool = new pg.Pool({ connectionString: dbUrl })
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
-
   try {
-    // Check if the user already exists
+    const body = await readBody(event)
+    const { 
+      username, 
+      email, 
+      password, 
+      firstName, 
+      middleName, 
+      lastName, 
+      uniqueId, 
+      role 
+    } = body
+
+    // 1. Mandatory field validation check (allowing middleName to be optional)
+    if (!username || !email || !password || !firstName || !lastName || !uniqueId || !role) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'All registration fields except middle name are required.'
+      })
+    }
+
+    // 2. Multi-risk unique credential check (Immediate, clean user feedback)
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: email },
-          { username: username },
-          { uniqueId: uniqueId }
+          { email: email.toLowerCase().trim() },
+          { username: username.trim() },
+          { uniqueId: uniqueId.trim() }
         ]
       }
     })
@@ -27,36 +38,66 @@ export default defineEventHandler(async (event) => {
     if (existingUser) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'User credentials already registered.'
+        statusMessage: 'User credentials (Email, Username, or Admin ID) are already registered.'
       })
     }
 
-    // Create the user record
+    // 3. Map the frontend dropdown strings (like 'HUMAN RESOURCES') to your enum shapes
+    let normalizedRole: 'ADMIN' | 'HR' | 'REGISTRAR' | 'PATIENT' = 'ADMIN'
+    const cleanRole = role.toUpperCase().trim()
+
+    if (cleanRole.includes('HUMAN') || cleanRole === 'HR') {
+      normalizedRole = 'HR'
+    } else if (cleanRole.includes('REGISTRAR')) {
+      normalizedRole = 'REGISTRAR'
+    } else if (cleanRole.includes('PATIENT')) {
+      normalizedRole = 'PATIENT'
+    } else {
+      normalizedRole = 'ADMIN'
+    }
+
+    // 4. Securely hash the text password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // 5. Write cleanly into your PostgreSQL table using your exact schema properties
     const newUser = await prisma.user.create({
       data: {
-        username: username,
-        email: email,
-        password: password, 
-        firstName: firstName,
-        middleName: middleName || null,
-        lastName: lastName,
-        uniqueId: uniqueId,          // 🚀 Matches your database column field
-        role: role.toUpperCase() 
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        password: hashedPassword,
+        firstName: firstName.trim(),
+        middleName: middleName ? middleName.trim() : null,
+        lastName: lastName.trim(),
+        uniqueId: uniqueId.trim(),
+        role: normalizedRole // Emits 'HR', 'REGISTRAR', or 'ADMIN' safely
       }
     })
 
+    // 6. Return clean feedback payload to the user dashboard table
     return {
       success: true,
-      user: { username: newUser.username, role: newUser.role }
+      message: 'Account successfully registered to directory database.',
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role
+      }
     }
 
   } catch (error: any) {
-    console.error("Database Registration Error:", error)
+    console.error('Registration backend validation error:', error)
+    
+    // Safety fallback block for race-condition database collisions
+    if (error.code === 'P2002') {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Registration conflict: This account data is already registered.'
+      })
+    }
+
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Internal Server Error'
+      statusMessage: error.statusMessage || 'Failed to complete operational registration write.'
     })
-  } finally {
-    await pool.end()
   }
 })

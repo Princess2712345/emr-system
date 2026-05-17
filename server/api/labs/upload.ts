@@ -1,16 +1,10 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import pg from 'pg'
+import { prisma } from '../../utils/prisma' // <-- Exactly 3 levels up to reach your root utils path!
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
   
-  const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:admin123@localhost:5433/emr_db"
-  const pool = new pg.Pool({ connectionString: dbUrl })
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
-
   try {
+    // === GET METHOD: FETCH RECORD MATCHES ===
     if (method === 'GET') {
       const query = getQuery(event)
       const search = (query.search as string || '').trim()
@@ -36,6 +30,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // === POST METHOD: LOG NEW LAB RECORDS ===
     if (method === 'POST') {
       const body = await readBody(event)
       const { testName, patientName, category, colorClass } = body
@@ -44,19 +39,29 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: 'Incomplete payload items.' })
       }
 
+      // 1. Search for the patient using the unified schema 'name' property
       let patient = await prisma.patient.findFirst({
-        where: { name: { equals: patientName, mode: 'insensitive' } }
+        where: {
+          name: { equals: patientName.trim(), mode: 'insensitive' }
+        }
       })
 
+      // 2. If the patient record doesn't exist yet, create it using your schema's properties
       if (!patient) {
         const cleanEmail = `${patientName.toLowerCase().replace(/\s+/g, '')}-${Math.floor(1000 + Math.random() * 9000)}@example.com`
+        
         patient = await prisma.patient.create({
-          data: { name: patientName, email: cleanEmail, phone: "N/A" }
+          data: { 
+            name: patientName.trim(), // <-- Fixed to match your schema's actual field descriptor
+            email: cleanEmail
+          }
         })
       }
 
+      // 3. Generate a fresh lab tracking reference code
       const generatedRequestId = `#LAB-${Math.floor(Math.random() * 8999) + 1000}`
 
+      // 4. Log the complete laboratory entry mapped tightly to the found or new patient ID
       const newRecord = await prisma.labResult.create({
         data: {
           testName,
@@ -78,8 +83,5 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       statusMessage: error?.message || "Internal database operational write failure."
     })
-  } finally {
-    await prisma.$disconnect()
-    await pool.end()
   }
 })

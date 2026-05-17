@@ -1,34 +1,29 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import pg from 'pg'
+import { prisma } from '../../utils/prisma' // <-- Points safely to your central engine
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
-  const { username, password, uniqueId, role } = body
-
-  if (!username || !password || !uniqueId || !role) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Missing required credentials.',
-    })
-  }
-
-  const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:admin123@localhost:5433/emr_db"
-  
-  const pool = new pg.Pool({ connectionString: dbUrl })
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
-
   try {
+    const body = await readBody(event)
+    const { username, password, uniqueId, role } = body
+
+    // 1. Validate payload requirements
+    if (!username || !password || !uniqueId || !role) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Missing required credentials.',
+      })
+    }
+
+    // 2. Query the user with strict role and ID checks
     const user = await prisma.user.findFirst({
       where: {
-        username: username,
-        password: password, 
-        uniqueId: uniqueId,       // 🚀 FIXED: Changed from 'id' to 'uniqueId' to match registration
-        role: role.toUpperCase()   
+        username: username.trim(),
+        password: password, // Note: Consider hashing this in production later!
+        uniqueId: uniqueId.trim(),
+        role: role.toUpperCase().trim()   
       }
     })
 
+    // 3. Handle incorrect authentication attempts
     if (!user) {
       throw createError({
         statusCode: 401,
@@ -36,10 +31,16 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // 4. Strip sensitive password data from response payload
     const { password: _, ...userWithoutPassword } = user
+
     return {
+      success: true,
       authenticated: true,
-      user: userWithoutPassword
+      user: {
+        ...userWithoutPassword,
+        role: user.role || 'ADMIN'
+      }
     }
 
   } catch (error: any) {
@@ -48,7 +49,5 @@ export default defineEventHandler(async (event) => {
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || 'Internal Server Error processing your login.',
     })
-  } finally {
-    await pool.end()
   }
 })
