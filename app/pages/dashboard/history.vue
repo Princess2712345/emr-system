@@ -181,17 +181,19 @@ const navLinks = [
   { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
 ]
 
-const logs = ref([
-  { id: 1042, user: 'Admin_Maria', timestamp: 'May 05, 2026 - 10:15 AM', action: 'Modified Patient Record', resource: 'P-2024-001', severity: 'Info' },
-  { id: 1041, user: 'Dr. Smith', timestamp: 'May 05, 2026 - 09:45 AM', action: 'Authorized Discharge', resource: 'Room 402-A', severity: 'Warning' },
-  { id: 1040, user: 'System', timestamp: 'May 05, 2026 - 08:00 AM', action: 'Database Backup Completed', resource: 'SQL_Server_DB', severity: 'Info' },
-  { id: 1039, user: 'Nurse_John', timestamp: 'May 04, 2026 - 11:20 PM', action: 'Failed Login Attempt', resource: 'IP: 192.168.1.45', severity: 'Critical' }
-])
+// 1. Fetch live historical audit logs securely from your server endpoint
+const { data: logs, refresh } = await useFetch('/api/history', {
+  default: () => []
+})
 
+// 2. Keep your frontend client-side filtering completely operational
 const filteredLogs = computed(() => {
+  if (!logs.value) return []
   return logs.value.filter(l => {
     const s = searchQuery.value.toLowerCase()
-    const matchesSearch = l.user.toLowerCase().includes(s) || l.action.toLowerCase().includes(s) || l.resource.toLowerCase().includes(s)
+    const matchesSearch = l.user.toLowerCase().includes(s) || 
+                          l.action.toLowerCase().includes(s) || 
+                          l.resource.toLowerCase().includes(s)
     const matchesSeverity = selectedSeverity.value === 'All' || l.severity === selectedSeverity.value
     return matchesSearch && matchesSeverity
   })

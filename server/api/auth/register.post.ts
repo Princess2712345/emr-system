@@ -73,7 +73,17 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    // 6. Return clean feedback payload to the user dashboard table
+    // 6. RECORD LOG ENTRY: Log the successful account registration to your history tracking table
+    await prisma.auditLog.create({
+      data: {
+        user: 'System', // Since the account is brand new, the action is initially handled by the registration engine
+        action: `Registered new staff account: ${newUser.username} (${newUser.role})`,
+        resource: `User-${newUser.id}`,
+        severity: 'Info' // Logged as general audit information
+      }
+    })
+
+    // 7. Return clean feedback payload to the user dashboard table
     return {
       success: true,
       message: 'Account successfully registered to directory database.',

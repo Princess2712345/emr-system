@@ -26,17 +26,18 @@ model Patient {
   name         String
   email        String        @unique
   phone        String        @default("N/A")
-  createdAt    DateTime      @default(now()) // Fixed: Removed the accidental "=" sign here
+  createdAt    DateTime      @default(now())
   appointments Appointment[]
   bills        Invoice[]
   labResults   LabResult[]
+  dispositions Disposition[] // Added bidirectional relation back-reference link
 }
 
 model Appointment {
   id          Int      @id @default(autoincrement())
   date        DateTime // Stores the calendar day
   time        String   // e.g., "09:00 AM" or "14:30"
-  duration    String   @default("30 min") // e.g., "30 min", "45 min"
+  duration    String   // e.g., "30 min", "45 min"
   reason      String   // Reason for checkup or clinical emergency
   status      String   @default("Pending") // "Confirmed", "Pending", "Urgent", "In Progress"
   
@@ -86,6 +87,7 @@ model Disposition {
   dateTime    DateTime @default(now()) 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade) // Integrated relation constraints safely
 }
 
 model Inventory {
@@ -104,4 +106,15 @@ enum Role {
   HR
   REGISTRAR
   PATIENT
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  user      String   // Stores the username or email (e.g., "Admin_Maria", "System")
+  action    String   // Description of what happened (e.g., "Modified Patient Record")
+  resource  String   // What entity was affected (e.g., "P-2024-001")
+  severity  String   // "Info", "Warning", or "Critical"
+
+  @@index([severity]) // Speeds up queries when filtering by severity level on your dashboard history layout
 }

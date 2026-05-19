@@ -39,31 +39,41 @@
 <script setup>
 import { ref } from 'vue'
 
-// Grouped state structure initialization
 const loginData = ref({
   username: '',
   password: '',
   uniqueId: '',
-  role: 'patient' // Matches your lower-case template value defaults
+  role: 'patient' // Toggles between 'admin' and 'patient' via UI radio buttons
 })
 
 const handleLogin = async () => {
   try {
     const response = await $fetch('/api/auth/login', {
       method: 'POST',
-      body: loginData.value // Securely passes the entire updated credential payload object
+      body: loginData.value 
     })
 
-    if (response.authenticated) {
-      // 🌟 Save the actual user metadata object payload locally to feed your dynamic text headers
+    if (response.authenticated && response.user) {
+      // Save session metadata globally
       localStorage.setItem('user_data', JSON.stringify(response.user))
       
-      // Redirect straight to the live database analytics panel view
-      await navigateTo('/dashboard')
+      // Read the exact uppercase role returned directly from the successful database row
+      const userRole = response.user.role ? response.user.role.toUpperCase() : 'PATIENT'
+
+      // 🔄 The Permanent Routing Solution
+      if (userRole === 'PATIENT') {
+        // 🎯 Redirects cleanly straight to your singular patient landing route
+        await navigateTo('/patient') 
+      } else if (['ADMIN', 'HR', 'REGISTRAR'].includes(userRole)) {
+        // 🎯 Redirects cleanly straight to your admin dashboard view
+        await navigateTo('/dashboard')
+      } else {
+        await navigateTo('/dashboard')
+      }
     }
   } catch (error) {
     console.error('Authentication processing failure:', error)
-    alert(error.statusMessage || 'Invalid database credentials.')
+    alert(error.data?.statusMessage || 'Invalid Username, Password, or ID.')
   }
 }
 </script>

@@ -1,4 +1,6 @@
-import { prisma } from '../../utils/prisma' // <-- Points safely to your central engine
+// server/api/auth/login.post.ts
+import { prisma } from '../../utils/prisma' 
+import bcrypt from 'bcryptjs' // Import bcrypt to read the hashed password safely
 
 export default defineEventHandler(async (event) => {
   try {
@@ -6,24 +8,31 @@ export default defineEventHandler(async (event) => {
     const { username, password, uniqueId, role } = body
 
     // 1. Validate payload requirements
-    if (!username || !password || !uniqueId || !role) {
+    if (!username || !password || !role) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Missing required credentials.',
       })
     }
 
-    // 2. Query the user with strict role and ID checks
+    const normalizedRole = role.toUpperCase().trim()
+
+    // 2. Find the user based on their specific role requirements
     const user = await prisma.user.findFirst({
       where: {
         username: username.trim(),
-        password: password, // Note: Consider hashing this in production later!
-        uniqueId: uniqueId.trim(),
-        role: role.toUpperCase().trim()   
+        role: normalizedRole,
+        // 🔄 Conditional matching: Admin/Staff can bypass strict ID matching if needed, Patients remain strict
+        ...(['ADMIN', 'HR', 'REGISTRAR'].includes(normalizedRole)
+          ? uniqueId?.trim() 
+            ? { uniqueId: uniqueId.trim() } // If an ID is provided, match it
+            : {} // If no ID is provided, don't let it block the admin login
+          : { uniqueId: uniqueId ? uniqueId.trim() : '' } // Patients MUST match their uniqueId
+        )
       }
     })
 
-    // 3. Handle incorrect authentication attempts
+    // 3. If user doesn't exist in the database, fail early
     if (!user) {
       throw createError({
         statusCode: 401,
@@ -31,7 +40,17 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 4. Strip sensitive password data from response payload
+    // 4. Validate the hashed password securely using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    
+    if (!isPasswordValid) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Invalid Username, Password, or ID.',
+      })
+    }
+
+    // 5. Strip sensitive password data from response payload
     const { password: _, ...userWithoutPassword } = user
 
     return {
@@ -39,7 +58,7 @@ export default defineEventHandler(async (event) => {
       authenticated: true,
       user: {
         ...userWithoutPassword,
-        role: user.role || 'ADMIN'
+        role: user.role // Returns the exact enum role from the database ('ADMIN', 'PATIENT', etc.)
       }
     }
 
