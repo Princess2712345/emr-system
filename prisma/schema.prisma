@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // <-- Make sure this line is here!
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -26,18 +26,26 @@ model Patient {
   name         String
   email        String        @unique
   phone        String        @default("N/A")
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime      @default(now()) // Fixed: Removed the accidental "=" sign here
   appointments Appointment[]
   bills        Invoice[]
   labResults   LabResult[]
 }
 
 model Appointment {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  status    String   @default("SCHEDULED")
-  patientId String
-  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+  date        DateTime // Stores the calendar day
+  time        String   // e.g., "09:00 AM" or "14:30"
+  duration    String   @default("30 min") // e.g., "30 min", "45 min"
+  reason      String   // Reason for checkup or clinical emergency
+  status      String   @default("Pending") // "Confirmed", "Pending", "Urgent", "In Progress"
+  
+  patientId   String
+  patientName String   // Snapshot string to keep dashboard loads fast
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model LabResult {
@@ -57,12 +65,38 @@ model LabResult {
 }
 
 model Invoice {
-  id        Int      @id @default(autoincrement())
-  amount    Float
-  isPaid    Boolean  @default(false)
-  patientId String
+  id          String   @id @default(cuid())
+  amount      Float    @default(0.00)
+  balance     Float    @default(0.00)
+  dueDate     DateTime
+  status      String   @default("Unpaid") // Valid states: "Paid", "Unpaid", "Partial"
+  patientId   String
+  patientName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Disposition {
+  id          String   @id @default(uuid())
+  patientName String
+  patientId   String   
+  type        String   
+  physician   String
+  dateTime    DateTime @default(now()) 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inventory {
+  id        String   @id @default(uuid())
+  name      String
+  category  String   
+  stock     Int      @default(0)
+  unit      String   @default("pcs") 
+  price     Float    @default(0.00)
   createdAt DateTime @default(now())
-  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {

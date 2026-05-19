@@ -1,13 +1,11 @@
 <template>
   <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <!-- SIDEBAR (Synced with Collapsible Logic) -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo" v-if="!isCollapsed">
           <Icon name="mdi:hospital-building" class="icon-blue-light" />
           <span class="logo-text">EMR System</span>
         </div>
-        <!-- HAMBURGER TOGGLE -->
         <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
           <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
         </button>
@@ -17,7 +15,6 @@
         <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
           <Icon :name="link.icon" />
           <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <!-- Floating Tooltip for Collapsed State -->
           <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
         </NuxtLink>
       </nav>
@@ -77,7 +74,7 @@
               </select>
             </div>
             <div class="visual-placeholder bar-chart">
-              <div v-for="(height, index) in [40, 60, 55, 90, 75, 85, 70, 95, 65, 80]" 
+              <div v-for="(height, index) in statsData.monthlyAdmissions" 
                    :key="index" 
                    class="bar-wrapper">
                 <div class="bar-tooltip">{{ height }}%</div>
@@ -100,7 +97,7 @@
                 </div>
               </div>
               <ul class="chart-legend">
-                <li v-for="item in distribution" :key="item.name">
+                <li v-for="item in statsData.distribution" :key="item.name">
                   <div class="legend-info">
                     <span :class="['dot', item.class]"></span>
                     {{ item.name }}
@@ -125,7 +122,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="dept in departments" :key="dept.name">
+                <tr v-for="dept in statsData.departments" :key="dept.name">
                   <td class="font-bold">{{ dept.name }}</td>
                   <td>{{ dept.patients }}</td>
                   <td>{{ dept.stay }} Days</td>
@@ -141,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const isCollapsed = ref(false)
 
@@ -157,35 +154,34 @@ const navLinks = [
   { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
 ]
 
-const kpiData = [
-  { label: 'Patient Growth', value: '2,405', trend: '+8.2%', trendType: 'up', icon: 'lucide:user-plus' },
-  { label: 'Avg. Consultation', value: '18m', trend: '-2.1%', trendType: 'up', icon: 'lucide:clock' },
+// Securely pull dynamic live numbers from your Prisma Client backend layout route
+const { data: statsData } = await useFetch('/api/statistic', {
+  default: () => ({
+    kpis: { totalPatients: '0', totalStaff: '0', appointmentsCount: '0' },
+    distribution: [],
+    monthlyAdmissions: [30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+    departments: []
+  })
+})
+
+// Computed array formatting data seamlessly into your layout grid template loops
+const kpiData = computed(() => [
+  { label: 'Patient Registry', value: statsData.value.kpis.totalPatients, trend: '+8.2%', trendType: 'up', icon: 'lucide:user-plus' },
+  { label: 'Booked Appointments', value: statsData.value.kpis.appointmentsCount, trend: 'Stable', trendType: 'up', icon: 'lucide:clock' },
   { label: 'System Uptime', value: '99.9%', trend: 'Stable', trendType: 'up', icon: 'lucide:activity' },
-  { label: 'Active Staff', value: '142', trend: '+4', trendType: 'up', icon: 'lucide:shield-check' }
-];
-
-const distribution = [
-  { name: 'Cardiology', pct: 40, class: 'cardio' },
-  { name: 'Neurology', pct: 30, class: 'neuro' },
-  { name: 'Pediatrics', pct: 30, class: 'ped' }
-];
-
-const departments = [
-  { name: 'Cardiology Unit', patients: '1,204', stay: '4.2' },
-  { name: 'Neurology Dept', patients: '840', stay: '6.1' },
-  { name: 'Pediatric Ward', patients: '361', stay: '2.5' }
-];
+  { label: 'Active Staff Users', value: statsData.value.kpis.totalStaff, trend: '+2', trendType: 'up', icon: 'lucide:shield-check' }
+])
 
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out of the EMR System?')) {
     try {
-      const token = useCookie('auth_token');
-      token.value = null;
+      const token = useCookie('auth_token')
+      token.value = null
       if (process.client) {
-        localStorage.removeItem('user_data');
-        sessionStorage.clear();
+        localStorage.removeItem('user_data')
+        sessionStorage.clear()
       }
-      await navigateTo('/auth/login'); 
+      await navigateTo('/auth/login') 
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -294,7 +290,7 @@ const handleLogout = async () => {
   align-items: center; 
   gap: 12px; 
   padding: 0.8rem 1rem; 
-  position: relative; /* Necessary for tooltip positioning */
+  position: relative; 
   transition: all 0.2s ease;
 }
 
@@ -304,16 +300,14 @@ const handleLogout = async () => {
   transform: translateX(5px); 
 }
 
-/* Center icon and handle hover when sidebar is collapsed */
 .is-collapsed .logout-btn { 
   justify-content: center; 
 }
 
 .is-collapsed .logout-btn:hover { 
-  transform: none; /* Prevent sliding when collapsed */
+  transform: none; 
 }
 
-/* Trigger tooltip visibility on hover when collapsed */
 .logout-btn:hover .sidebar-tooltip { 
   opacity: 1; 
   margin-left: 10px; 
@@ -349,6 +343,7 @@ const handleLogout = async () => {
 .bar-tooltip { position: absolute; top: -30px; background: #1e293b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; opacity: 0; transition: 0.2s; }
 .bar-wrapper:hover .bar-tooltip { opacity: 1; transform: translateY(-5px); }
 
+/* SVG Pie Fallback Colors */
 .circle { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(#2563eb 0% 40%, #10b981 40% 70%, #f59e0b 70% 100%); mask: radial-gradient(transparent 55%, black 56%); }
 .pie-container { display: flex; flex-direction: column; align-items: center; gap: 2rem; margin-top: 1rem; }
 .pie-visual { position: relative; }
@@ -358,6 +353,9 @@ const handleLogout = async () => {
 .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 .data-table th { text-align: left; padding: 12px; font-size: 0.8rem; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
 .data-table td { padding: 12px; font-size: 0.9rem; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
+
+.status-pill { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+.font-bold { font-weight: 700; }
 
 .export-btn { background: #1e3a8a; color: white; padding: 0.7rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; cursor: pointer; }
 .clickable { cursor: pointer; transition: all 0.2s ease; }

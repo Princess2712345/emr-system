@@ -151,12 +151,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
-// Layout State
+// Layout & UI State
 const isCollapsed = ref(false);
-
-// Disposition Logic
 const searchQuery = ref('');
 const selectedCategory = ref('All');
 const isModalOpen = ref(false);
@@ -164,7 +162,7 @@ const isModalOpen = ref(false);
 const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
   { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/registration', icon: 'lucide:user-plus', label: 'Registration' },
   { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
   { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
   { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
@@ -173,10 +171,24 @@ const navLinks = [
   { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
 ];
 
-const dispositions = ref([
-  { id: 1, patientName: 'Juan Dela Cruz', patientId: 'P-2026-0412', type: 'Discharged', physician: 'Santos', dateTime: 'May 05, 2026 - 09:00 AM' },
-  { id: 2, patientName: 'Maria Clara', patientId: 'P-2026-0501', type: 'Admitted', physician: 'Reyes', dateTime: 'May 05, 2026 - 08:30 AM' }
-]);
+// --- Live Pipeline Data Stream ---
+const { data: dispositions, refresh: reloadDispositions } = await useFetch('/api/dispositions', {
+  key: 'disposition-live-feed',
+  query: { search: searchQuery }
+})
+
+// Triggers search updates on typing
+watch(searchQuery, () => {
+  reloadDispositions()
+})
+
+// Handle client category filter grouping cleanly
+const filteredDispositions = computed(() => {
+  if (!dispositions.value) return [];
+  return dispositions.value.filter(d => {
+    return selectedCategory.value === 'All' || d.type === selectedCategory.value;
+  });
+});
 
 const newEntry = ref({
   patientName: '',
@@ -185,29 +197,23 @@ const newEntry = ref({
   physician: ''
 });
 
-const filteredDispositions = computed(() => {
-  return dispositions.value.filter(d => {
-    const s = searchQuery.value.toLowerCase();
-    const matchesSearch = d.patientName.toLowerCase().includes(s) || d.patientId.toLowerCase().includes(s);
-    const matchesCat = selectedCategory.value === 'All' || d.type === selectedCategory.value;
-    return matchesSearch && matchesCat;
-  });
-});
-
-const submitNewEntry = () => {
-  const now = new Date();
-  const timeStr = now.toLocaleString('en-US', { 
-    month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-  });
-
-  dispositions.value.unshift({ 
-    id: Date.now(), 
-    ...newEntry.value, 
-    dateTime: timeStr.replace(',', ' -') 
-  });
-
-  newEntry.value = { patientName: '', patientId: '', type: 'Discharged', physician: '' };
-  isModalOpen.value = false;
+// Write to your database real-time
+const submitNewEntry = async () => {
+  try {
+    await $fetch('/api/dispositions', {
+      method: 'POST',
+      body: newEntry.value
+    })
+    
+    alert('New patient disposition securely filed to clinical record database.')
+    await reloadDispositions() // Triggers instant data refresh!
+    
+    newEntry.value = { patientName: '', patientId: '', type: 'Discharged', physician: '' };
+    isModalOpen.value = false;
+  } catch (err) {
+    console.error(err)
+    alert('Failed to save disposition record.')
+  }
 };
 
 const manageCase = (item) => {

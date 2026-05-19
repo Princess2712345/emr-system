@@ -203,35 +203,84 @@ const currentView = ref('list');
 const activeFilter = ref('All');
 const form = ref({ name: '', time: '', date: '', reason: '' });
 
-const appointments = ref([
-  { id: 1, date: '2026-04-03', time: '09:00 AM', duration: '30 min', patientName: 'John Doe', reason: 'Routine Checkup - Hypertension', status: 'Confirmed' },
-  { id: 2, date: '2026-04-03', time: '10:30 AM', duration: '45 min', patientName: 'Alice Smith', reason: 'Emergency - Severe Abdominal Pain', status: 'Urgent' },
-  { id: 3, date: '2026-04-03', time: '01:15 PM', duration: '15 min', patientName: 'Robert Johnson', reason: 'Follow-up: Lab Results', status: 'Pending' },
-]);
+// Fetch real-time appointments data from database backend layout routing
+const { data: appointments, refresh } = await useFetch('/api/appointments', {
+  default: () => []
+});
 
+// Dynamic data filtering options based on state selections
 const filteredAppointments = computed(() => {
+  if (!appointments.value) return [];
   if (activeFilter.value === 'All') return appointments.value;
   return appointments.value.filter(a => a.status === activeFilter.value);
 });
 
-const toggleView = () => { currentView.value = currentView.value === 'list' ? 'calendar' : 'list'; };
+const toggleView = () => { 
+  currentView.value = currentView.value === 'list' ? 'calendar' : 'list'; 
+};
+
 const getApptsForDay = (dayNum) => {
+  if (!appointments.value) return 0;
   const formattedDay = dayNum < 10 ? `0${dayNum}` : dayNum;
-  return appointments.value.filter(a => a.date === `2026-04-${formattedDay}`).length;
+  // Standardized database query checking matches format: "2026-04-XX"
+  return appointments.value.filter(a => a.date.startsWith(`2026-04-${formattedDay}`)).length;
 };
 
-const confirmAppt = (id) => { 
-  const appt = appointments.value.find(a => a.id === id); 
-  if (appt) appt.status = 'Confirmed'; 
+// Form submit booking function to save records straight to PostgreSQL database
+const submitBooking = async () => {
+  if (!form.value.name || !form.value.date || !form.value.time) {
+    alert("Please complete required scheduling parameters.");
+    return;
+  }
+
+  try {
+    await $fetch('/api/appointments', {
+      method: 'POST',
+      body: {
+        name: form.value.name,
+        date: form.value.date,
+        time: form.value.time,
+        reason: form.value.reason
+      }
+    });
+    
+    alert("Booking Confirmed and saved to system database!");
+    form.value = { name: '', time: '', date: '', reason: '' }; // Clean parameters block
+    refresh(); // Refresh dashboard UI
+  } catch (err) {
+    alert(err.data?.statusMessage || "Booking operation failed. Ensure patient is registered first.");
+  }
 };
 
-const startVisit = (id) => { 
-  const appt = appointments.value.find(a => a.id === id); 
-  if (appt) appt.status = 'In Progress'; 
+// Action button functionality handler to confirm appointment requests
+const confirmAppt = async (id) => { 
+  try {
+    await $fetch(`/api/appointments/${id}`, {
+      method: 'PATCH',
+      body: { status: 'Confirmed' }
+    });
+    refresh();
+  } catch (err) {
+    alert("Failed to update appointment status registry.");
+  }
 };
 
-const submitBooking = () => { alert("Booking Confirmed"); };
-const handleLogout = () => { if(confirm('Logout?')) navigateTo('/auth/login'); };
+// Action button functionality handler to initiate patient room processing tracking
+const startVisit = async (id) => { 
+  try {
+    await $fetch(`/api/appointments/${id}`, {
+      method: 'PATCH',
+      body: { status: 'In Progress' }
+    });
+    refresh();
+  } catch (err) {
+    alert("Failed to track room visit processing state.");
+  }
+};
+
+const handleLogout = () => { 
+  if (confirm('Logout?')) navigateTo('/auth/login'); 
+};
 </script>
 
 <style scoped>

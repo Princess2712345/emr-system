@@ -1,13 +1,11 @@
 <template>
   <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo" v-if="!isCollapsed">
           <Icon name="mdi:hospital-building" class="icon-blue-light" />
           <span class="logo-text">EMR System</span>
         </div>
-        <!-- HAMBURGER TOGGLE -->
         <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
           <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
         </button>
@@ -33,7 +31,6 @@
     <main class="main-content">
       <header class="top-bar">
         <div class="welcome-msg">
-          <!-- BREADCRUMB REMOVED -->
           <h1>Inventory Management</h1>
           <p>Monitor medical supplies, equipment stock levels, and procurement alerts.</p>
         </div>
@@ -87,7 +84,7 @@
                     </div>
                     <div>
                       <p class="i-name">{{ item.name }}</p>
-                      <p class="i-subtext">ID: SKU-00{{ item.id }}</p>
+                      <p class="i-subtext">ID: SKU-{{ item.id.substring(0, 8).toUpperCase() }}</p>
                     </div>
                   </div>
                 </td>
@@ -118,7 +115,6 @@
       </section>
     </main>
 
-    <!-- MODAL -->
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
@@ -177,7 +173,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const isCollapsed = ref(false)
 const searchQuery = ref('')
@@ -189,7 +185,7 @@ const editingId = ref(null)
 const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
   { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
+  { to: '/dashboard/registration', icon: 'lucide:user-plus', label: 'Registration' },
   { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
   { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
   { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
@@ -206,43 +202,74 @@ const newItem = ref({
   unit: 'pcs'
 })
 
-const inventoryItems = ref([
-  { id: 1, name: 'Amoxicillin 500mg', category: 'Medication', stock: 450, unit: 'caps', price: '25.00', status: 'In-Stock' },
-  { id: 2, name: 'Surgical Gloves (M)', category: 'Disposables', stock: 12, unit: 'boxes', price: '750.00', status: 'Low-Stock' },
-  { id: 3, name: 'Digital Thermometer', category: 'Equipment', stock: 0, unit: 'pcs', price: '1,250.00', status: 'Out-of-Stock' },
-  { id: 4, name: 'Paracetamol Syrup', category: 'Medication', stock: 85, unit: 'bottles', price: '210.00', status: 'In-Stock' },
-])
+// --- Live Pipeline Data Stream ---
+const { data: inventoryItems, refresh: reloadInventory } = await useFetch('/api/inventory', {
+  key: 'inventory-live-feed',
+  query: { search: searchQuery }
+})
 
+// Refetches whenever the client uses search bars
+watch(searchQuery, () => {
+  reloadInventory()
+})
+
+// Process local grouping selection categories across our upstream responses
 const filteredInventory = computed(() => {
+  if (!inventoryItems.value) return [];
   return inventoryItems.value.filter(item => {
-    const s = searchQuery.value.toLowerCase()
-    const matchesSearch = item.name.toLowerCase().includes(s) || item.category.toLowerCase().includes(s)
-    const matchesCat = selectedCategory.value === 'All' || item.category === selectedCategory.value
-    return matchesSearch && matchesCat
+    return selectedCategory.value === 'All' || item.category === selectedCategory.value
   })
 })
 
 const resetFilters = () => { searchQuery.value = ''; selectedCategory.value = 'All'; }
 const openAddModal = () => { isEditing.value = false; newItem.value = { name: '', category: 'Medication', stock: '', price: '', unit: 'pcs' }; isModalOpen.value = true; }
-const editItem = (item) => { isEditing.value = true; editingId.value = item.id; newItem.value = { ...item }; isModalOpen.value = true; }
-const closeModal = () => { isModalOpen.value = false; isEditing.value = false; editingId.value = null; }
 
-const handleSave = () => {
-  const stockCount = parseInt(newItem.value.stock) || 0
-  const status = stockCount > 50 ? 'In-Stock' : (stockCount > 0 ? 'Low-Stock' : 'Out-of-Stock')
-  if (isEditing.value) {
-    const index = inventoryItems.value.findIndex(i => i.id === editingId.value)
-    if (index !== -1) inventoryItems.value[index] = { ...newItem.value, stock: stockCount, status }
-  } else {
-    inventoryItems.value.push({ ...newItem.value, id: Date.now(), stock: stockCount, status })
-  }
-  closeModal()
+const editItem = (item) => { 
+  isEditing.value = true; 
+  editingId.value = item.id; 
+  // Parse standard localized numeric strings back to basic inputs for editing forms cleanly
+  newItem.value = { 
+    ...item, 
+    price: typeof item.price === 'string' ? parseFloat(item.price.replace(/,/g, '')) : item.price 
+  }; 
+  isModalOpen.value = true; 
 }
 
-const deleteItem = () => {
-  if (confirm(`Are you sure you want to remove ${newItem.value.name} from the inventory?`)) {
-    inventoryItems.value = inventoryItems.value.filter(i => i.id !== editingId.value)
+const closeModal = () => { isModalOpen.value = false; isEditing.value = false; editingId.value = null; }
+
+// --- Database Mutation Handles ---
+const handleSave = async () => {
+  try {
+    const targetEndpoint = isEditing.value ? `/api/inventory/${editingId.value}` : '/api/inventory/new'
+    const targetMethod = isEditing.value ? 'PUT' : 'POST'
+
+    await $fetch(targetEndpoint, {
+      method: targetMethod,
+      body: newItem.value
+    })
+
+    alert(isEditing.value ? 'Inventory stock updates saved.' : 'New stock entry added to system core registry.')
+    await reloadInventory()
     closeModal()
+  } catch (err) {
+    console.error(err)
+    alert('Failed to execute item data update mutations.')
+  }
+}
+
+const deleteItem = async () => {
+  if (confirm(`Are you sure you want to remove ${newItem.value.name} from the inventory?`)) {
+    try {
+      await $fetch(`/api/inventory/${editingId.value}`, {
+        method: 'DELETE'
+      })
+      alert('Supply item cleanly dropped from catalog indexes.')
+      await reloadInventory()
+      closeModal()
+    } catch (err) {
+      console.error(err)
+      alert('Failed to safely drop the requested logistics registry profile.')
+    }
   }
 }
 
