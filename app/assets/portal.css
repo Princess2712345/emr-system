@@ -190,7 +190,7 @@ video {
   max-width: 100%;
 }
 
-/* --- Responsive grids (override scoped page CSS) --- */
+/* --- Responsive grids --- */
 .portal-page .bento-grid,
 .portal-bento-grid,
 .stats-grid,
@@ -221,19 +221,20 @@ video {
   width: 100%;
 }
 
-/* --- Tables: horizontal scroll on small screens --- */
+/* --- Tables: horizontal scrollable wrapper --- */
 .table-container {
   width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
+  overflow-x: auto; 
   -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
 }
 
 .patient-table,
 .data-table,
 .inventory-table {
   width: 100%;
-  min-width: 600px;
+  min-width: 600px; 
+  border-collapse: collapse;
 }
 
 /* --- Cards & lists --- */
@@ -245,21 +246,7 @@ video {
   max-width: 100%;
 }
 
-.portal-page .hero-content,
-.hero-content {
-  flex-wrap: wrap;
-}
-
-.portal-page .meta-row,
-.meta-row {
-  flex-wrap: wrap;
-}
-
 /* --- Modals --- */
-.modal-overlay {
-  padding: 1rem;
-}
-
 .modal-container,
 .modal-card,
 .modal-content {
@@ -305,49 +292,28 @@ video {
   .side-by-side-container {
     grid-template-columns: 1fr !important;
   }
-
-  .booking-sidebar {
-    order: 2;
-  }
 }
 
 /* ==========================================================================
    MOBILE (≤768px)
    ========================================================================== */
 @media (max-width: 768px) {
-  .desktop-only {
-    display: none !important;
-  }
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
 
-  .mobile-only {
-    display: flex !important;
-  }
-
-  .portal-layout,
-  .dashboard-layout {
+  .portal-layout, .dashboard-layout {
     flex-direction: column;
     height: auto;
     min-height: 100vh;
-    overflow-x: hidden;
   }
 
-  .portal-mobile-bar,
-  .mobile-nav-bar {
-    display: flex !important;
-    order: -2;
-    position: sticky;
-    top: 0;
-  }
-
-  .portal-sidebar,
-  .dashboard-layout .sidebar {
+  .portal-sidebar, .dashboard-layout .sidebar {
     position: fixed !important;
     left: 0;
     top: 0;
     width: min(280px, 88vw) !important;
     height: 100vh !important;
     transform: translateX(-100%);
-    order: -1;
   }
 
   .portal-layout.mobile-open .portal-sidebar,
@@ -355,181 +321,18 @@ video {
     transform: translateX(0) !important;
   }
 
-  .portal-main,
-  .dashboard-layout .main-content {
-    width: 100% !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  /* Single column grids */
-  .portal-page .bento-grid,
-  .portal-bento-grid,
-  .stats-grid,
-  .kpi-grid,
-  .billing-stats,
-  .bento-grid,
-  .dashboard-main-grid {
+  .portal-page .bento-grid, .dashboard-main-grid {
     grid-template-columns: 1fr !important;
   }
-
-  .billing-stats {
-    display: grid !important;
-  }
-
-  .portal-page .bottom-layout,
-  .portal-bottom-layout,
-  .bottom-layout {
-    grid-template-columns: 1fr !important;
-  }
-
-  .portal-page .scrollable-body,
-  .dashboard-body,
-  .billing-body,
-  .patient-body,
-  .appointment-body {
-    padding: 1rem !important;
-  }
-
-  .portal-page .top-bar,
-  .portal-top-bar,
-  .dashboard-layout .top-bar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 1rem;
-  }
-
-  .portal-page .header-actions,
-  .portal-header-actions,
-  .dashboard-layout .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .welcome-msg h1,
-  .header-info h1 {
-    font-size: 1.2rem !important;
-  }
-
-  .table-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-wrapper {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .appointment-card {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0.75rem !important;
-    grid-template-columns: unset !important;
-  }
-
-  .status-box {
-    align-self: flex-end;
-  }
-
-  .schedule-header,
-  .view-filters,
-  .filter-tabs {
-    flex-wrap: wrap;
-    width: 100%;
-  }
-
-  .view-filters {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 0.25rem;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .portal-page .record-item,
-  .record-item,
-  .apt-item,
-  .activity-item {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-  }
-
-  .portal-page .record-actions,
-  .record-actions,
-  .apt-item .apt-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .portal-page .card-header,
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .portal-page .add-btn,
-  .portal-page .action-outline,
-  .add-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr !important;
-  }
-
-  .patient-info {
-    flex-wrap: wrap;
-  }
-
-  .calendar-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-
-  .calendar-day {
-    height: auto;
-    min-height: 56px;
-  }
-
-  .payment-methods-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .modal-container,
-  .modal-card,
-  .modal-content {
-    width: calc(100vw - 1.5rem) !important;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
+  
+  .form-row { grid-template-columns: 1fr !important; }
 }
 
 /* ==========================================================================
    SMALL PHONES (≤480px)
    ========================================================================== */
 @media (max-width: 480px) {
-  .portal-page .bento-grid,
-  .portal-bento-grid,
-  .stats-grid,
-  .kpi-grid {
-    gap: 0.75rem !important;
-  }
-
-  .portal-page .main-val,
-  .main-val {
-    font-size: 1.2rem !important;
-  }
-
-  .patient-table,
-  .data-table {
+  .patient-table, .data-table {
     min-width: 520px;
-  }
-
-  .filter-pill,
-  .tab {
-    font-size: 0.7rem;
-    padding: 0.35rem 0.6rem;
   }
 }

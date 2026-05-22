@@ -40,17 +40,15 @@
         </div>
 
         <div class="table-container">
-          <table class="patient-table">
-            <thead>
-              <tr>
-                <th>Test & Patient</th>
-                <th>Request ID</th>
-                <th>Category</th>
-                <th>Date Reported</th>
-                <th>Status</th>
-                <th class="text-right">Action</th>
-              </tr>
-            </thead>
+  <table class="patient-table">
+    <thead>
+      <tr>
+        <th>TEST & PATIENT</th>
+        <th>REQUEST ID</th>
+        <th>CATEGORY</th>
+        <th>DATE REPORTED</th>
+      </tr>
+    </thead>
             <tbody>
               <tr v-for="lab in filteredLabs" :key="lab.id">
                 <td>
