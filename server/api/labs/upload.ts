@@ -46,15 +46,10 @@ export default defineEventHandler(async (event) => {
         }
       })
 
-      // 2. If the patient record doesn't exist yet, create it using your schema's properties
       if (!patient) {
-        const cleanEmail = `${patientName.toLowerCase().replace(/\s+/g, '')}-${Math.floor(1000 + Math.random() * 9000)}@example.com`
-        
-        patient = await prisma.patient.create({
-          data: { 
-            name: patientName.trim(), // <-- Fixed to match your schema's actual field descriptor
-            email: cleanEmail
-          }
+        throw createError({
+          statusCode: 404,
+          statusMessage: 'Patient must be registered before lab results can be uploaded.'
         })
       }
 

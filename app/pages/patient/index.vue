@@ -1,37 +1,6 @@
 <template>
-  <div class="dashboard-layout">
-    <!-- SIDEBAR: Solid Professional Style -->
-     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="logo-icon" />
-        <span class="logo-text">MyHealth<span class="text-blue-400">Portal</span></span>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink to="/patients" class="nav-item active">
-          <Icon name="lucide:layout-dashboard" /> Dashboard
-        </NuxtLink>
-        <NuxtLink to="/patients/myappointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/patients/lab-results" class="nav-item">
-          <Icon name="lucide:file-heart" /> Health Records
-        </NuxtLink>
-        <NuxtLink to="/patients/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Billing & Payments
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout Account
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <!-- TOP BAR: Refined Alignment -->
-      <header class="top-bar">
+  <div class="portal-page">
+      <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>Welcome, {{ patientInfo.name }}</h1>
           <p class="current-date">{{ currentDate }}</p>
@@ -48,7 +17,6 @@
       </header>
 
       <div class="scrollable-body animate-in">
-        <!-- HERO SECTION: Realistic Patient Profile -->
         <section class="patient-hero">
           <div class="hero-content">
             <div class="avatar-large-container">
@@ -62,49 +30,43 @@
               </div>
               <div class="meta-row">
                 <span class="meta-item"><strong>ID:</strong> {{ patientInfo.id }}</span>
-                <span class="meta-item"><strong>Blood:</strong> O Positive</span>
-                <span class="meta-item"><strong>Age:</strong> 24</span>
+                <span class="meta-item"><strong>Blood:</strong> {{ patientInfo.bloodType }}</span>
+                <span class="meta-item"><strong>Age:</strong> {{ patientInfo.age }}</span>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- DASHBOARD GRID: Realistic Health Monitoring -->
-        <div class="bento-grid">
-          <!-- Next Appointment (Primary Action) -->
+        <div class="bento-grid portal-bento-grid">
           <div class="bento-card highlight-card">
             <label class="label-caps"><Icon name="lucide:clock" /> Incoming Visit</label>
             <div class="appt-details">
-              <p class="main-val">May 15</p>
-              <p class="sub-val">Ophthalmology • 09:00 AM</p>
+              <p class="main-val">{{ nextAppt.date }}</p>
+              <p class="sub-val">{{ nextAppt.details }}</p>
             </div>
             <button class="card-btn clickable" @click="addToCalendar">Add to Calendar</button>
           </div>
 
-          <!-- Vital: BP -->
           <div class="bento-card">
             <label class="label-caps"><Icon name="lucide:activity" /> Blood Pressure</label>
-            <p class="main-val">120<span class="unit">/80</span></p>
+            <p class="main-val">{{ vitalsData.bloodPressure }}</p>
             <div class="trend-tag success">Within Normal Range</div>
           </div>
 
-          <!-- Vital: Pulse -->
           <div class="bento-card">
             <label class="label-caps"><Icon name="lucide:heart" /> Heart Rate</label>
-            <p class="main-val">72 <span class="unit">bpm</span></p>
-            <div class="trend-tag info">Recorded Oct 24</div>
+            <p class="main-val">{{ vitalsData.heartRate }}</p>
+            <div class="trend-tag info">{{ vitalsData.lastRecorded }}</div>
           </div>
 
-          <!-- Vital: Allergy -->
           <div class="bento-card warning-bg">
             <label class="label-caps text-red-700"><Icon name="lucide:shield-alert" /> Critical Allergy</label>
-            <p class="main-val text-red-700">Aspirin</p>
+            <p class="main-val text-red-700">{{ vitalsData.criticalAllergy }}</p>
             <p class="small-text text-red-600">Contact staff if updated</p>
           </div>
         </div>
 
-        <div class="bottom-layout">
-          <!-- TIMELINE: Clinical History -->
+        <div class="bottom-layout portal-bottom-layout">
           <section class="content-card timeline-card">
             <div class="card-header">
               <h3><Icon name="lucide:history" /> Medical Timeline</h3>
@@ -125,9 +87,7 @@
             </div>
           </section>
 
-          <!-- SIDEBAR WIDGETS -->
           <aside class="widget-stack">
-            <!-- Emergency Card -->
             <div class="emergency-card">
               <div class="card-header-sm">
                 <Icon name="lucide:phone-call" />
@@ -140,7 +100,6 @@
               </div>
             </div>
 
-            <!-- Insurance Card -->
             <div class="content-card insurance-card">
               <label class="label-caps">Insurance</label>
               <div class="provider-row">
@@ -151,54 +110,67 @@
           </aside>
         </div>
       </div>
-    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+definePageMeta({ layout: 'patient' })
 
-const patientInfo = ref({ 
-  initials: 'PRP', 
-  name: 'Penny Rose Peduhan', 
-  id: '#EMR-2045', 
-  colorClass: 'purple-theme' 
-})
+import { ref, onMounted, computed } from 'vue'
 
-const patientNotes = ref([
-  { 
-    doctor: 'Dr. Aris (Cardiology)', 
-    date: 'Oct 24, 2025', 
-    content: 'Standard cardiac screening. Rhythm is regular. Patient encouraged to maintain current physical activity levels.' 
-  },
-  { 
-    doctor: 'Dr. Cruz (General Medicine)', 
-    date: 'Aug 12, 2025', 
-    content: 'Seasonal influenza consultation. Prescription provided for symptoms. Bed rest advised for 3 days.' 
+const isLoading = ref(true)
+
+// Reactive holders initialized with safe placeholder defaults
+const patientInfo = ref({ initials: '...', name: 'Loading...', id: '#...', colorClass: 'purple-theme', age: '--', bloodType: '--' })
+const vitalsData = ref({ bloodPressure: '--/--', heartRate: '--', criticalAllergy: 'None', lastRecorded: '' })
+const nextAppt = ref({ date: 'No upcoming visits', details: '' })
+const patientNotes = ref([])
+
+onMounted(async () => {
+  try {
+    // 1. Grab the user session object saved during login
+    const cachedUser = localStorage.getItem('user_data')
+    if (!cachedUser) {
+      // Direct unauthorized snoopers back to security checkpoint
+      return await navigateTo('/auth/login')
+    }
+
+    const user = JSON.parse(cachedUser)
+
+    // 2. Query our backend endpoint passing the logged-in ID
+    const data = await $fetch(`/api/patient/dashboard?userId=${user.id}`)
+
+    if (data.success) {
+      // 3. Hydrate state values dynamically
+      patientInfo.value = {
+        ...data.patientInfo,
+        colorClass: 'purple-theme'
+      }
+      vitalsData.value = data.vitals
+      nextAppt.value = data.nextAppointment
+      patientNotes.value = data.timelineNotes
+    }
+  } catch (error) {
+    console.error('Failed to load profile parameters:', error)
+  } finally {
+    isLoading.value = false
   }
-])
+})
 
 const currentDate = computed(() => {
   return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 })
 
-const handleLogout = () => {
-  if (confirm('Sign out from MyHealth Portal?')) {
-    navigateTo('/auth/login')
-  }
-}
-
 const printRecord = () => { window.print() }
 
 const addToCalendar = () => {
-  const title = "Ophthalmology Appointment - MyHealth Portal";
-  const details = "Location: Ophthalmology Clinic, Main Wing";
-  const start = "20250515T090000";
-  const end = "20250515T100000";
+  const title = "Ophthalmology Appointment - MyHealth Portal"
+  const details = "Location: Ophthalmology Clinic, Main Wing"
+  const start = "20260515T090000"
+  const end = "20260515T100000"
   
-  // Direct link to Google Calendar Template
-  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}`;
-  window.open(calendarUrl, '_blank');
+  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}`
+  window.open(calendarUrl, '_blank')
 }
 </script>
 
@@ -206,23 +178,75 @@ const addToCalendar = () => {
 /* --- BASE & SIDEBAR --- */
 .dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-/* SIDEBAR: Universal Style */
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; flex-shrink: 0; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+/* SIDEBAR: Base transitions added */
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 2rem 1.5rem; 
+  flex-shrink: 0; 
+  position: relative;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease; 
+}
+
+/* Collapsed Sidebar Modifier */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 2rem 0.75rem;
+  align-items: center;
+}
+
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; white-space: nowrap; }
+.logo-icon { flex-shrink: 0; font-size: 1.5rem; }
+
+/* Toggle Action Button styling */
+.toggle-btn {
+  position: absolute;
+  top: 1.8rem;
+  right: -14px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  z-index: 10;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-btn:hover { background: #1d4ed8; }
+
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
 .nav-item { 
   display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
   color: #bfdbfe; text-decoration: none; border-radius: 12px; font-weight: 500; 
   transition: 0.2s ease; 
+  white-space: nowrap;
 }
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.8rem;
+}
+
+.nav-item :deep(svg), .nav-item .icon { flex-shrink: 0; font-size: 1.25rem; }
+.nav-text { transition: opacity 0.2s ease; }
+
 .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+.sidebar.collapsed .nav-item:hover { transform: scale(1.05); }
 .router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); width: 100%; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; }
+.sidebar.collapsed .logout-btn { justify-content: center; }
 
 /* --- MAIN CONTENT & TOP BAR --- */
-.main-content { flex: 1; display: flex; flex-direction: column; }
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
 .top-bar { 
   background: white; padding: 1.2rem 2.5rem; display: flex; justify-content: space-between; 
@@ -232,7 +256,6 @@ const addToCalendar = () => {
 .header-info h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
 .current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 
-/* ALIGNMENT FIX: header-actions */
 .header-actions { 
   display: flex; 
   align-items: center; 
@@ -252,7 +275,7 @@ const addToCalendar = () => {
 }
 
 /* --- ENHANCED BODY --- */
-.scrollable-body { padding: 2rem 2.5rem; }
+.scrollable-body { padding: 2rem 2.5rem; overflow-y: auto; flex: 1; }
 
 /* Patient Hero Card */
 .patient-hero { 

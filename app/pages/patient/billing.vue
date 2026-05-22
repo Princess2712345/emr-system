@@ -1,44 +1,13 @@
 <template>
-  <div class="dashboard-layout">
-    <!-- SIDEBAR: Standardized with standard portal navigation -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="logo-icon" />
-        <span class="logo-text">MyHealth<span class="text-blue-400">Portal</span></span>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink to="/patients" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Dashboard
-        </NuxtLink>
-        <NuxtLink to="/patients/myappointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/patients/lab-results" class="nav-item">
-          <Icon name="lucide:file-heart" /> Health Records
-        </NuxtLink>
-        <NuxtLink to="/patients/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Billing & Payments
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout Account
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <!-- TOP BAR: Consistent with the Profile and Action alignment -->
-      <header class="top-bar">
+  <div class="portal-page">
+      <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>Billing & Payments</h1>
           <p class="current-date">Manage your invoices and insurance coverage</p>
         </div>
         
         <div class="header-actions">
-          <button class="add-btn clickable" @click="handleMakePayment">
+          <button class="add-btn clickable" @click="openPaymentModal(null)">
             <Icon name="lucide:wallet" /> Quick Pay
           </button>
           <div class="profile-chip" @click="handleProfileClick">
@@ -48,33 +17,30 @@
       </header>
 
       <div class="scrollable-body animate-in">
-        <!-- BILLING STATS BENTO: Standard 4-Column Grid -->
-        <div class="bento-grid">
-          <div class="bento-card highlight-card" @click="handleStatClick('Total Balance')">
+        <div class="bento-grid portal-bento-grid">
+          <div class="bento-card highlight-card" @click="billingFilter = 'Unpaid'">
             <label class="label-caps"><Icon name="lucide:alert-circle" /> Total Balance</label>
-            <p class="main-val">₱2,450.00</p>
-            <p class="sub-val">Due by May 20, 2026</p>
+            <p class="main-val">₱{{ totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+            <p class="sub-val text-blue-200">{{ dueByLabel }}</p>
           </div>
           <div class="bento-card" @click="handleStatClick('Insurance Status')">
             <label class="label-caps"><Icon name="lucide:shield-check" /> Insurance</label>
-            <p class="main-val-sm">PhilHealth Verified</p>
-            <div class="trend-tag success">Active Coverage</div>
+            <p class="main-val-sm">{{ insurance.provider }}</p>
+            <div class="trend-tag success">{{ insurance.status }}</div>
           </div>
-          <div class="bento-card" @click="handleStatClick('Last Payment')">
+          <div class="bento-card" @click="billingFilter = 'Paid'">
             <label class="label-caps"><Icon name="lucide:receipt" /> Last Payment</label>
-            <p class="main-val-sm">₱1,200.00</p>
-            <p class="sub-val">Processed April 15</p>
+            <p class="main-val-sm">₱{{ lastPayment.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</p>
+            <p class="sub-val">Processed {{ lastPayment.date }}</p>
           </div>
           <div class="bento-card" @click="handleStatClick('Payment Method')">
             <label class="label-caps"><Icon name="lucide:credit-card" /> Auto-Pay</label>
-            <p class="main-val-sm">GCash Enabled</p>
-            <p class="sub-val">Linked: **** 2341</p>
+            <p class="main-val-sm">{{ autoPay.method }} Enabled</p>
+            <p class="sub-val">Linked: {{ autoPay.accountDisplay }}</p>
           </div>
         </div>
 
-        <!-- 2-COLUMN MAIN LAYOUT -->
         <div class="bottom-layout">
-          <!-- LEFT: INVOICE LIST -->
           <section class="content-card">
             <div class="card-header">
               <div class="header-title-group">
@@ -112,16 +78,18 @@
                 </div>
 
                 <div class="record-actions">
-                  <p class="bill-amount" :class="{ 'text-muted': bill.status === 'Paid' }">{{ bill.amount }}</p>
+                  <p class="bill-amount" :class="{ 'text-muted': bill.status === 'Paid' }">
+                    ₱{{ bill.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                  </p>
                   
-                  <button v-if="bill.status === 'Unpaid'" class="btn-primary-sm" @click="handlePayInvoice(bill)">
+                  <button v-if="bill.status === 'Unpaid'" class="btn-primary-sm" @click="openPaymentModal(bill)">
                     Pay Now
                   </button>
                   <button v-else class="btn-receipt-sm" @click="handleDownloadInvoice(bill)">
                     <Icon name="lucide:receipt-text" /> Receipt
                   </button>
 
-                  <button class="icon-btn-more" @click="handleDownloadInvoice(bill)">
+                  <button class="icon-btn-more" @click="handleDownloadInvoice(bill)" title="Download Invoice">
                     <Icon name="lucide:download" />
                   </button>
                 </div>
@@ -134,7 +102,6 @@
             </div>
           </section>
 
-          <!-- RIGHT: WIDGET STACK -->
           <aside class="widget-stack">
             <div class="info-card-blue">
               <h4><Icon name="lucide:landmark" /> Financial Assistance</h4>
@@ -145,75 +112,305 @@
             <div class="content-card insurance-widget">
               <h4>Primary Coverage</h4>
               <div class="insurance-card-mini">
-                <p class="ins-provider">PhilHealth / Maxicare</p>
-                <p class="ins-id">ID: 0021-4452-1102</p>
+                <p class="ins-provider">{{ insurance.provider }}</p>
+                <p class="ins-id">ID: {{ insurance.policyId }}</p>
                 <div class="ins-badge">Verified Active</div>
               </div>
-              <button class="btn-text-link" @click="handleUpdateInsurance">
+              <button class="btn-text-link" @click="isInsuranceModalOpen = true">
                 Update Insurance <Icon name="lucide:arrow-right" />
               </button>
             </div>
           </aside>
         </div>
       </div>
-    </main>
+    <div v-if="isPaymentModalOpen" class="modal-overlay" @click.self="isPaymentModalOpen = false">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Secure Payment Gateway</h3>
+          <button class="close-modal" @click="isPaymentModalOpen = false"><Icon name="lucide:x" /></button>
+        </div>
+        <div class="modal-body">
+          <p v-if="selectedBill">Processing payment for <strong>{{ selectedBill.service }}</strong></p>
+          <p v-else>Processing custom checkout settlement amount.</p>
+          <div class="amount-summary">
+            <span>Total Outstanding Amount:</span>
+            <span class="amount-highlight">₱{{ (selectedBill ? selectedBill.amount : totalBalance).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+          </div>
+          <div class="payment-methods-grid">
+            <button class="method-option active">
+              <Icon name="lucide:wallet" /> GCash
+            </button>
+            <button class="method-option" @click="alert('Credit/Debit system integration pending.')">
+              <Icon name="lucide:credit-card" /> Card
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="isPaymentModalOpen = false">Cancel</button>
+          <button class="btn-primary" @click="executePayment">Confirm Settlement</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="isInsuranceModalOpen" class="modal-overlay" @click.self="isInsuranceModalOpen = false">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Update Insurance Records</h3>
+          <button class="close-modal" @click="isInsuranceModalOpen = false"><Icon name="lucide:x" /></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Insurance Provider Group</label>
+            <input type="text" v-model="insuranceForm.provider" class="form-input" placeholder="e.g., PhilHealth / Maxicare" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Policy / Member ID Card Reference</label>
+            <input type="text" v-model="insuranceForm.policyId" class="form-input" placeholder="0000-0000-0000" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="isInsuranceModalOpen = false">Cancel</button>
+          <button class="btn-primary" @click="saveInsurance">Save Verification Document</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+definePageMeta({ layout: 'patient' })
+
+import { ref, computed, onMounted } from 'vue'
 
 const billingFilter = ref('All')
+const isPaymentModalOpen = ref(false)
+const isInsuranceModalOpen = ref(false)
+const selectedBill = ref(null)
 
-const bills = ref([
-  { id: 1, service: 'Routine Consultation (Dr. Santos)', date: 'May 01, 2026', invoiceNo: '88291', amount: '₱850.00', status: 'Unpaid' },
-  { id: 2, service: 'Laboratory: CBC & Lipid Profile', date: 'April 20, 2026', invoiceNo: '88102', amount: '₱1,600.00', status: 'Unpaid' },
-  { id: 3, service: 'Telemedicine Session', date: 'March 15, 2026', invoiceNo: '87544', amount: '₱500.00', status: 'Paid' },
-  { id: 4, service: 'Annual Physical Exam Package', date: 'Jan 10, 2026', invoiceNo: '86221', amount: '₱3,200.00', status: 'Paid' }
-])
+// Application Mock Reactive Targets
+const insurance = ref({
+  provider: 'PhilHealth / Maxicare',
+  policyId: '0021-4452-1102',
+  status: 'Active Coverage'
+})
 
+const insuranceForm = ref({ ...insurance.value })
+
+const autoPay = ref({
+  method: 'GCash',
+  accountDisplay: '**** 2341'
+})
+
+const lastPayment = ref({
+  amount: 1200.00,
+  date: 'April 15, 2026'
+})
+
+const bills = ref([])
+const dueByLabel = ref('No outstanding balance')
+
+onMounted(async () => {
+  try {
+    const cachedUser = localStorage.getItem('user_data')
+    if (!cachedUser) return navigateTo('/auth/login')
+    const user = JSON.parse(cachedUser)
+    const data = await $fetch(`/api/patient/billing?userId=${user.id}`)
+    if (data.success) {
+      bills.value = data.bills
+      insurance.value = data.insurance
+      insuranceForm.value = { ...data.insurance }
+      lastPayment.value = data.lastPayment
+      autoPay.value = data.autoPay
+      dueByLabel.value = data.dueBy ? `Due by ${data.dueBy}` : 'No outstanding balance'
+    }
+  } catch (e) {
+    console.error('Billing load failed:', e)
+  }
+})
+
+// Computed Properties
 const filteredBills = computed(() => {
   if (billingFilter.value === 'All') return bills.value
   return bills.value.filter(b => b.status === billingFilter.value)
 })
 
-const handleMakePayment = () => alert('Redirecting to Secure Payment Portal...')
-const handleProfileClick = () => alert('Accessing Profile Settings...')
-const handleStatClick = (type) => alert(`Detail view for: ${type}`)
-const handlePayInvoice = (bill) => alert(`Processing payment for: ${bill.service}`)
-const handleDownloadInvoice = (bill) => alert(`Generating INV-${bill.invoiceNo}.pdf...`)
-const handleAssistance = () => alert('Opening Financial Aid Portal...')
-const handleUpdateInsurance = () => alert('Upload your new Health Card/ID...')
+const totalBalance = computed(() => {
+  return bills.value
+    .filter(bill => bill.status === 'Unpaid')
+    .reduce((sum, current) => sum + current.amount, 0)
+})
 
-const handleLogout = () => {
-  if (confirm('Sign out from MyHealth Portal?')) {
-    // navigateTo is a Nuxt utility
-    navigateTo('/auth/login')
-  }
+// Handlers
+const openPaymentModal = (bill) => {
+  selectedBill.value = bill
+  isPaymentModalOpen.value = true
 }
 
-const printRecord = () => { window.print() }
-</script>
+const executePayment = () => {
+  if (selectedBill.value) {
+    const target = bills.value.find(b => b.id === selectedBill.value.id)
+    if (target) {
+      target.status = 'Paid'
+      lastPayment.value = {
+        amount: target.amount,
+        date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      }
+    }
+  } else {
+    bills.value.forEach(b => {
+      if (b.status === 'Unpaid') b.status = 'Paid'
+    })
+  }
+  isPaymentModalOpen.value = false
+  selectedBill.value = null
+  alert('Transaction processed successfully.')
+}
 
+const saveInsurance = () => {
+  insurance.value = { ...insuranceForm.value, status: 'Verification Pending' }
+  isInsuranceModalOpen.value = false
+  alert('Insurance dataset updated.')
+}
+
+const handleProfileClick = () => alert('Accessing Profile Settings...')
+const handleStatClick = (type) => alert(`Detail view for: ${type}`)
+const handleDownloadInvoice = (bill) => alert(`Generating INV-${bill.invoiceNo}.pdf...`)
+const handleAssistance = () => alert('Opening Financial Aid Portal...')
+
+</script>
 
 <style scoped>
 /* REUSABLE BASE STYLES */
 .dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-/* SIDEBAR: Universal Style */
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; flex-shrink: 0; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { 
-  display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
-  color: #bfdbfe; text-decoration: none; border-radius: 12px; font-weight: 500; 
-  transition: 0.2s ease; 
+/* SIDEBAR CONFIGURATION (Matches Index Layout Perfectly) */
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 2rem 1.5rem; 
+  height: 100vh; 
+  flex-shrink: 0; 
+  z-index: 50; 
+  position: relative;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
 }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.sidebar.collapsed {
+  width: 80px;
+  padding: 2rem 0.75rem;
+  align-items: center;
+}
+
+.sidebar-logo { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  font-size: 1.25rem; 
+  font-weight: 800; 
+  margin-bottom: 3rem; 
+  white-space: nowrap; 
+}
+
+.logo-icon { 
+  flex-shrink: 0; 
+  font-size: 1.5rem; 
+}
+
+/* Floating Sidebar Edge Toggle Button */
+.toggle-btn {
+  position: absolute;
+  top: 1.8rem;
+  right: -14px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 60;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-btn:hover { 
+  background: #1d4ed8; 
+}
+
+.sidebar-nav { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.5rem; 
+  width: 100%; 
+}
+
+.nav-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-weight: 500; 
+  transition: all 0.2s; 
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.8rem;
+}
+
+.nav-item :deep(svg), .nav-item .icon { 
+  flex-shrink: 0; 
+  font-size: 1.25rem; 
+}
+.nav-text { 
+  transition: opacity 0.2s ease; 
+}
+
+.nav-item.router-link-active { 
+  background: #2563eb; 
+  color: white; 
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); 
+}
+.nav-item:hover:not(.router-link-active) { 
+  background: rgba(255, 255, 255, 0.1); 
+  color: white; 
+  transform: translateX(5px); 
+}
+.sidebar.collapsed .nav-item:hover:not(.router-link-active) { 
+  transform: scale(1.05); 
+}
+
+.sidebar-footer { 
+  padding-top: 1.5rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+  width: 100%; 
+}
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  cursor: pointer; 
+  white-space: nowrap; 
+}
+.sidebar.collapsed .logout-btn { 
+  justify-content: center; 
+}
 
 /* MAIN CONTENT & TOP BAR */
 .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
@@ -222,17 +419,22 @@ const printRecord = () => { window.print() }
   justify-content: space-between; align-items: center; 
   border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; 
 }
+.top-bar h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
+.current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 .header-actions { display: flex; align-items: center; gap: 1.2rem; }
 .add-btn { 
   background: #2563eb; color: white; border: none; padding: 0.75rem 1.4rem; 
   border-radius: 10px; font-weight: 700; display: flex; align-items: center; 
-  gap: 10px; font-size: 0.85rem; cursor: pointer; 
+  gap: 10px; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
 }
+.add-btn:hover { background: #1d4ed8; }
 .avatar-circle { 
   width: 44px; height: 44px; border-radius: 50%; display: flex; 
-  align-items: center; justify-content: center; font-weight: 800; cursor: pointer;
+  align-items: center; justify-content: center; font-weight: 800; cursor: pointer; transition: transform 0.2s;
 }
+.avatar-circle:hover { transform: scale(1.05); }
 .purple-theme { background: #f3e8ff; color: #7e22ce; border: 2px solid #e9d5ff; }
+.purple-theme:hover { border-color: #d8b4fe; }
 
 /* BENTO GRID */
 .scrollable-body { padding: 2rem 2.5rem; }
@@ -240,16 +442,18 @@ const printRecord = () => { window.print() }
 .bento-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.3s; }
 .bento-card:hover { border-color: #2563eb; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
 .highlight-card { background: #1e3a8a; color: white; border: none; }
+.highlight-card:hover { background: #1e40af; }
 .main-val { font-size: 1.7rem; font-weight: 800; color: #1e293b; margin: 4px 0; }
 .main-val-sm { font-size: 1.1rem; font-weight: 800; color: #1e293b; }
 .highlight-card .main-val { color: white; }
+.text-blue-200 { color: #bfdbfe; }
 
-/* RECORDS TABLE/LIST */
+/* RECONSTRUCTED BOTTOM LAYOUT Elements */
 .bottom-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
 .content-card { background: white; padding: 1.8rem; border-radius: 24px; border: 1px solid #e2e8f0; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; }
-.tab { border: none; background: none; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; border-radius: 8px; cursor: pointer; }
+.tab { border: none; background: none; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; border-radius: 8px; cursor: pointer; transition: 0.2s; }
 .tab.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
 .record-item { 
@@ -260,14 +464,15 @@ const printRecord = () => { window.print() }
 .record-item:hover { border-color: #cbd5e1; background: white; }
 .item-paid { border-left: 4px solid #10b981; }
 
-.record-icon-box { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.record-icon-box { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
 .paid-icon { background: #dcfce7; color: #10b981; }
 .unpaid-icon { background: #fff7ed; color: #f97316; }
 
 .record-main-info { flex: 1; }
 .record-title { font-weight: 700; color: #1e3a8a; font-size: 1rem; }
 .record-meta { display: flex; gap: 15px; margin-top: 5px; color: #64748b; font-size: 0.85rem; }
-.status-pill { font-size: 0.65rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; margin-left: 10px; }
+.record-meta span { display: flex; align-items: center; gap: 5px; }
+.status-pill { font-size: 0.65rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; margin-left: 10px; vertical-align: middle; }
 .status-pill.unpaid { background: #fee2e2; color: #ef4444; }
 .status-pill.paid { background: #dcfce7; color: #10b981; }
 
@@ -277,19 +482,40 @@ const printRecord = () => { window.print() }
 
 .btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .btn-receipt-sm { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-.icon-btn-more { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 8px; }
+.icon-btn-more { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 8px; transition: color 0.2s; }
+.icon-btn-more:hover { color: #1e3a8a; }
 
-/* WIDGETS */
+/* WIDGET INTERFACES */
 .widget-stack { display: flex; flex-direction: column; gap: 1.5rem; }
 .info-card-blue { background: #1e3a8a; color: white; padding: 1.5rem; border-radius: 20px; }
 .widget-text { font-size: 0.85rem; opacity: 0.8; margin: 10px 0 1.5rem 0; line-height: 1.5; }
-.widget-action { width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.widget-action { width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.widget-action:hover { background: rgba(255,255,255,0.2); }
 
 .insurance-card-mini { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 1rem 0; }
 .ins-provider { font-weight: 800; color: #1e293b; }
 .ins-id { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
 .ins-badge { display: inline-block; background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-top: 10px; }
 .btn-text-link { background: none; border: none; color: #2563eb; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+
+/* MODAL BLOCKS */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+.modal-container { background: white; width: 100%; max-width: 480px; border-radius: 24px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s ease-out; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.modal-header h3 { font-size: 1.25rem; font-weight: 800; color: #1e3a8a; }
+.close-modal { background: none; border: none; color: #64748b; cursor: pointer; font-size: 1.2rem; }
+.modal-body { margin-bottom: 1.5rem; font-size: 0.95rem; color: #475569; }
+.amount-summary { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 1rem; border-radius: 12px; margin: 1rem 0; border: 1px dashed #cbd5e1; }
+.amount-highlight { font-size: 1.4rem; font-weight: 900; color: #2563eb; }
+.payment-methods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
+.method-option { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; font-weight: 700; cursor: pointer; color: #475569; }
+.method-option.active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+.form-group { margin-bottom: 1.2rem; }
+.form-label { display: block; font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px; }
+.form-input { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
+.btn-secondary { background: #f1f5f9; color: #475569; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.btn-primary { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 
 /* UTILS */
 .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
@@ -299,4 +525,7 @@ const printRecord = () => { window.print() }
 .trend-tag.success { background: #dcfce7; color: #166534; font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; font-weight: 700; display: inline-block; margin-top: 8px; }
 .animate-in { animation: slideUp 0.5s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+.clickable { cursor: pointer; }
+.clickable:active { transform: scale(0.98); }
 </style>

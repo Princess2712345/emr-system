@@ -1,33 +1,42 @@
-// server/api/patients.get.ts
-import { prisma } from '../utils/prisma' // Using a direct relative path bypasses Nuxt's alias system completely
+import { prisma } from '../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event)
     const search = (query.search as string || '').toLowerCase().trim()
 
-    // Query Prisma using insensitive mode for smoother search matching
     const patients = await prisma.patient.findMany({
       where: search ? {
         OR: [
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } }
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { userAccount: { uniqueId: { contains: search, mode: 'insensitive' } } },
+          { userAccount: { firstName: { contains: search, mode: 'insensitive' } } },
+          { userAccount: { lastName: { contains: search, mode: 'insensitive' } } }
         ]
       } : {},
+      include: { userAccount: true },
       orderBy: { createdAt: 'desc' }
     })
 
-    // Fixed the typo here: (patient) instead of (patienlt)
-    return patients.map((patient: any) => {
-      const fullName = `${patient.firstName} ${patient.lastName}`
-      
+    return patients.map((patient) => {
+      const ua = patient.userAccount
+      const displayName = patient.name || (ua ? `${ua.firstName} ${ua.lastName}` : 'Unknown')
       return {
         id: patient.id,
-        name: fullName,
+        name: displayName,
         email: patient.email,
-        patientId: patient.uniqueId || `#PAT-${String(patient.id).slice(0, 4).toUpperCase()}`,
+        phone: patient.phone,
+        patientId: ua?.uniqueId || `#PAT-${patient.id.slice(0, 8).toUpperCase()}`,
+        uniqueId: ua?.uniqueId,
+        firstName: ua?.firstName,
+        lastName: ua?.lastName,
+        middleName: ua?.middleName,
+        bloodType: ua?.bloodType,
+        age: ua?.age,
+        gender: ua ? 'Logged' : 'N/A',
         status: patient.status || 'Active',
+        userAccount: ua,
         date: new Date(patient.createdAt).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',

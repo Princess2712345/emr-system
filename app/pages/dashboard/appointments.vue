@@ -1,10 +1,8 @@
 <template>
   <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
     
-    <!-- MOBILE OVERLAY -->
     <div class="sidebar-overlay" @click="isMobileOpen = false"></div>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo" v-if="!isCollapsed || isMobileOpen">
@@ -39,9 +37,7 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
-      <!-- MOBILE MENU BAR -->
       <header class="mobile-nav-bar mobile-only">
         <button class="mobile-menu-toggle" @click="isMobileOpen = true">
           <Icon name="lucide:menu" />
@@ -50,7 +46,6 @@
         <div class="mobile-avatar clickable">JS</div>
       </header>
 
-      <!-- DESKTOP TOP BAR -->
       <header class="top-bar desktop-only">
         <div class="welcome-msg">
           <h1>Schedule & Appointments</h1>
@@ -67,19 +62,17 @@
       <section class="appointment-body">
         <div class="side-by-side-container">
           
-          <!-- LEFT SIDE: List or Calendar -->
           <div class="view-content animate-in">
             <div v-if="currentView === 'list'">
               <div class="schedule-header">
                 <div class="date-display">
                   <button class="arrow-btn clickable"><Icon name="lucide:chevron-left" /></button>
-                  <span class="current-date">Today, April 3</span>
+                  <span class="current-date">Today, Scheduled Track</span>
                   <button class="arrow-btn clickable"><Icon name="lucide:chevron-right" /></button>
                 </div>
-                <!-- SIDEWAYS SCROLLABLE FILTERS -->
                 <div class="view-filters">
                   <button 
-                    v-for="status in ['All', 'Confirmed', 'Pending', 'Urgent', 'In Progress']" 
+                    v-for="status in ['All', 'Pending', 'Confirmed', 'In Progress', 'Completed', 'Cancelled']" 
                     :key="status"
                     :class="['filter-pill', 'clickable', { active: activeFilter === status }]"
                     @click="activeFilter = status"
@@ -90,6 +83,9 @@
               </div>
 
               <div class="appointment-list">
+                <div v-if="filteredAppointments.length === 0" class="empty-state-card">
+                  No appointments registered under "{{ activeFilter }}" status filter.
+                </div>
                 <div 
                   v-for="appt in filteredAppointments" 
                   :key="appt.id" 
@@ -102,6 +98,10 @@
                   <div class="patient-brief">
                     <p class="p-name"><b>{{ appt.patientName }}</b></p>
                     <p class="p-reason">{{ appt.reason }}</p>
+                    <p class="p-doctor-tag" v-if="appt.staff">
+                      <Icon name="lucide:stethoscope" class="mini-icon" /> 
+                      Assigned: {{ appt.staff.firstName }} {{ appt.staff.lastName }}
+                    </p>
                   </div>
                   <div class="status-box">
                     <span :class="['status-tag', appt.status.toLowerCase().replace(/\s+/g, '-')]">
@@ -110,15 +110,14 @@
                   </div>
                   <div class="actions">
                     <button v-if="appt.status === 'Pending'" class="action-btn outline clickable" @click="confirmAppt(appt.id)">Confirm</button>
-                    <button v-else class="action-btn primary clickable" @click="startVisit(appt.id)">
-                      <b>{{ appt.status === 'In Progress' ? 'Continue' : 'Start' }}</b>
-                    </button>
+                    <button v-else-if="appt.status === 'Confirmed'" class="action-btn primary clickable" @click="startVisit(appt.id)">Start</button>
+                    <button v-else-if="appt.status === 'In Progress'" class="action-btn success-btn clickable" @click="completeVisit(appt.id)">Complete</button>
+                    <span v-else class="completed-placeholder-text">Checked Out</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Calendar View -->
             <div v-else class="calendar-wrapper animate-in">
               <div class="calendar-grid">
                 <div v-for="day in 30" :key="day" class="calendar-day">
@@ -131,14 +130,30 @@
             </div>
           </div>
 
-          <!-- RIGHT SIDE: Booking Form -->
           <aside class="booking-sidebar">
             <div class="booking-card">
               <h3 class="booking-title">Book Appointment</h3>
+              
               <div class="form-group">
-                <label>Patient Name</label>
-                <input v-model="form.name" type="text" placeholder="Full Name" />
+                <label>Registered Patient File</label>
+                <select v-model="form.patientId" class="form-select">
+                  <option value="">Select Target Profile</option>
+                  <option v-for="pat in patients" :key="pat.id" :value="pat.id">
+                    {{ pat.name }}
+                  </option>
+                </select>
               </div>
+
+              <div class="form-group">
+                <label>Assign Clinical Staff / Attendant</label>
+                <select v-model="form.staffId" class="form-select">
+                  <option value="">Select System Practitioner</option>
+                  <option v-for="member in staffMembers" :key="member.id" :value="member.id">
+                    {{ member.name || member.username }}
+                  </option>
+                </select>
+              </div>
+
               <div class="form-row">
                 <div class="form-group">
                   <label>Date</label>
@@ -146,9 +161,20 @@
                 </div>
                 <div class="form-group">
                   <label>Time</label>
-                  <input v-model="form.time" type="time" />
+                  <input v-model="form.time" type="text" placeholder="e.g., 09:00 AM" />
                 </div>
               </div>
+
+              <div class="form-group">
+                <label>Estimated Duration</label>
+                <select v-model="form.duration" class="form-select">
+                  <option value="30 min">30 min</option>
+                  <option value="45 min">45 min</option>
+                  <option value="1 hr">1 hr</option>
+                  <option value="2 hr">2 hr</option>
+                </select>
+              </div>
+
               <div class="form-group">
                 <label>Reason for Visit</label>
                 <input v-model="form.reason" type="text" placeholder="Reason for checkup" />
@@ -168,7 +194,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 const isCollapsed = ref(false);
 const isMobileOpen = ref(false);
 
-// Clean Resize Logic
 const handleResize = () => {
   if (process.client && window.innerWidth > 768) {
     isMobileOpen.value = false;
@@ -191,20 +216,30 @@ const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
   { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
   { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
-  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/disposition', icon: 'lucide:file-output', label: 'Disposition' },
   { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
   { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
   { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
   { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+  { to: '/dashboard/history', icon: 'lucide:history', label: 'History' },
 ];
 
 const currentView = ref('list');
 const activeFilter = ref('All');
-const form = ref({ name: '', time: '', date: '', reason: '' });
+const form = ref({ patientId: '', staffId: '', time: '', date: '', reason: '', duration: '30 min' });
 
-// Fetch real-time appointments data from database backend layout routing
+// Fetch real-time appointments data from backend structure
 const { data: appointments, refresh } = await useFetch('/api/appointments', {
+  default: () => []
+});
+
+// Pull master staff registry safely from backend
+const { data: staffMembers } = await useFetch('/api/admins', {
+  default: () => []
+});
+
+// Fetch master patients file registry 
+const { data: patients } = await useFetch('/api/patients', {
   default: () => []
 });
 
@@ -221,14 +256,15 @@ const toggleView = () => {
 
 const getApptsForDay = (dayNum) => {
   if (!appointments.value) return 0;
-  const formattedDay = dayNum < 10 ? `0${dayNum}` : dayNum;
-  // Standardized database query checking matches format: "2026-04-XX"
-  return appointments.value.filter(a => a.date.startsWith(`2026-04-${formattedDay}`)).length;
+  return appointments.value.filter(a => {
+    const d = new Date(a.date);
+    return d.getDate() === dayNum;
+  }).length;
 };
 
-// Form submit booking function to save records straight to PostgreSQL database
+// Form submit booking function to save records straight to database table structures
 const submitBooking = async () => {
-  if (!form.value.name || !form.value.date || !form.value.time) {
+  if (!form.value.patientId || !form.value.date || !form.value.time) {
     alert("Please complete required scheduling parameters.");
     return;
   }
@@ -237,22 +273,23 @@ const submitBooking = async () => {
     await $fetch('/api/appointments', {
       method: 'POST',
       body: {
-        name: form.value.name,
+        patientId: form.value.patientId,
+        staffId: form.value.staffId || null,
         date: form.value.date,
         time: form.value.time,
-        reason: form.value.reason
+        reason: form.value.reason,
+        duration: form.value.duration
       }
     });
     
     alert("Booking Confirmed and saved to system database!");
-    form.value = { name: '', time: '', date: '', reason: '' }; // Clean parameters block
-    refresh(); // Refresh dashboard UI
+    form.value = { patientId: '', staffId: '', time: '', date: '', reason: '', duration: '30 min' }; 
+    refresh(); 
   } catch (err) {
-    alert(err.data?.statusMessage || "Booking operation failed. Ensure patient is registered first.");
+    alert(err.data?.statusMessage || "Booking operation failed. Ensure identity options match registry profiles.");
   }
 };
 
-// Action button functionality handler to confirm appointment requests
 const confirmAppt = async (id) => { 
   try {
     await $fetch(`/api/appointments/${id}`, {
@@ -265,7 +302,6 @@ const confirmAppt = async (id) => {
   }
 };
 
-// Action button functionality handler to initiate patient room processing tracking
 const startVisit = async (id) => { 
   try {
     await $fetch(`/api/appointments/${id}`, {
@@ -275,6 +311,18 @@ const startVisit = async (id) => {
     refresh();
   } catch (err) {
     alert("Failed to track room visit processing state.");
+  }
+};
+
+const completeVisit = async (id) => { 
+  try {
+    await $fetch(`/api/appointments/${id}`, {
+      method: 'PATCH',
+      body: { status: 'Completed' }
+    });
+    refresh();
+  } catch (err) {
+    alert("Failed to complete treatment cycle tracking.");
   }
 };
 
@@ -334,14 +382,13 @@ const handleLogout = () => {
 .date-display { display: flex; align-items: center; gap: 1.5rem; background: white; padding: 0.6rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; }
 .current-date { font-weight: 700; color: #1e3a8a; }
 
-/* --- VIEW FILTERS (Sideways scrollable) --- */
+/* --- VIEW FILTERS --- */
 .view-filters { 
   display: flex; 
   gap: 8px; 
   overflow-x: auto; 
   white-space: nowrap; 
   padding-bottom: 8px; 
-  -webkit-overflow-scrolling: touch; 
   scrollbar-width: none; 
 }
 .view-filters::-webkit-scrollbar { display: none; }
@@ -349,13 +396,18 @@ const handleLogout = () => {
 .filter-pill.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
 
 /* --- APPOINTMENT CARDS --- */
+.appointment-list { display: flex; flex-direction: column; gap: 1rem; }
+.empty-state-card { background: white; text-align: center; padding: 3rem; border-radius: 12px; border: 1px dashed #cbd5e1; color: #64748b; font-weight: 500; }
 .appointment-card {
   background: white; display: grid; grid-template-columns: 120px 1fr 120px 140px; 
   align-items: center; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; 
-  border-left: 4px solid #2563eb; transition: all 0.3s ease; margin-bottom: 1rem;
+  border-left: 4px solid #2563eb; transition: all 0.3s ease;
 }
 .appointment-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-.appointment-card.urgent { border-left-color: #f43f5e; }
+.in-progress-card { border-left-color: #eab308 !important; background: #fefcf2; }
+
+.p-doctor-tag { font-size: 0.8rem; color: #2563eb; font-weight: 600; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+.mini-icon { font-size: 0.9rem; }
 
 .booking-card { 
   background: white; padding: 2rem; border-radius: 12px; border: 1px solid #e2e8f0; 
@@ -367,13 +419,20 @@ const handleLogout = () => {
 .time-slot .duration { color: #64748b; font-size: 0.75rem; font-weight: 600; }
 
 .status-tag { padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.65rem; text-transform: uppercase; text-align: center; display: inline-block; width: 100%; }
-.confirmed { background: #dcfce7; color: #15803d; }
+.confirmed { background: #e0f2fe; color: #0369a1; }
 .pending { background: #fef3c7; color: #b45309; }
-.urgent .status-tag { background: #fff1f2; color: #e11d48; }
+.in-progress { background: #fef9c3; color: #a16207; }
+.completed { background: #dcfce7; color: #166534; }
+.cancelled { background: #fee2e2; color: #991b1b; }
 
 .action-btn { padding: 0.6rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; width: 100%; border: none; transition: 0.2s; cursor: pointer; }
 .action-btn.primary { background: #1e293b; color: white; }
 .action-btn.outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+.action-btn.success-btn { background: #166534; color: white; }
+.completed-placeholder-text { font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-align: center; display: block; }
+
+/* --- SELECT / IMPORTS --- */
+.form-select { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; background: white; font-family: inherit; }
 
 /* --- CALENDAR --- */
 .calendar-wrapper { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
@@ -410,7 +469,6 @@ const handleLogout = () => {
   .schedule-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
   .date-display { width: 100%; justify-content: space-between; }
 
-  /* Filters sideways scroll logic */
   .view-filters { 
     width: calc(100% + 2rem); 
     margin-left: -1rem; 
@@ -424,9 +482,6 @@ const handleLogout = () => {
   }
   .time-slot { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; flex-direction: row; display: flex; gap: 10px; align-items: center; }
   .status-box { position: absolute; top: 1.25rem; right: 1.25rem; width: auto; }
-  
-  .calendar-wrapper { overflow-x: auto; }
-  .calendar-grid { min-width: 600px; }
 }
 
 /* --- UTILS --- */
@@ -435,7 +490,7 @@ const handleLogout = () => {
 .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; color: #475569; }
 .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.submit-btn { background: #2563eb; color: white; border: none; padding: 1rem; border-radius: 10px; font-weight: 700; width: 100%; margin-top: 1rem; }
+.submit-btn { background: #2563eb; color: white; border: none; padding: 1rem; border-radius: 10px; font-weight: 700; width: 100%; margin-top: 1rem; cursor: pointer; }
 .animate-in { animation: fadeIn 0.4s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>

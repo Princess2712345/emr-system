@@ -22,15 +22,29 @@ export default defineEventHandler(async (event) => {
       console.log("LabResult table empty or not yet migrated, falling back to 0") 
     }
 
-    // 3. Return the fully formed data payload to your dashboard metrics cards
+    let unpaidInvoices = 0
+    let recentLabs: { testName: string; patientName: string; status: string }[] = []
+    try {
+      const unpaid = await prisma.invoice.findMany({ where: { status: { not: 'Paid' } } })
+      unpaidInvoices = unpaid.reduce((sum, inv) => sum + inv.balance, 0)
+      recentLabs = await prisma.labResult.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: { testName: true, patientName: true, status: true }
+      })
+    } catch {
+      /* tables may be empty during first migrate */
+    }
+
     return {
       success: true,
       data: {
         totalPatients,
         totalAdmins,
         todayAppointments: totalAppointments,
-        pendingLabs: pendingLabs,
-        unpaidInvoices: 0, // Placeholder metric
+        pendingLabs,
+        unpaidInvoices,
+        recentLabs,
         updatedAt: new Date().toISOString()
       }
     }

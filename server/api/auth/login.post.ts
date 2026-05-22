@@ -1,38 +1,37 @@
-// server/api/auth/login.post.ts
-import { prisma } from '../../utils/prisma' 
-import bcrypt from 'bcryptjs' // Import bcrypt to read the hashed password safely
+import { defineEventHandler, readBody, createError } from 'h3'
+import { PrismaClient } from 'db-client'
+import bcrypt from 'bcryptjs'
+
+const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
     const { username, password, uniqueId, role } = body
 
-    // 1. Validate payload requirements
-    if (!username || !password || !role) {
+    // 1. Core requirement validation
+    if (!username || !password) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Missing required credentials.',
       })
     }
 
-    const normalizedRole = role.toUpperCase().trim()
+    const cleanIdentifier = username.trim().toLowerCase()
+    const inputUniqueId = uniqueId ? uniqueId.trim() : ''
+    const inputRole = role ? role.toUpperCase().trim() : ''
 
-    // 2. Find the user based on their specific role requirements
+    // 2. Locate the user solely by their unique identity attributes (Email or Username)
     const user = await prisma.user.findFirst({
       where: {
-        username: username.trim(),
-        role: normalizedRole,
-        // 🔄 Conditional matching: Admin/Staff can bypass strict ID matching if needed, Patients remain strict
-        ...(['ADMIN', 'HR', 'REGISTRAR'].includes(normalizedRole)
-          ? uniqueId?.trim() 
-            ? { uniqueId: uniqueId.trim() } // If an ID is provided, match it
-            : {} // If no ID is provided, don't let it block the admin login
-          : { uniqueId: uniqueId ? uniqueId.trim() : '' } // Patients MUST match their uniqueId
-        )
+        OR: [
+          { username: cleanIdentifier },
+          { email: cleanIdentifier }
+        ]
       }
     })
 
-    // 3. If user doesn't exist in the database, fail early
+    // 3. Fail early if account doesn't exist anywhere in the directory
     if (!user) {
       throw createError({
         statusCode: 401,
@@ -40,9 +39,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 4. Validate the hashed password securely using bcrypt
+    // 4. Validate the hashed password securely using bcrypt comparisons
     const isPasswordValid = await bcrypt.compare(password, user.password)
-    
     if (!isPasswordValid) {
       throw createError({
         statusCode: 401,
@@ -50,23 +48,51 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 5. Strip sensitive password data from response payload
+    // 5. POST-MATCH VALIDATION: Verify uniqueId matching depending on user status
+    const actualRole = user.role.toUpperCase()
+
+    if (actualRole === 'PATIENT') {
+      // Patients MUST have a matching Unique ID (MRN)
+      if (user.uniqueId.trim() !== inputUniqueId) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Invalid Username, Password, or ID.',
+        })
+      }
+    } else {
+      // For Staff/Admins, if they passed a uniqueId, validate it. 
+      // If the login interface forced an ID input, cross-check it against the DB record.
+      if (inputUniqueId && user.uniqueId.trim() !== inputUniqueId) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Invalid Username, Password, or ID.',
+        })
+      }
+    }
+
+    // 6. Strip sensitive password data from response payload cleanly
     const { password: _, ...userWithoutPassword } = user
 
     return {
       success: true,
       authenticated: true,
+      message: 'Authentication successful.',
       user: {
         ...userWithoutPassword,
-        role: user.role // Returns the exact enum role from the database ('ADMIN', 'PATIENT', etc.)
+        role: user.role // Emits the true database string ('ADMIN', 'HR', 'REGISTRAR', 'PATIENT')
       }
     }
 
   } catch (error: any) {
     console.error("Database Login Error Details:", error)
+    
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error
+    }
+
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Internal Server Error processing your login.',
+      statusCode: 500,
+      statusMessage: error.message || 'Internal Server Error processing your login.',
     })
   }
 })

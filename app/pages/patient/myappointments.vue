@@ -1,37 +1,6 @@
 <template>
-  <div class="dashboard-layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="logo-icon" />
-        <span class="logo-text">MyHealth<span class="text-blue-400">Portal</span></span>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink to="/patients" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Dashboard
-        </NuxtLink>  
-        <NuxtLink to="/patients/myappointments" class="nav-item active">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/patients/lab-results" class="nav-item">
-          <Icon name="lucide:file-heart" /> Health Records
-        </NuxtLink>
-        <NuxtLink to="/patients/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Billing & Payments
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout Account
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <!-- TOP BAR -->
-      <header class="top-bar">
+  <div class="portal-page">
+      <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>My Appointments</h1>
           <p class="current-date">Manage your schedule and visit history</p>
@@ -42,27 +11,26 @@
             <Icon name="lucide:calendar-plus" /> Book New Appointment
           </button>
           <div class="profile-chip">
-            <div class="avatar-circle purple-theme" title="View Profile" @click="viewProfile">PRP</div>
+            <div class="avatar-circle purple-theme" title="View Profile" @click="viewProfile">{{ userInitials }}</div>
           </div>
         </div>
       </header>
 
       <div class="scrollable-body animate-in">
-        <!-- QUICK STATS -->
         <div class="bento-grid">
           <div class="bento-card highlight-card">
             <label class="label-caps"><Icon name="lucide:calendar-check" /> Next Visit</label>
-            <p class="main-val">May 15</p>
-            <p class="sub-val">In 9 Days</p>
+            <p class="main-val">{{ metrics.nextDate }}</p>
+            <p class="sub-val">{{ metrics.daysRemaining }}</p>
           </div>
           <div class="bento-card">
             <label class="label-caps"><Icon name="lucide:history" /> Past Year</label>
-            <p class="main-val">12</p>
+            <p class="main-val">{{ metrics.completedVisits }}</p>
             <p class="sub-val">Visits Completed</p>
           </div>
           <div class="bento-card" @click="openClinicMap" style="cursor:pointer">
             <label class="label-caps"><Icon name="lucide:map-pin" /> Preferred Clinic</label>
-            <p class="main-val-sm">St. Luke's Hub</p>
+            <p class="main-val-sm">{{ metrics.preferredClinic }}</p>
             <p class="sub-val">Main Medical Center</p>
           </div>
           <div class="bento-card">
@@ -73,7 +41,6 @@
         </div>
 
         <div class="bottom-layout">
-          <!-- APPOINTMENT LIST -->
           <section class="content-card">
             <div class="card-header">
               <h3><Icon name="lucide:list-todo" /> Scheduled & Past Visits</h3>
@@ -90,10 +57,12 @@
             </div>
             
             <div class="appointment-stack">
-              <div v-for="(apt, index) in filteredAppointments" :key="index" :class="['apt-item', apt.status.toLowerCase()]">
+              <div v-if="isLoading" class="empty-state">Loading schedules...</div>
+              
+              <div v-else v-for="(apt, index) in filteredAppointments" :key="index" :class="['apt-item', apt.status.toLowerCase()]">
                 <div class="apt-date-box">
                   <span class="month">{{ apt.date.split(' ')[0] }}</span>
-                  <span class="day">{{ apt.date.split(' ')[1].replace(',', '') }}</span>
+                  <span class="day">{{ apt.date.split(' ')[1]?.replace(',', '') }}</span>
                 </div>
                 
                 <div class="apt-main-info">
@@ -120,21 +89,19 @@
                 </div>
               </div>
 
-              <!-- Empty State -->
-              <div v-if="filteredAppointments.length === 0" class="empty-state">
+              <div v-if="!isLoading && filteredAppointments.length === 0" class="empty-state">
                 <p>No appointments found for this category.</p>
               </div>
             </div>
           </section>
 
-          <!-- SIDEBAR WIDGETS -->
           <aside class="widget-stack">
             <div class="info-card-blue">
               <h4><Icon name="lucide:lightbulb" /> Pre-visit Checklist</h4>
               <ul class="check-list">
                 <li v-for="(item, i) in checklist" :key="i" @click="item.done = !item.done" style="cursor:pointer">
                   <Icon :name="item.done ? 'lucide:check-circle' : 'lucide:circle'" :class="{'text-blue-300': item.done}" />
-                  <span :style="item.done ? 'text-decoration: line-through; opacity: 0.7' : ''">{{ item.label }}</span>
+                  <span :style="item.done ? 'text-decoration: line-through; opacity: 0.7;' : ''">{{ item.label }}</span>
                 </li>
               </ul>
               <button class="widget-action" @click="showChecklistHelp">Learn More</button>
@@ -150,42 +117,26 @@
           </aside>
         </div>
       </div>
-    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+definePageMeta({ layout: 'patient' })
 
-// --- DATA ---
+import { ref, computed, onMounted } from 'vue'
+
+const isLoading = ref(true)
 const currentFilter = ref('All')
+const userInitials = ref('PR')
 
-const appointments = ref([
-  { 
-    id: 1,
-    doctor: 'Dr. Santos (Opthalmology)', 
-    date: 'May 15, 2026', 
-    time: '09:00 AM',
-    reason: 'Annual Eye Exam & Grade Check',
-    status: 'Upcoming'
-  },
-  { 
-    id: 2,
-    doctor: 'Dr. Aris (Cardiology)', 
-    date: 'Oct 24, 2025', 
-    time: '02:30 PM',
-    reason: 'Routine Heart Monitoring',
-    status: 'Completed'
-  },
-  { 
-    id: 3,
-    doctor: 'Dr. Cruz (General Medicine)', 
-    date: 'Aug 12, 2025', 
-    time: '10:00 AM',
-    reason: 'Fever and Seasonal Flu consultation',
-    status: 'Completed'
-  }
-])
+const metrics = ref({
+  nextDate: '--',
+  daysRemaining: '--',
+  completedVisits: 0,
+  preferredClinic: "St. Luke's Hub"
+})
+
+const appointments = ref([])
 
 const checklist = ref([
   { label: 'Confirm Insurance', done: false },
@@ -194,73 +145,108 @@ const checklist = ref([
   { label: 'Valid Photo ID', done: false },
 ])
 
-// --- COMPUTED ---
 const filteredAppointments = computed(() => {
   if (currentFilter.value === 'All') return appointments.value
   return appointments.value.filter(apt => apt.status === currentFilter.value)
 })
 
-// --- FUNCTIONS (The requested logic) ---
+onMounted(async () => {
+  try {
+    const cachedUser = localStorage.getItem('user_data')
+    if (!cachedUser) return navigateTo('/auth/login')
 
-const bookAppointment = () => {
-  alert('Redirecting to the Booking Wizard...')
-  // Example: navigateTo('/patients/book')
-}
+    const user = JSON.parse(cachedUser)
+    
+    // Compute display initials dynamically
+    if (user.firstName && user.lastName) {
+      userInitials.value = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    }
 
-const viewProfile = () => {
-  alert('Opening Profile Settings...')
-}
+    // Hit our database API handler
+    const data = await $fetch(`/api/patient/appointments?userId=${user.id}`)
+    if (data.success) {
+      metrics.value = data.metrics
+      appointments.value = data.appointments
+    }
+  } catch (err) {
+    console.error('Failed to resolve dynamic appointments data stream:', err)
+  } finally {
+    isLoading.value = false
+  }
+})
 
-const openClinicMap = () => {
-  window.open('https://www.google.com/maps?q=St+Lukes+Medical+Center', '_blank')
-}
-
-const prepareForVisit = (apt) => {
-  alert(`Preparation guide for your visit with ${apt.doctor} has been sent to your email.`)
-}
-
-const downloadSummary = (apt) => {
-  alert(`Downloading Medical Summary for visit on ${apt.date}...`)
-}
-
-const toggleAptMenu = (apt) => {
-  const action = confirm(`Manage appointment with ${apt.doctor}?\n\nPress OK to Reschedule, Cancel to Close.`)
-  if (action) alert('Redirecting to rescheduling page...')
-}
-
-const showChecklistHelp = () => {
-  alert('This checklist helps you ensure a smooth visit. Completed items are saved to your session.')
-}
-
-const switchToVideoCall = () => {
-  const confirmTele = confirm('Would you like to request a change from an In-Person visit to a Video Call? (Subject to doctor availability)')
-  if (confirmTele) alert('Request sent! A clinic coordinator will contact you shortly.')
-}
-
-const handleLogout = () => {
-  if (confirm('Sign out from MyHealth Portal?')) {
-    navigateTo('/auth')
+const bookAppointment = async () => {
+  const cachedUser = localStorage.getItem('user_data')
+  if (!cachedUser) return navigateTo('/auth/login')
+  const user = JSON.parse(cachedUser)
+  const date = prompt('Preferred date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10))
+  if (!date) return
+  const time = prompt('Preferred time:', '09:00 AM') || '09:00 AM'
+  const reason = prompt('Reason for visit:', 'General consultation') || 'General consultation'
+  try {
+    await $fetch(`/api/patient/appointments?userId=${user.id}`, {
+      method: 'POST',
+      body: { date, time, reason }
+    })
+    alert('Appointment request submitted. Staff will confirm shortly.')
+    const data = await $fetch(`/api/patient/appointments?userId=${user.id}`)
+    if (data.success) {
+      metrics.value = data.metrics
+      appointments.value = data.appointments
+    }
+  } catch {
+    alert('Could not book appointment. Please try again.')
   }
 }
+const viewProfile = () => { alert('Opening Profile Settings...') }
+const openClinicMap = () => { window.open('https://maps.google.com', '_blank') }
+const prepareForVisit = (apt) => { alert(`Preparation guide sent for ${apt.doctor}`) }
+const downloadSummary = (apt) => { alert(`Downloading Summary for ${apt.date}`) }
+const toggleAptMenu = (apt) => { alert(`Opening contextual menu for ${apt.doctor}`) }
+const showChecklistHelp = () => { alert('Checklist options help clear check-in protocols quickly.') }
+const switchToVideoCall = () => { alert('Requesting change to virtual format...') }
+
 </script>
 
 <style scoped>
 /* --- BASE LAYOUT --- */
-.dashboard-layout { display: flex; height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow: hidden; }
+.dashboard-layout { display: flex; height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-/* --- SIDEBAR --- */
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; flex-shrink: 0; z-index: 50; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s; }
-.nav-item.active { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-.nav-item:hover:not(.active) { background: rgba(255,255,255,0.1); color: white; }
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+/* --- SIDEBAR STRUCTURE --- */
+.sidebar { 
+  width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; flex-shrink: 0; z-index: 50; position: relative;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+}
+.sidebar.collapsed { width: 80px; padding: 2rem 0.75rem; align-items: center; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; white-space: nowrap; }
+.logo-icon { flex-shrink: 0; font-size: 1.5rem; }
 
-/* --- MAIN CONTENT --- */
-.main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
-.top-bar { background: white; padding: 1.2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; flex-shrink: 0; }
+.toggle-btn {
+  position: absolute; top: 1.8rem; right: -14px; background: #2563eb; border: none; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); z-index: 60; cursor: pointer; transition: background 0.2s;
+}
+.toggle-btn:hover { background: #1d4ed8; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+
+.nav-item { 
+  display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s; white-space: nowrap;
+}
+.sidebar.collapsed .nav-item { justify-content: center; padding: 0.8rem; }
+.nav-item :deep(svg), .nav-item .icon { flex-shrink: 0; font-size: 1.25rem; }
+
+.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+.sidebar.collapsed .nav-item:hover { transform: scale(1.05); }
+
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); width: 100%; }
+.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; }
+.sidebar.collapsed .logout-btn { justify-content: center; }
+
+/* --- MAIN CONTENT PANELS --- */
+.main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.top-bar { 
+  background: white; padding: 1.2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; 
+}
 .top-bar h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
 .current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 .header-actions { display: flex; align-items: center; gap: 1.5rem; }
@@ -268,8 +254,8 @@ const handleLogout = () => {
 .avatar-circle { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; cursor: pointer; }
 .purple-theme { background: #f3e8ff; color: #7e22ce; }
 
-/* --- CONTENT BODY --- */
-.scrollable-body { padding: 2rem 2.5rem; }
+/* --- CONTENT FRAMES --- */
+.scrollable-body { padding: 2rem 2.5rem; overflow-y: auto; flex: 1; }
 .bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 2rem; }
 .bento-card { background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #e2e8f0; }
 .highlight-card { background: #1e3a8a; color: white; border: none; }
@@ -285,13 +271,12 @@ const handleLogout = () => {
 
 .bottom-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
-
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; }
 .tab { border: none; background: none; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; border-radius: 8px; cursor: pointer; transition: 0.2s; }
 .tab.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-/* --- APT STACK --- */
+/* --- VISITS STACK --- */
 .appointment-stack { display: flex; flex-direction: column; gap: 1rem; }
 .apt-item { display: flex; align-items: center; padding: 1.2rem; border-radius: 16px; border: 1px solid #f1f5f9; background: #fafafa; gap: 1.5rem; transition: 0.2s; }
 .apt-item:hover { border-color: #dbeafe; background: white; transform: scale(1.01); }
@@ -308,7 +293,7 @@ const handleLogout = () => {
 .btn-outline-sm { background: white; border: 1.5px solid #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
 .icon-btn-more { background: none; border: none; color: #94a3b8; cursor: pointer; }
 
-/* --- WIDGETS --- */
+/* --- SIDE WIDGETS --- */
 .widget-stack { display: flex; flex-direction: column; gap: 1.5rem; }
 .info-card-blue { background: #1e3a8a; color: white; padding: 1.5rem; border-radius: 20px; }
 .info-card-blue h4 { margin: 0 0 1rem 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
@@ -319,9 +304,10 @@ const handleLogout = () => {
 .tele-widget h4 { margin: 0 0 8px 0; color: #1e3a8a; }
 .tele-widget p { font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; }
 .btn-text-link { background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 0; }
-
 .empty-state { padding: 2rem; text-align: center; color: #94a3b8; font-style: italic; }
 
 .animate-in { animation: fadeIn 0.6s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.clickable { cursor: pointer; }
+.clickable:active { transform: scale(0.98); }
 </style>

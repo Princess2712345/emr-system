@@ -1,0 +1,110 @@
+<template>
+  <div
+    class="portal-layout dashboard-layout"
+    :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen, 'sidebar-collapsed': isCollapsed }"
+  >
+    <div class="portal-sidebar-overlay" @click="closeMobile" />
+
+    <header class="portal-mobile-bar">
+      <button type="button" class="portal-mobile-menu-btn" aria-label="Open menu" @click="isMobileOpen = true">
+        <Icon name="lucide:menu" />
+      </button>
+      <span class="logo-text" style="font-weight: 800;">MyHealth<span style="color: #93c5fd;">Portal</span></span>
+      <div class="avatar-circle purple-theme" style="width: 32px; height: 32px; font-size: 0.7rem;">{{ initials }}</div>
+    </header>
+
+    <aside class="portal-sidebar sidebar" :class="{ collapsed: isCollapsed }">
+      <div class="sidebar-logo">
+        <Icon name="mdi:hospital-building" class="logo-icon" />
+        <span v-if="!isCollapsed || isMobileOpen" class="logo-text">MyHealth<span class="text-blue-400">Portal</span></span>
+      </div>
+
+      <button
+        type="button"
+        class="toggle-btn clickable desktop-sidebar-toggle"
+        :title="isCollapsed ? 'Expand' : 'Collapse'"
+        @click="isCollapsed = !isCollapsed"
+      >
+        <Icon :name="isCollapsed ? 'lucide:chevron-right' : 'lucide:chevron-left'" />
+      </button>
+
+      <nav class="sidebar-nav">
+        <NuxtLink
+          v-for="link in navLinks"
+          :key="link.to"
+          :to="link.to"
+          class="nav-item"
+          :title="link.label"
+          @click="closeMobile"
+        >
+          <Icon :name="link.icon" />
+          <span v-if="!isCollapsed || isMobileOpen" class="nav-text">{{ link.label }}</span>
+        </NuxtLink>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button type="button" class="logout-btn clickable" @click="onLogout">
+          <Icon name="lucide:log-out" />
+          <span v-if="!isCollapsed || isMobileOpen" class="nav-text">Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="portal-main main-content">
+      <slot />
+    </div>
+  </div>
+</template>
+
+<script setup>
+const { isCollapsed, isMobileOpen, closeMobile } = usePortalLayout()
+const { logout, initials, loadUser } = useAuth()
+
+loadUser()
+
+const navLinks = [
+  { to: '/patient', icon: 'lucide:layout-dashboard', label: 'Dashboard' },
+  { to: '/patient/myappointments', icon: 'lucide:calendar-days', label: 'Appointments' },
+  { to: '/patient/lab-results', icon: 'lucide:file-heart', label: 'Health Records' },
+  { to: '/patient/billing', icon: 'lucide:credit-card', label: 'Billing & Payments' }
+]
+
+const onLogout = () => {
+  if (confirm('Sign out from MyHealth Portal?')) logout()
+}
+</script>
+
+<style scoped>
+.dashboard-layout { overflow: hidden; }
+.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 2rem; }
+.logo-icon { font-size: 1.5rem; flex-shrink: 0; }
+.text-blue-400 { color: #93c5fd; }
+.toggle-btn {
+  position: absolute; top: 1.5rem; right: -14px;
+  background: #2563eb; border: none; color: white; width: 28px; height: 28px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+}
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.35rem; width: 100%; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 0.75rem 1rem;
+  color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500;
+}
+.nav-item.router-link-active { background: #2563eb; color: white; }
+.nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+.sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; width: 100%; }
+.logout-btn {
+  background: none; border: none; color: #fca5a5; font-weight: 600;
+  display: flex; align-items: center; gap: 10px; cursor: pointer; width: 100%;
+}
+.avatar-circle {
+  background: #7c3aed; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-weight: 800; color: white;
+}
+.purple-theme { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+
+@media (max-width: 768px) {
+  .desktop-sidebar-toggle { display: none; }
+  .main-content { height: auto; overflow: visible; }
+}
+</style>

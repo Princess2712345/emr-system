@@ -8,61 +8,90 @@ generator client {
   output   = "../node_modules/db-client"
 }
 
+enum Role {
+  ADMIN
+  HR
+  REGISTRAR
+  PATIENT
+  DOCTOR 
+}
+
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  username   String   @unique
-  password   String
-  firstName  String
-  middleName String?
-  lastName   String
-  role       Role     @default(PATIENT)
-  uniqueId   String   @unique
-  createdAt  DateTime @default(now())
+  id                String        @id @default(cuid())
+  email             String        @unique
+  username          String        @unique
+  password          String
+  firstName         String
+  middleName        String?
+  lastName          String
+  role              String        @default("PATIENT") 
+  uniqueId          String        @unique
+  age               Int?          @default(24)
+  bloodType         String?       @default("O Positive")
+  status            String        @default("Active")   
+  createdAt         DateTime      @default(now())
+
+  // Relation pointing to patient files if this user is a PATIENT
+  patientProfile    Patient? 
+  
+  // Connects Admins/Staff/Doctors directly to their scheduled patient appointments
+  staffAppointments Appointment[] @relation("StaffAppointments")
 }
 
 model Patient {
   id           String        @id @default(uuid())
   name         String
-  email        String        @unique
+  email        String        @unique 
   phone        String        @default("N/A")
+  status       String        @default("Active")   
   createdAt    DateTime      @default(now())
+  
+  // The Patient record cleanly points back to the primary User account
+  userAccount  User          @relation(fields: [email], references: [email], onDelete: Cascade)
+
   appointments Appointment[]
   bills        Invoice[]
   labResults   LabResult[]
-  dispositions Disposition[] // Added bidirectional relation back-reference link
+  dispositions Disposition[]
 }
 
 model Appointment {
   id          Int      @id @default(autoincrement())
-  date        DateTime // Stores the calendar day
-  time        String   // e.g., "09:00 AM" or "14:30"
-  duration    String   // e.g., "30 min", "45 min"
-  reason      String   // Reason for checkup or clinical emergency
-  status      String   @default("Pending") // "Confirmed", "Pending", "Urgent", "In Progress"
+  date        DateTime 
+  time        String   
+  duration    String   
+  reason      String   
+  status      String   @default("Pending") 
   
   patientId   String
-  patientName String   // Snapshot string to keep dashboard loads fast
+  patientName String   
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   
+  // Replaced doctorId with staffId pointing to the User model account
+  staffId     String?  
+  staff       User?    @relation("StaffAppointments", fields: [staffId], references: [id], onDelete: SetNull)
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([staffId])
 }
 
 model LabResult {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   testName     String
   patientId    String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
   category     String
-  colorClass   String   @default("teal")
-  dateReported DateTime @default(now())
+  colorClass   String    @default("teal")
+  dateReported DateTime  @default(now())
   filePath     String?
   patientName  String
-  requestId    String   @unique
-  status       String   @default("Pending")
+  requestId    String    @unique
+  status       String    @default("Pending")
   uploadedBy   String?
-  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient      Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
 }
 
 model Invoice {
@@ -70,7 +99,7 @@ model Invoice {
   amount      Float    @default(0.00)
   balance     Float    @default(0.00)
   dueDate     DateTime
-  status      String   @default("Unpaid") // Valid states: "Paid", "Unpaid", "Partial"
+  status      String   @default("Unpaid") 
   patientId   String
   patientName String
   createdAt   DateTime @default(now())
@@ -87,7 +116,7 @@ model Disposition {
   dateTime    DateTime @default(now()) 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade) // Integrated relation constraints safely
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 }
 
 model Inventory {
@@ -101,20 +130,13 @@ model Inventory {
   updatedAt DateTime @updatedAt
 }
 
-enum Role {
-  ADMIN
-  HR
-  REGISTRAR
-  PATIENT
-}
-
 model AuditLog {
   id        Int      @id @default(autoincrement())
   timestamp DateTime @default(now())
-  user      String   // Stores the username or email (e.g., "Admin_Maria", "System")
-  action    String   // Description of what happened (e.g., "Modified Patient Record")
-  resource  String   // What entity was affected (e.g., "P-2024-001")
-  severity  String   // "Info", "Warning", or "Critical"
+  user      String   
+  action    String   
+  resource  String   
+  severity  String   
 
-  @@index([severity]) // Speeds up queries when filtering by severity level on your dashboard history layout
+  @@index([severity])
 }

@@ -1,38 +1,6 @@
 <template>
-  <div class="dashboard-layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <Icon name="mdi:hospital-building" class="logo-icon" />
-        <span class="logo-text">MyHealth<span class="text-blue-400">Portal</span></span>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink to="/patients" class="nav-item">
-          <Icon name="lucide:layout-dashboard" /> Dashboard
-        </NuxtLink>  
-        <NuxtLink to="/patients/myappointments" class="nav-item">
-          <Icon name="lucide:calendar-days" /> Appointments
-        </NuxtLink>
-        <NuxtLink to="/patients/lab-results" class="nav-item active">
-          <Icon name="lucide:file-heart" /> Health Records
-        </NuxtLink>
-        <NuxtLink to="/patients/billing" class="nav-item">
-          <Icon name="lucide:credit-card" /> Billing & Payments
-        </NuxtLink>
-      </nav>
-
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" /> Logout Account
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <!-- TOP BAR: Aligned actions -->
-      <header class="top-bar">
+  <div class="portal-page">
+      <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>Health Records</h1>
           <p class="current-date">Your clinical history and test results</p>
@@ -49,11 +17,10 @@
       </header>
 
       <div class="scrollable-body animate-in">
-        <!-- VITAL STATS -->
-        <div class="bento-grid">
+        <div class="bento-grid portal-bento-grid">
           <div class="bento-card highlight-card" @click="handleVitalClick('Blood Type')">
             <label class="label-caps"><Icon name="lucide:droplet" /> Blood Type</label>
-            <p class="main-val">O+</p>
+            <p class="main-val">{{ bloodType }}</p>
             <p class="sub-val">Verified Record</p>
           </div>
           <div class="bento-card" @click="handleVitalClick('Allergies')">
@@ -68,13 +35,12 @@
           </div>
           <div class="bento-card" @click="handleVitalClick('Medications')">
             <label class="label-caps"><Icon name="lucide:pill" /> Active Meds</label>
-            <p class="main-val">2</p>
+            <p class="main-val">{{ activeMeds }}</p>
             <p class="sub-val">Prescriptions active</p>
           </div>
         </div>
 
         <div class="bottom-layout">
-          <!-- RECORDS LIST -->
           <section class="content-card">
             <div class="card-header">
               <h3><Icon name="lucide:flask-conical" /> Clinical Laboratory Results</h3>
@@ -123,7 +89,6 @@
             </div>
           </section>
 
-          <!-- SIDEBAR WIDGETS -->
           <aside class="widget-stack">
             <div class="info-card-blue">
               <h4><Icon name="lucide:info" /> How to read results?</h4>
@@ -149,26 +114,35 @@
           </aside>
         </div>
       </div>
-    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+definePageMeta({ layout: 'patient' })
 
-// --- DATA ---
+import { ref, computed, onMounted } from 'vue'
+
 const recordFilter = ref('All')
+const bloodType = ref('—')
+const activeMeds = ref(0)
+const records = ref([])
+const medications = ref([])
 
-const records = ref([
-  { id: 101, name: 'Complete Blood Count (CBC)', date: 'April 12, 2026', doctor: 'Dr. Cruz', type: 'Labs', resultStatus: 'Normal' },
-  { id: 102, name: 'Chest X-Ray Digital', date: 'March 05, 2026', doctor: 'Dr. Aris', type: 'Imaging', resultStatus: 'Needs Review' },
-  { id: 103, name: 'Lipid Profile', date: 'Jan 20, 2026', doctor: 'Dr. Cruz', type: 'Labs', resultStatus: 'Normal' }
-])
-
-const medications = ref([
-  { name: 'Lisinopril 10mg', dose: '1 Tablet', timing: 'Once Daily' },
-  { name: 'Atorvastatin 20mg', dose: '1 Tablet', timing: 'At Bedtime' }
-])
+onMounted(async () => {
+  try {
+    const cachedUser = localStorage.getItem('user_data')
+    if (!cachedUser) return navigateTo('/auth/login')
+    const user = JSON.parse(cachedUser)
+    const data = await $fetch(`/api/patient/labs?userId=${user.id}`)
+    if (data.success) {
+      bloodType.value = data.bloodType
+      activeMeds.value = data.activeMeds
+      records.value = data.records
+    }
+  } catch (e) {
+    console.error('Labs load failed:', e)
+  }
+})
 
 // --- COMPUTED ---
 const filteredRecords = computed(() => {
@@ -210,30 +184,149 @@ const handleRequestRefill = () => {
   if (confirmRefill) alert('Refill request sent! Check your notifications for approval status.')
 }
 
-const handleLogout = () => {
-  if (confirm('Are you sure you want to log out?')) {
-    // navigateTo('/auth')
-    console.log('Logged out')
-  }
-}
 </script>
 
 <style scoped>
 /* --- BASE LAYOUT --- */
-.dashboard-layout { display: flex; height: 100vh; background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow: hidden; }
+.dashboard-layout { 
+  display: flex; 
+  height: 100vh; 
+  background-color: #f1f5f9; 
+  font-family: 'Inter', sans-serif; 
+  overflow: hidden; 
+}
 
-/* --- SIDEBAR --- */
-.sidebar { width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; flex-shrink: 0; z-index: 50; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s; }
-.nav-item.active { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-.nav-item:hover:not(.active) { background: rgba(255,255,255,0.1); color: white; }
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+/* --- SIDEBAR CONFIGURATION (Matches Index Layout Perfectly) --- */
+.sidebar { 
+  width: 260px; 
+  background: #1e3a8a; 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 2rem 1.5rem; 
+  height: 100vh; 
+  flex-shrink: 0; 
+  z-index: 50; 
+  position: relative;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: 2rem 0.75rem;
+  align-items: center;
+}
+
+.sidebar-logo { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  font-size: 1.25rem; 
+  font-weight: 800; 
+  margin-bottom: 3rem; 
+  white-space: nowrap; 
+}
+
+.logo-icon { 
+  flex-shrink: 0; 
+  font-size: 1.5rem; 
+}
+
+/* Floating Sidebar Edge Toggle Button */
+.toggle-btn {
+  position: absolute;
+  top: 1.8rem;
+  right: -14px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 60;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-btn:hover { 
+  background: #1d4ed8; 
+}
+
+.sidebar-nav { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.5rem; 
+  width: 100%; 
+}
+
+.nav-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 0.8rem 1rem; 
+  color: #bfdbfe; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-weight: 500; 
+  transition: all 0.2s; 
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.8rem;
+}
+
+.nav-item :deep(svg), .nav-item .icon { 
+  flex-shrink: 0; 
+  font-size: 1.25rem; 
+}
+.nav-text { 
+  transition: opacity 0.2s ease; 
+}
+
+.nav-item.active { 
+  background: #2563eb; 
+  color: white; 
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); 
+}
+.nav-item:hover:not(.active) { 
+  background: rgba(255, 255, 255, 0.1); 
+  color: white; 
+  transform: translateX(5px); 
+}
+.sidebar.collapsed .nav-item:hover:not(.active) { 
+  transform: scale(1.05); 
+}
+
+.sidebar-footer { 
+  padding-top: 1.5rem; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+  width: 100%; 
+}
+.logout-btn { 
+  background: none; 
+  border: none; 
+  width: 100%; 
+  text-align: left; 
+  color: #fca5a5; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  cursor: pointer; 
+  white-space: nowrap; 
+}
+.sidebar.collapsed .logout-btn { 
+  justify-content: center; 
+}
 
 /* --- MAIN CONTENT & HEADER ALIGNMENT --- */
-.main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+.main-content { display: flex; flex-direction: column; height: 100vh; overflow-y: auto; flex: 1; }
 .top-bar { 
   background: white; 
   padding: 1.2rem 2.5rem; 
@@ -246,6 +339,8 @@ const handleLogout = () => {
   z-index: 10; 
   flex-shrink: 0;
 }
+.top-bar h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
+.current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 .header-actions { display: flex; align-items: center; gap: 1.2rem; }
 .add-btn { background: #2563eb; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
 .add-btn:hover { background: #1d4ed8; }
@@ -315,4 +410,7 @@ const handleLogout = () => {
 
 .animate-in { animation: fadeIn 0.6s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.clickable { cursor: pointer; }
+.clickable:active { transform: scale(0.98); }
 </style>

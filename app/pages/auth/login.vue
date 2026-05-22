@@ -48,9 +48,19 @@ const loginData = ref({
 
 const handleLogin = async () => {
   try {
+    // Clean up inputs and explicitly map to match backend expectations
+    const payload = {
+      username: loginData.value.username.trim(),
+      password: loginData.value.password,
+      uniqueId: loginData.value.uniqueId.trim(),
+      // Force uppercase ('ADMIN' or 'PATIENT') to match database rules perfectly
+      role: loginData.value.role.toUpperCase() 
+    }
+
+    // Relative path call prevents connection refusal errors safely
     const response = await $fetch('/api/auth/login', {
       method: 'POST',
-      body: loginData.value 
+      body: payload
     })
 
     if (response.authenticated && response.user) {
@@ -60,12 +70,10 @@ const handleLogin = async () => {
       // Read the exact uppercase role returned directly from the successful database row
       const userRole = response.user.role ? response.user.role.toUpperCase() : 'PATIENT'
 
-      // 🔄 The Permanent Routing Solution
+      // Clean role-based routing layout
       if (userRole === 'PATIENT') {
-        // 🎯 Redirects cleanly straight to your singular patient landing route
         await navigateTo('/patient') 
       } else if (['ADMIN', 'HR', 'REGISTRAR'].includes(userRole)) {
-        // 🎯 Redirects cleanly straight to your admin dashboard view
         await navigateTo('/dashboard')
       } else {
         await navigateTo('/dashboard')
@@ -73,6 +81,7 @@ const handleLogin = async () => {
     }
   } catch (error) {
     console.error('Authentication processing failure:', error)
+    // Safely reads the custom error status message thrown from your backend handler
     alert(error.data?.statusMessage || 'Invalid Username, Password, or ID.')
   }
 }

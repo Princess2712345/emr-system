@@ -241,7 +241,9 @@ const stats = computed(() => {
     },
     { 
       label: 'Unpaid Invoices', 
-      value: dbMetrics?.unpaidInvoices || '0', 
+      value: dbMetrics?.unpaidInvoices != null
+        ? `₱${Number(dbMetrics.unpaidInvoices).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+        : '₱0', 
       trendText: 'Requires follow-up', 
       trendClass: 'negative' 
     }
@@ -253,19 +255,28 @@ const navLinks = [
   { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
   { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
   { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
-  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
+  { to: '/dashboard/disposition', icon: 'lucide:file-output', label: 'Disposition' },
   { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
   { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
   { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
   { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
+  { to: '/dashboard/history', icon: 'lucide:history', label: 'History' },
 ]
 
-const recentLabs = ref([
-  { id: 1, test: 'CBC Panel', patient: 'John Doe', time: '10 mins ago', status: 'Active' },
-  { id: 2, test: 'Lipid Profile', patient: 'Alice Smith', time: '45 mins ago', status: 'Pending' },
-  { id: 3, test: 'Chest X-Ray', patient: 'Robert Johnson', time: '2 hours ago', status: 'Active' },
-])
+const recentLabs = ref([])
+
+watch(metricsResponse, (res) => {
+  const labs = res?.data?.recentLabs
+  if (labs?.length) {
+    recentLabs.value = labs.map((lab, i) => ({
+      id: i + 1,
+      test: lab.testName,
+      patient: lab.patientName,
+      time: lab.status,
+      status: lab.status
+    }))
+  }
+}, { immediate: true })
 
 const currentDate = computed(() => {
   return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

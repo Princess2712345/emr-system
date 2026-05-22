@@ -1,46 +1,58 @@
-import { PrismaClient } from 'db-client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
-  const query = getQuery(event)
 
-  // 1. GET: Fetch appointments for the dashboard
   if (method === 'GET') {
-    const databaseAppointments = await prisma.appointment.findMany({
+    return prisma.appointment.findMany({
+      include: { staff: true, patient: true },
       orderBy: { date: 'asc' }
     })
-    return databaseAppointments
   }
 
-  // 2. POST: Handle New Sidebar Bookings
   if (method === 'POST') {
     const body = await readBody(event)
 
-    // Look up the patient profile to link the relation ID
-    const targetedPatient = await prisma.patient.findFirst({
-      where: { name: { contains: body.name, mode: 'insensitive' } }
-    })
+    let targetedPatient = null
+    if (body.patientId) {
+      targetedPatient = await prisma.patient.findUnique({ where: { id: body.patientId } })
+    } else if (body.name) {
+      targetedPatient = await prisma.patient.findFirst({
+        where: { name: { contains: body.name, mode: 'insensitive' } }
+      })
+    }
 
     if (!targetedPatient) {
-      throw createError({ 
-        statusCode: 404, 
-        statusMessage: 'Patient record not found. Please register the patient first.' 
-      })
+      throw createError({ statusCode: 404, statusMessage: 'Patient not found in registry.' })
     }
 
     const newAppointment = await prisma.appointment.create({
       data: {
-        date: new Date(body.date), // Expects "YYYY-MM-DD" layout strings
+        date: new Date(body.date),
         time: body.time,
+        duration: body.duration || '30 min',
         reason: body.reason || 'General Consultation',
-        status: 'Pending',
+        status: body.status || 'Pending',
         patientId: targetedPatient.id,
-        patientName: targetedPatient.name
-      }
+        patientName: targetedPatient.name,
+        staffId: body.staffId || body.doctorId || null
+      },
+      include: { staff: true, patient: true }
     })
 
-    return newAppointment
+    await prisma.auditLog.create({
+      data: {
+        user: 'Staff',
+        action: `Scheduled appointment for ${targetedPatient.name}`,
+        resource: `Appointment-${newAppointment.id}`,
+        severity: 'Info'
+      }
+    }).catch(() => {})
+
+    return {
+      success: true,
+      message: 'Appointment scheduled successfully.',
+      data: newAppointment
+    }
   }
 })

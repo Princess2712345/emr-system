@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     const admins = await prisma.user.findMany({
       where: {
         // Strict role verification: Only stream administrative tiers
-        role: { in: ['ADMIN', 'HR', 'REGISTRAR'] },
+        role: { in: ['ADMIN', 'HR', 'REGISTRAR', 'DOCTOR'] },
         
         // If there's a search string active, match it cleanly across attributes
         ...(search ? {
