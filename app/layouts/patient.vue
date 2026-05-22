@@ -5,7 +5,7 @@
   >
     <div class="portal-sidebar-overlay" @click="closeMobile" />
 
-    <header class="portal-mobile-bar">
+    <header class="portal-mobile-bar mobile-nav-bar">
       <button type="button" class="portal-mobile-menu-btn" aria-label="Open menu" @click="isMobileOpen = true">
         <Icon name="lucide:menu" />
       </button>
@@ -75,7 +75,21 @@ const onLogout = () => {
 </script>
 
 <style scoped>
-.dashboard-layout { overflow: hidden; }
+.dashboard-layout {
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+  .portal-main.main-content {
+    overflow: visible;
+    height: auto;
+  }
+}
 .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 2rem; }
 .logo-icon { font-size: 1.5rem; flex-shrink: 0; }
 .text-blue-400 { color: #93c5fd; }

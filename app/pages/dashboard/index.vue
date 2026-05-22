@@ -1,58 +1,6 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
-    
-    <!-- SIDEBAR OVERLAY: Only visible on mobile when menu is active -->
-    <div class="sidebar-overlay" @click="isMobileOpen = false"></div>
-
-    <!-- SIDEBAR: Preserves original hover/collapse logic -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed || isMobileOpen">
-          <Icon name="mdi:hospital-building" class="icon-blue-light" />
-          <span class="logo-text">EMR System</span>
-        </div>
-        <!-- Toggle button hidden on mobile to avoid layout clutter -->
-        <button class="menu-toggle desktop-only clickable" @click="isCollapsed = !isCollapsed">
-          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
-        </button>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink 
-          v-for="link in navLinks" 
-          :key="link.to" 
-          :to="link.to" 
-          class="nav-item"
-          @click="isMobileOpen = false"
-          :title="isCollapsed ? link.label : ''"
-        >
-          <Icon :name="link.icon" />
-          <span v-if="!isCollapsed || isMobileOpen" class="nav-label">{{ link.label }}</span>
-          <!-- Original Floating Tooltip -->
-          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">{{ link.label }}</span>
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed || isMobileOpen">Logout</span>
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <!-- NEW MOBILE TOP BAR: Only visible on phones -->
-      <header class="mobile-nav-bar mobile-only">
-        <button class="mobile-menu-toggle" @click="isMobileOpen = true">
-          <Icon name="lucide:menu" />
-        </button>
-        <div class="mobile-logo-text">EMR System</div>
-        <div class="avatar-sm clickable" @click="goToProfile">{{ userInitials }}</div>
-      </header>
-
-      <!-- ORIGINAL TOP BAR: Hidden on mobile to save vertical space -->
-      <header class="top-bar desktop-only">
+  <div class="portal-page dashboard-page">
+      <header class="top-bar desktop-only portal-top-bar">
         <div class="welcome-msg">
           <h1>Welcome back, {{ doctorName }}</h1>
           <p>Here is what's happening with your clinic today.</p>
@@ -170,15 +118,13 @@
           </div>
         </div>
       </section>
-    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+definePageMeta({ layout: 'dashboard' })
 
-const isCollapsed = ref(false)
-const isMobileOpen = ref(false) 
+import { ref, computed, onMounted } from 'vue'
 
 // 🚀 CHANGE 1: Turn these into empty reactive references
 const doctorName = ref('User') 
@@ -249,19 +195,6 @@ const stats = computed(() => {
     }
   ]
 })
-
-// Navigation links configuration matching your original list
-const navLinks = [
-  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
-  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
-  { to: '/dashboard/disposition', icon: 'lucide:file-output', label: 'Disposition' },
-  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
-  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
-  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
-  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/history', icon: 'lucide:history', label: 'History' },
-]
 
 const recentLabs = ref([])
 

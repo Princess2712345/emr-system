@@ -1,41 +1,12 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed">
-          <Icon name="mdi:hospital-building" class="icon-blue-light" />
-          <span class="logo-text">EMR System</span>
-        </div>
-        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
-          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
-        </button>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
-          <Icon :name="link.icon" />
-          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed">Logout</span>
-          <span v-if="isCollapsed" class="sidebar-tooltip">Logout</span>
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="top-bar">
+  <div class="portal-page dashboard-page">
+      <header class="top-bar portal-top-bar">
         <div class="welcome-msg">
           <span class="breadcrumb">REPORTS / ANALYTICS</span>
           <h1>System Statistics</h1>
           <p>Real-time analytics and performance metrics across all departments.</p>
         </div>
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
           <div class="status-indicator">
             <span class="pulse-dot"></span>
             Live Updates
@@ -133,26 +104,13 @@
           </div>
         </div>
       </section>
-    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+definePageMeta({ layout: 'dashboard' })
 
-const isCollapsed = ref(false)
-
-const navLinks = [
-  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
-  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
-  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
-  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
-  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
-  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
-  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
-]
+import { computed } from 'vue'
 
 // Securely pull dynamic live numbers from your Prisma Client backend layout route
 const { data: statsData } = await useFetch('/api/statistic', {
@@ -171,22 +129,6 @@ const kpiData = computed(() => [
   { label: 'System Uptime', value: '99.9%', trend: 'Stable', trendType: 'up', icon: 'lucide:activity' },
   { label: 'Active Staff Users', value: statsData.value.kpis.totalStaff, trend: '+2', trendType: 'up', icon: 'lucide:shield-check' }
 ])
-
-const handleLogout = async () => {
-  if (confirm('Are you sure you want to log out of the EMR System?')) {
-    try {
-      const token = useCookie('auth_token')
-      token.value = null
-      if (process.client) {
-        localStorage.removeItem('user_data')
-        sessionStorage.clear()
-      }
-      await navigateTo('/auth/login') 
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  }
-}
 </script>
 
 <style scoped>

@@ -290,6 +290,17 @@ const handleLogin = async () => {
 
 /* --- Responsive Media Queries --- */
 
+@media (max-width: 768px) {
+  .login-content {
+    padding: 1.25rem;
+    align-items: center;
+  }
+  .login-form {
+    width: 100%;
+    max-width: 420px;
+  }
+}
+
 @media (max-width: 480px) {
   .login-content {
     padding: 1rem;

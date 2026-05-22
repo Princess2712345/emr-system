@@ -1,40 +1,11 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed">
-          <Icon name="mdi:hospital-building" class="icon-blue-light" />
-          <span class="logo-text">EMR System</span>
-        </div>
-        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
-          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
-        </button>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
-          <Icon :name="link.icon" />
-          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed">Logout</span>
-          <span v-if="isCollapsed" class="sidebar-tooltip">Logout</span>
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="top-bar">
+  <div class="portal-page dashboard-page">
+      <header class="top-bar portal-top-bar">
         <div class="welcome-msg">
           <h1>Inventory Management</h1>
           <p>Monitor medical supplies, equipment stock levels, and procurement alerts.</p>
         </div>
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
           <button class="add-btn clickable" @click="openAddModal">
             <Icon name="lucide:plus" /> Add New Item
           </button>
@@ -113,7 +84,6 @@
           </table>
         </div>
       </section>
-    </main>
 
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
@@ -173,26 +143,15 @@
 </template>
 
 <script setup>
+definePageMeta({ layout: 'dashboard' })
+
 import { ref, computed, watch } from 'vue'
 
-const isCollapsed = ref(false)
 const searchQuery = ref('')
 const selectedCategory = ref('All')
 const isModalOpen = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
-
-const navLinks = [
-  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
-  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'lucide:user-plus', label: 'Registration' },
-  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
-  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
-  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
-  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
-  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
-]
 
 const newItem = ref({
   name: '',
@@ -273,13 +232,6 @@ const deleteItem = async () => {
   }
 }
 
-const handleLogout = async () => {
-  if (confirm('Are you sure you want to log out?')) {
-    const token = useCookie('auth_token'); token.value = null;
-    if (process.client) { localStorage.removeItem('user_data'); sessionStorage.clear(); }
-    await navigateTo('/auth/login');
-  }
-}
 </script>
 
 <style scoped>

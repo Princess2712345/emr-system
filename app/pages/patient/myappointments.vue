@@ -6,7 +6,7 @@
           <p class="current-date">Manage your schedule and visit history</p>
         </div>
         
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
           <button class="add-btn clickable" @click="bookAppointment">
             <Icon name="lucide:calendar-plus" /> Book New Appointment
           </button>
@@ -17,7 +17,7 @@
       </header>
 
       <div class="scrollable-body animate-in">
-        <div class="bento-grid">
+        <div class="bento-grid portal-bento-grid">
           <div class="bento-card highlight-card">
             <label class="label-caps"><Icon name="lucide:calendar-check" /> Next Visit</label>
             <p class="main-val">{{ metrics.nextDate }}</p>
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div class="bottom-layout">
+        <div class="bottom-layout portal-bottom-layout">
           <section class="content-card">
             <div class="card-header">
               <h3><Icon name="lucide:list-todo" /> Scheduled & Past Visits</h3>
@@ -209,44 +209,6 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 </script>
 
 <style scoped>
-/* --- BASE LAYOUT --- */
-.dashboard-layout { display: flex; height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
-
-/* --- SIDEBAR STRUCTURE --- */
-.sidebar { 
-  width: 260px; background: #1e3a8a; color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; height: 100vh; flex-shrink: 0; z-index: 50; position: relative;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
-}
-.sidebar.collapsed { width: 80px; padding: 2rem 0.75rem; align-items: center; }
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; white-space: nowrap; }
-.logo-icon { flex-shrink: 0; font-size: 1.5rem; }
-
-.toggle-btn {
-  position: absolute; top: 1.8rem; right: -14px; background: #2563eb; border: none; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); z-index: 60; cursor: pointer; transition: background 0.2s;
-}
-.toggle-btn:hover { background: #1d4ed8; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
-
-.nav-item { 
-  display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; color: #bfdbfe; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s; white-space: nowrap;
-}
-.sidebar.collapsed .nav-item { justify-content: center; padding: 0.8rem; }
-.nav-item :deep(svg), .nav-item .icon { flex-shrink: 0; font-size: 1.25rem; }
-
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.sidebar.collapsed .nav-item:hover { transform: scale(1.05); }
-
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); width: 100%; }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; }
-.sidebar.collapsed .logout-btn { justify-content: center; }
-
-/* --- MAIN CONTENT PANELS --- */
-.main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-.top-bar { 
-  background: white; padding: 1.2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; 
-}
 .top-bar h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
 .current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 .header-actions { display: flex; align-items: center; gap: 1.5rem; }
@@ -255,8 +217,6 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 .purple-theme { background: #f3e8ff; color: #7e22ce; }
 
 /* --- CONTENT FRAMES --- */
-.scrollable-body { padding: 2rem 2.5rem; overflow-y: auto; flex: 1; }
-.bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 2rem; }
 .bento-card { background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #e2e8f0; }
 .highlight-card { background: #1e3a8a; color: white; border: none; }
 .label-caps { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
@@ -269,7 +229,6 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 .trend-tag { font-size: 0.7rem; font-weight: 700; margin-top: 8px; display: inline-block; padding: 2px 8px; border-radius: 5px; }
 .trend-tag.success { background: #dcfce7; color: #166534; }
 
-.bottom-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; }

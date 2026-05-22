@@ -6,7 +6,7 @@
           <p class="current-date">Your clinical history and test results</p>
         </div>
         
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
           <button class="add-btn clickable" @click="handleRequestRecord">
             <Icon name="lucide:file-up" /> Request Medical Record
           </button>
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div class="bottom-layout">
+        <div class="bottom-layout portal-bottom-layout">
           <section class="content-card">
             <div class="card-header">
               <h3><Icon name="lucide:flask-conical" /> Clinical Laboratory Results</h3>
@@ -187,158 +187,6 @@ const handleRequestRefill = () => {
 </script>
 
 <style scoped>
-/* --- BASE LAYOUT --- */
-.dashboard-layout { 
-  display: flex; 
-  height: 100vh; 
-  background-color: #f1f5f9; 
-  font-family: 'Inter', sans-serif; 
-  overflow: hidden; 
-}
-
-/* --- SIDEBAR CONFIGURATION (Matches Index Layout Perfectly) --- */
-.sidebar { 
-  width: 260px; 
-  background: #1e3a8a; 
-  color: white; 
-  display: flex; 
-  flex-direction: column; 
-  padding: 2rem 1.5rem; 
-  height: 100vh; 
-  flex-shrink: 0; 
-  z-index: 50; 
-  position: relative;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
-}
-
-.sidebar.collapsed {
-  width: 80px;
-  padding: 2rem 0.75rem;
-  align-items: center;
-}
-
-.sidebar-logo { 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  font-size: 1.25rem; 
-  font-weight: 800; 
-  margin-bottom: 3rem; 
-  white-space: nowrap; 
-}
-
-.logo-icon { 
-  flex-shrink: 0; 
-  font-size: 1.5rem; 
-}
-
-/* Floating Sidebar Edge Toggle Button */
-.toggle-btn {
-  position: absolute;
-  top: 1.8rem;
-  right: -14px;
-  background: #2563eb;
-  border: none;
-  color: white;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  z-index: 60;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.toggle-btn:hover { 
-  background: #1d4ed8; 
-}
-
-.sidebar-nav { 
-  flex: 1; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 0.5rem; 
-  width: 100%; 
-}
-
-.nav-item { 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 0.8rem 1rem; 
-  color: #bfdbfe; 
-  text-decoration: none; 
-  border-radius: 8px; 
-  font-weight: 500; 
-  transition: all 0.2s; 
-  white-space: nowrap;
-}
-
-.sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: 0.8rem;
-}
-
-.nav-item :deep(svg), .nav-item .icon { 
-  flex-shrink: 0; 
-  font-size: 1.25rem; 
-}
-.nav-text { 
-  transition: opacity 0.2s ease; 
-}
-
-.nav-item.active { 
-  background: #2563eb; 
-  color: white; 
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); 
-}
-.nav-item:hover:not(.active) { 
-  background: rgba(255, 255, 255, 0.1); 
-  color: white; 
-  transform: translateX(5px); 
-}
-.sidebar.collapsed .nav-item:hover:not(.active) { 
-  transform: scale(1.05); 
-}
-
-.sidebar-footer { 
-  padding-top: 1.5rem; 
-  border-top: 1px solid rgba(255, 255, 255, 0.1); 
-  width: 100%; 
-}
-.logout-btn { 
-  background: none; 
-  border: none; 
-  width: 100%; 
-  text-align: left; 
-  color: #fca5a5; 
-  font-weight: 600; 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  cursor: pointer; 
-  white-space: nowrap; 
-}
-.sidebar.collapsed .logout-btn { 
-  justify-content: center; 
-}
-
-/* --- MAIN CONTENT & HEADER ALIGNMENT --- */
-.main-content { display: flex; flex-direction: column; height: 100vh; overflow-y: auto; flex: 1; }
-.top-bar { 
-  background: white; 
-  padding: 1.2rem 2.5rem; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  border-bottom: 1px solid #e2e8f0; 
-  position: sticky; 
-  top: 0; 
-  z-index: 10; 
-  flex-shrink: 0;
-}
 .top-bar h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
 .current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 .header-actions { display: flex; align-items: center; gap: 1.2rem; }
@@ -350,8 +198,6 @@ const handleRequestRefill = () => {
 .purple-theme:hover { border-color: #d8b4fe; }
 
 /* --- CONTENT BODY --- */
-.scrollable-body { padding: 2rem 2.5rem; }
-.bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 2rem; }
 .bento-card { background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; }
 .bento-card:hover { border-color: #2563eb; transform: translateY(-2px); }
 .highlight-card { background: #1e3a8a; color: white; border: none; }
@@ -364,7 +210,6 @@ const handleRequestRefill = () => {
 .sub-val { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
 .trend-tag.success { background: #dcfce7; color: #166534; font-size: 0.7rem; padding: 2px 8px; border-radius: 5px; margin-top: 8px; display: inline-block; font-weight: 700; }
 
-.bottom-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
 
 /* --- RECORDS --- */

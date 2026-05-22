@@ -1,45 +1,12 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed">
-          <Icon name="mdi:hospital-building" class="icon-blue-light" />
-          <span class="logo-text">EMR System</span>
-        </div>
-        <!-- HAMBURGER TOGGLE -->
-        <button class="menu-toggle clickable" @click="isCollapsed = !isCollapsed">
-          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
-        </button>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <NuxtLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-item">
-          <Icon :name="link.icon" />
-          <span v-if="!isCollapsed" class="nav-label">{{ link.label }}</span>
-          <!-- Floating Tooltip -->
-          <span v-if="isCollapsed" class="sidebar-tooltip">{{ link.label }}</span>
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed">Logout</span>
-          <span v-if="isCollapsed" class="sidebar-tooltip">Logout</span>
-        </button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-      <header class="top-bar">
+  <div class="portal-page dashboard-page">
+      <header class="top-bar portal-top-bar">
         <div class="welcome-msg">
           <span class="breadcrumb">ADMINISTRATION</span>
           <h1>System History & Logs</h1>
           <p>Real-time audit trail and clinical activity monitoring.</p>
         </div>
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
            <button class="export-btn clickable" @click="exportLogs">
              <Icon name="lucide:download" /> Export CSV
            </button>
@@ -110,7 +77,6 @@
           </div>
         </div>
       </section>
-    </main>
 
     <!-- MODAL SYSTEM -->
     <Transition name="fade">
@@ -161,25 +127,14 @@
 </template>
 
 <script setup>
+definePageMeta({ layout: 'dashboard' })
+
 import { ref, computed } from 'vue'
 
-const isCollapsed = ref(false)
 const searchQuery = ref('')
 const selectedSeverity = ref('All')
 const isModalOpen = ref(false)
 const selectedLog = ref(null)
-
-const navLinks = [
-  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
-  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
-  { to: '/dashboard/Disposition', icon: 'lucide:file-output', label: 'Disposition' },
-  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
-  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
-  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
-  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/History', icon: 'lucide:history', label: 'History' },
-]
 
 // 1. Fetch live historical audit logs securely from your server endpoint
 const { data: logs, refresh } = await useFetch('/api/history', {
@@ -207,14 +162,6 @@ const getLogIcon = (sev) => {
 const openModal = (log) => { selectedLog.value = log; isModalOpen.value = true; }
 const closeModal = () => { isModalOpen.value = false; selectedLog.value = null; }
 const exportLogs = () => { alert('Generating CSV report for Audit History...') }
-
-const handleLogout = async () => {
-  if (confirm('Are you sure you want to log out?')) {
-    const token = useCookie('auth_token'); token.value = null;
-    if (process.client) { localStorage.removeItem('user_data'); sessionStorage.clear(); }
-    await navigateTo('/auth/login');
-  }
-}
 </script>
 
 <style scoped>

@@ -6,7 +6,7 @@
           <p class="current-date">{{ currentDate }}</p>
         </div>
         
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
           <button class="action-outline clickable" @click="printRecord">
             <Icon name="lucide:printer" /> Download E-Record
           </button>
@@ -175,84 +175,6 @@ const addToCalendar = () => {
 </script>
 
 <style scoped>
-/* --- BASE & SIDEBAR --- */
-.dashboard-layout { display: flex; height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
-
-/* SIDEBAR: Base transitions added */
-.sidebar { 
-  width: 260px; 
-  background: #1e3a8a; 
-  color: white; 
-  display: flex; 
-  flex-direction: column; 
-  padding: 2rem 1.5rem; 
-  flex-shrink: 0; 
-  position: relative;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease; 
-}
-
-/* Collapsed Sidebar Modifier */
-.sidebar.collapsed {
-  width: 80px;
-  padding: 2rem 0.75rem;
-  align-items: center;
-}
-
-.sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; margin-bottom: 3rem; white-space: nowrap; }
-.logo-icon { flex-shrink: 0; font-size: 1.5rem; }
-
-/* Toggle Action Button styling */
-.toggle-btn {
-  position: absolute;
-  top: 1.8rem;
-  right: -14px;
-  background: #2563eb;
-  border: none;
-  color: white;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  z-index: 10;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.toggle-btn:hover { background: #1d4ed8; }
-
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
-.nav-item { 
-  display: flex; align-items: center; gap: 12px; padding: 0.8rem 1rem; 
-  color: #bfdbfe; text-decoration: none; border-radius: 12px; font-weight: 500; 
-  transition: 0.2s ease; 
-  white-space: nowrap;
-}
-.sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: 0.8rem;
-}
-
-.nav-item :deep(svg), .nav-item .icon { flex-shrink: 0; font-size: 1.25rem; }
-.nav-text { transition: opacity 0.2s ease; }
-
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
-.sidebar.collapsed .nav-item:hover { transform: scale(1.05); }
-.router-link-active { background: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
-.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); width: 100%; }
-.logout-btn { background: none; border: none; width: 100%; text-align: left; color: #fca5a5; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; }
-.sidebar.collapsed .logout-btn { justify-content: center; }
-
-/* --- MAIN CONTENT & TOP BAR --- */
-.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-.top-bar { 
-  background: white; padding: 1.2rem 2.5rem; display: flex; justify-content: space-between; 
-  align-items: center; border-bottom: 1px solid #e2e8f0;
-}
-
 .header-info h1 { font-size: 1.4rem; color: #1e293b; font-weight: 800; margin: 0; }
 .current-date { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
 
@@ -275,7 +197,7 @@ const addToCalendar = () => {
 }
 
 /* --- ENHANCED BODY --- */
-.scrollable-body { padding: 2rem 2.5rem; overflow-y: auto; flex: 1; }
+/* scrollable-body padding: portal.css */
 
 /* Patient Hero Card */
 .patient-hero { 
@@ -293,8 +215,7 @@ const addToCalendar = () => {
 .badge-status { background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #dbeafe; }
 .meta-row { display: flex; gap: 20px; font-size: 0.9rem; color: #64748b; }
 
-/* Bento Grid */
-.bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 2rem; }
+/* Bento Grid — columns defined in portal.css */
 .bento-card { background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #e2e8f0; transition: 0.3s; }
 .bento-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.03); }
 
@@ -318,8 +239,6 @@ const addToCalendar = () => {
 .trend-tag.info { background: #f1f5f9; color: #475569; }
 .warning-bg { background: #fff1f2; border-color: #fecaca; }
 
-/* Content Layout */
-.bottom-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }

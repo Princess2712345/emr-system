@@ -1,57 +1,11 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
-    
-    <div class="sidebar-overlay" @click="isMobileOpen = false"></div>
-
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo" v-if="!isCollapsed || isMobileOpen">
-          <Icon name="mdi:hospital-building" class="icon-blue-light" />
-          <span class="logo-text">EMR System</span>
-        </div>
-        <button class="menu-toggle clickable desktop-only" @click="isCollapsed = !isCollapsed">
-          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
-        </button>
-      </div>
-
-      <nav class="sidebar-nav">
-        <NuxtLink 
-          v-for="link in navLinks" 
-          :key="link.to" 
-          :to="link.to" 
-          class="nav-item"
-          @click="isMobileOpen = false"
-        >
-          <Icon :name="link.icon" />
-          <span v-if="!isCollapsed || isMobileOpen" class="nav-label">{{ link.label }}</span>
-          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">{{ link.label }}</span>
-        </NuxtLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button @click="handleLogout" class="logout-btn clickable">
-          <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed || isMobileOpen">Logout</span>
-          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">Logout</span>
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="mobile-nav-bar mobile-only">
-        <button class="mobile-menu-toggle" @click="isMobileOpen = true">
-          <Icon name="lucide:menu" />
-        </button>
-        <div class="mobile-logo-text">EMR System</div>
-        <div class="mobile-avatar clickable">JS</div>
-      </header>
-
-      <header class="top-bar desktop-only">
+  <div class="portal-page dashboard-page">
+      <header class="top-bar desktop-only portal-top-bar">
         <div class="welcome-msg">
           <h1>Schedule & Appointments</h1>
           <p class="subtitle">{{ currentView === 'list' ? 'Daily Timeline' : 'Monthly View' }} — 2026</p>
         </div>
-        <div class="header-actions">
+        <div class="header-actions portal-header-actions">
           <button class="calendar-btn clickable" @click="toggleView">
             <Icon :name="currentView === 'list' ? 'lucide:calendar' : 'lucide:list'" />
             {{ currentView === 'list' ? 'Calendar View' : 'List View' }}
@@ -184,45 +138,13 @@
           </aside>
         </div>
       </section>
-    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+definePageMeta({ layout: 'dashboard' })
 
-const isCollapsed = ref(false);
-const isMobileOpen = ref(false);
-
-const handleResize = () => {
-  if (process.client && window.innerWidth > 768) {
-    isMobileOpen.value = false;
-  }
-};
-
-onMounted(() => {
-  if (process.client) {
-    window.addEventListener('resize', handleResize);
-  }
-});
-
-onUnmounted(() => {
-  if (process.client) {
-    window.removeEventListener('resize', handleResize);
-  }
-});
-
-const navLinks = [
-  { to: '/dashboard', icon: 'lucide:layout-dashboard', label: 'Overview' },
-  { to: '/dashboard/lab-results', icon: 'lucide:test-tube-2', label: 'Lab Results' },
-  { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
-  { to: '/dashboard/disposition', icon: 'lucide:file-output', label: 'Disposition' },
-  { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
-  { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
-  { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
-  { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },
-  { to: '/dashboard/history', icon: 'lucide:history', label: 'History' },
-];
+import { ref, computed } from 'vue';
 
 const currentView = ref('list');
 const activeFilter = ref('All');
@@ -326,9 +248,6 @@ const completeVisit = async (id) => {
   }
 };
 
-const handleLogout = () => { 
-  if (confirm('Logout?')) navigateTo('/auth/login'); 
-};
 </script>
 
 <style scoped>
