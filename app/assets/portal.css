@@ -346,6 +346,21 @@ video {
   }
   
   .form-row { grid-template-columns: 1fr !important; }
+
+  .appointment-body {
+    padding: 1rem !important;
+  }
+
+  .portal-page .side-by-side-container {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+
+  .schedule-header {
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 /* ==========================================================================

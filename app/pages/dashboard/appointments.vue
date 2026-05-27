@@ -13,6 +13,17 @@
         </div>
       </header>
 
+      <header class="appointments-mobile-header mobile-only portal-top-bar">
+        <div class="welcome-msg">
+          <h1>Schedule</h1>
+          <p class="subtitle">{{ currentView === 'list' ? 'Daily Timeline' : 'Monthly View' }} — 2026</p>
+        </div>
+        <button type="button" class="calendar-btn clickable" @click="toggleView">
+          <Icon :name="currentView === 'list' ? 'lucide:calendar' : 'lucide:list'" />
+          {{ currentView === 'list' ? 'Calendar' : 'List' }}
+        </button>
+      </header>
+
       <section class="appointment-body">
         <div class="side-by-side-container">
           
@@ -294,8 +305,30 @@ const completeVisit = async (id) => {
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; font-weight: 700; margin: 0; }
 .subtitle { color: #64748b; font-size: 0.85rem; margin-top: 4px; }
 
-.appointment-body { padding: 2rem 3rem; }
-.side-by-side-container { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; align-items: start; }
+.appointments-mobile-header {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.appointments-mobile-header h1 { font-size: 1.25rem; color: #1e3a8a; font-weight: 700; margin: 0; }
+.appointments-mobile-header .calendar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #1e3a8a;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.appointment-body { padding: 2rem 3rem; min-width: 0; width: 100%; box-sizing: border-box; }
+.side-by-side-container { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; align-items: start; min-width: 0; width: 100%; }
+.view-content { min-width: 0; width: 100%; }
+.booking-sidebar { min-width: 0; width: 100%; }
 
 .schedule-header { display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: center; }
 .date-display { display: flex; align-items: center; gap: 1.5rem; background: white; padding: 0.6rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; }
@@ -373,28 +406,112 @@ const completeVisit = async (id) => {
   .desktop-only { display: none !important; }
   .mobile-only { display: flex; }
 
-  .sidebar { position: fixed; top: 0; left: 0; width: 280px; transform: translateX(-100%); z-index: 2001; }
-  .mobile-open .sidebar { transform: translateX(0); }
-  .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; backdrop-filter: blur(2px); }
-  .mobile-open .sidebar-overlay { display: block; }
-
-  .appointment-body { padding: 1rem; overflow-x: hidden; }
-  .schedule-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .date-display { width: 100%; justify-content: space-between; }
-
-  .view-filters { 
-    width: calc(100% + 2rem); 
-    margin-left: -1rem; 
-    padding-left: 1rem;
-    padding-right: 1rem;
+  .appointment-body {
+    padding: 1rem;
+    min-width: 0;
+    width: 100%;
+    overflow-x: visible;
+    overflow-y: auto;
   }
 
-  .appointment-card { 
-    grid-template-columns: 1fr; gap: 12px; padding: 1.25rem; position: relative; 
-    border-left-width: 6px; width: 100%;
+  .side-by-side-container {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    width: 100%;
   }
-  .time-slot { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; flex-direction: row; display: flex; gap: 10px; align-items: center; }
-  .status-box { position: absolute; top: 1.25rem; right: 1.25rem; width: auto; }
+
+  .schedule-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .date-display {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .current-date {
+    font-size: 0.9rem;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .view-filters {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+    padding-right: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filter-pill {
+    flex-shrink: 0;
+  }
+
+  .appointment-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 1.25rem;
+    position: relative;
+    border-left-width: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .appointment-card:hover {
+    transform: none;
+  }
+
+  .time-slot {
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
+    flex-direction: row;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .status-box {
+    position: static;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .status-tag {
+    width: auto;
+    min-width: 6rem;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .booking-card {
+    padding: 1.25rem;
+  }
+
+  .calendar-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .calendar-grid {
+    min-width: 560px;
+  }
+
+  .calendar-day {
+    height: 72px;
+    min-width: 0;
+  }
 }
 
 /* --- UTILS --- */
