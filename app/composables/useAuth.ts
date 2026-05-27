@@ -1,21 +1,16 @@
+import { clearStoredUser, getStoredUser, type AuthUser } from '~/utils/authSession'
+
 export function useAuth() {
-  const user = ref<Record<string, unknown> | null>(null)
+  const user = ref<AuthUser | null>(null)
 
   const loadUser = () => {
-    if (!import.meta.client) return null
-    const raw = localStorage.getItem('user_data')
-    if (!raw) {
-      user.value = null
-      return null
-    }
-    user.value = JSON.parse(raw)
-    return user.value
+    const stored = getStoredUser()
+    user.value = stored
+    return stored
   }
 
   const logout = () => {
-    if (import.meta.client) {
-      localStorage.removeItem('user_data')
-    }
+    clearStoredUser()
     user.value = null
     return navigateTo('/auth/login')
   }

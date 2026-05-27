@@ -227,10 +227,9 @@ const filteredLabs = computed(() => {
 const handleLogout = async () => {
   if (confirm('Are you sure you want to log out?')) {
     try {
-      const token = useCookie('auth_token')
-      token.value = null
       if (process.client) {
-        localStorage.removeItem('user_data')
+        const { clearStoredUser } = await import('~/utils/authSession')
+        clearStoredUser()
         sessionStorage.clear()
       }
       await navigateTo('/auth/login') 

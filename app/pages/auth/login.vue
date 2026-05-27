@@ -38,6 +38,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { getHomeRouteForRole } from '~/utils/authSession'
 
 const loginData = ref({
   username: '',
@@ -63,21 +64,13 @@ const handleLogin = async () => {
       body: payload
     })
 
-    if (response.authenticated && response.user) {
+    if (response.authenticated && response.user?.id && response.user?.role) {
       // Save session metadata globally
       localStorage.setItem('user_data', JSON.stringify(response.user))
       
       // Read the exact uppercase role returned directly from the successful database row
-      const userRole = response.user.role ? response.user.role.toUpperCase() : 'PATIENT'
-
-      // Clean role-based routing layout
-      if (userRole === 'PATIENT') {
-        await navigateTo('/patient') 
-      } else if (['ADMIN', 'HR', 'REGISTRAR'].includes(userRole)) {
-        await navigateTo('/dashboard')
-      } else {
-        await navigateTo('/dashboard')
-      }
+      const userRole = response.user.role.toUpperCase()
+      await navigateTo(getHomeRouteForRole(userRole))
     }
   } catch (error) {
     console.error('Authentication processing failure:', error)
