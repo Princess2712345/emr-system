@@ -306,7 +306,7 @@ const deleteItem = async () => {
 .filter-btn:hover { background: #e2e8f0; color: #1e3a8a; }
 
 /* TABLE STYLING */
-.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .inventory-table { width: 100%; border-collapse: collapse; }
 .inventory-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
 .inventory-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; }

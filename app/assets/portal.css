@@ -301,6 +301,26 @@ video {
   .desktop-only { display: none !important; }
   .mobile-only { display: flex !important; }
 
+  .portal-mobile-bar,
+  .mobile-nav-bar {
+    display: flex;
+    position: sticky;
+    top: 0;
+  }
+
+  .table-container {
+    overflow-x: auto !important;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .billing-table,
+  .custom-table {
+    min-width: 600px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
   .portal-layout, .dashboard-layout {
     flex-direction: column;
     height: auto;
@@ -332,7 +352,11 @@ video {
    SMALL PHONES (≤480px)
    ========================================================================== */
 @media (max-width: 480px) {
-  .patient-table, .data-table {
+  .patient-table,
+  .data-table,
+  .inventory-table,
+  .billing-table,
+  .custom-table {
     min-width: 520px;
   }
 }

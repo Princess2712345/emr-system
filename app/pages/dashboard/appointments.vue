@@ -373,12 +373,6 @@ const completeVisit = async (id) => {
   .desktop-only { display: none !important; }
   .mobile-only { display: flex; }
 
-  .mobile-nav-bar { 
-    background: #1e3a8a; color: white; padding: 0.8rem 1.5rem; justify-content: space-between; 
-    align-items: center; position: sticky; top: 0; z-index: 1000;
-  }
-  .mobile-avatar { width: 32px; height: 32px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; }
-
   .sidebar { position: fixed; top: 0; left: 0; width: 280px; transform: translateX(-100%); z-index: 2001; }
   .mobile-open .sidebar { transform: translateX(0); }
   .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; backdrop-filter: blur(2px); }

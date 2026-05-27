@@ -33,6 +33,7 @@
 
         <!-- LOGS TABLE -->
         <div class="activity-card glass-card">
+          <div class="table-container">
           <table class="custom-table">
             <thead>
               <tr>
@@ -69,6 +70,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
 
           <!-- Empty State -->
           <div v-if="filteredLogs.length === 0" class="empty-state">

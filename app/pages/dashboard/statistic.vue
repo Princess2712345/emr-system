@@ -83,6 +83,7 @@
             <div class="chart-header">
               <h3>Departmental Performance Index</h3>
             </div>
+            <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
@@ -101,6 +102,7 @@
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </section>

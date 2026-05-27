@@ -427,15 +427,6 @@ const goToProfile = () => { alert('Navigating to profile...') }
   .desktop-only { display: none !important; }
   .mobile-only { display: flex; }
 
-  /* Mobile Nav Bar */
-  .mobile-nav-bar {
-    background: #1e3a8a; color: white; padding: 0.75rem 1.5rem; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 1000;
-  }
-  .mobile-menu-toggle { background: none; border: none; color: white; font-size: 1.5rem; display: flex; }
-  .mobile-logo-text { font-weight: 800; font-size: 1.1rem; }
-  .avatar-sm { width: 32px; height: 32px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; }
-
   /* Sidebar Transformation into Drawer */
   .sidebar {
     position: fixed; top: 0; left: 0; height: 100vh; width: 280px; z-index: 2000;

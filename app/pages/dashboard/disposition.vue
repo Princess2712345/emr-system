@@ -280,7 +280,7 @@ const manageCase = (item) => {
 .filter-icon { color: #64748b; margin-right: 8px; }
 .filter-dropdown { border: none; height: 44px; font-weight: 600; color: #475569; outline: none; background: transparent; }
 
-.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .patient-table { width: 100%; border-collapse: collapse; }
 .patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
 .patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; }

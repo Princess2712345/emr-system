@@ -329,7 +329,7 @@ const submitForm = async () => {
 
 .filter-btn { display: flex; align-items: center; gap: 8px; padding: 0 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; color: #475569; height: 44px; font-size: 0.85rem; }
 
-.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+.table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .patient-table { width: 100%; border-collapse: collapse; }
 .patient-table th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
 .patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 0.9rem; }

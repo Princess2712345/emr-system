@@ -62,6 +62,24 @@ const { logout, initials, loadUser } = useAuth()
 
 loadUser()
 
+const onResize = () => {
+  if (import.meta.client && window.innerWidth > 768) {
+    isMobileOpen.value = false
+  }
+}
+
+onMounted(() => {
+  if (import.meta.client) {
+    window.addEventListener('resize', onResize)
+  }
+})
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('resize', onResize)
+  }
+})
+
 const navLinks = [
   { to: '/patient', icon: 'lucide:layout-dashboard', label: 'Dashboard' },
   { to: '/patient/myappointments', icon: 'lucide:calendar-days', label: 'Appointments' },

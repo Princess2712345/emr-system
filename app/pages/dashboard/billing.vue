@@ -239,7 +239,7 @@ const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All
 .search-icon-svg { position: absolute; left: 15px; color: #94a3b8; font-size: 1.2rem; }
 .filter-group { display: flex; gap: 12px; }
 .filter-dropdown, .filter-btn { padding: 0 1.2rem; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #475569; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-.table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden; }
+.table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .billing-table { width: 100%; border-collapse: collapse; }
 .billing-table th { background-color: #f8fafc; padding: 1.2rem 1.5rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.05em; }
 .billing-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
@@ -287,8 +287,6 @@ const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All
   .table-controls { flex-direction: column; gap: 1rem; }
   .search-wrapper { max-width: 100%; }
   .filter-group { display: grid; grid-template-columns: 1fr auto; }
-  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .billing-table { min-width: 700px; }
   .modal-content { width: 90%; margin: 10px; padding: 1.5rem; }
 }
 @media (max-width: 640px) {
