@@ -30,28 +30,25 @@
         <label for="username">Username</label>
         <input id="username" v-model="registerData.username" type="text" required />
 
-        <label>Security Credentials</label>
-        <div class="password-wrapper">
+        <label for="register-password">Password</label>
+        <div class="password-box">
           <input
+            id="register-password"
             v-model="registerData.password"
             :type="showPassword ? 'text' : 'password'"
             placeholder="Password"
             required
             autocomplete="new-password"
           />
-          <div class="unique-id-section">
-            <span class="id-prefix">{{ registerData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <span class="id-auto-label">Auto-assigned</span>
-            <button
-              type="button"
-              class="password-toggle"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
-              :aria-pressed="showPassword"
-              @click.stop="showPassword = !showPassword"
-            >
-              <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
-            </button>
-          </div>
+          <button
+            type="button"
+            class="password-toggle"
+            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            :aria-pressed="showPassword"
+            @click.prevent="showPassword = !showPassword"
+          >
+            <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
+          </button>
         </div>
 
         <p class="id-auto-notice">
@@ -212,82 +209,73 @@ const handleRegister = async () => {
   z-index: 1;
 }
 
-.register-form input:not(.id-input):not([type="radio"]),
-.password-wrapper {
-  background-color: rgba(255, 255, 255, 0.4) !important;
+.register-form > input:not([type="radio"]),
+.password-box {
+  background-color: rgba(255, 255, 255, 0.4);
   border: 1.5px solid rgba(255, 255, 255, 0.3);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.password-wrapper {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  z-index: 2;
   border-radius: 8px;
-  position: relative;
+  z-index: 2;
+  transition: all 0.2s ease;
 }
 
-.password-wrapper:focus-within {
+.password-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+}
+
+.password-box:focus-within {
   border-color: #2563eb;
   background-color: rgba(255, 255, 255, 0.7);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-.password-wrapper > input {
+.password-box input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
-  padding: 0.8rem 1rem;
+  padding: 0.8rem 2.75rem 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
-  width: 100%;
   box-sizing: border-box;
 }
 
-.unique-id-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(226, 232, 240, 0.3);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  z-index: 2;
-  position: relative;
+.password-box input::-ms-reveal,
+.password-box input::-ms-clear {
+  display: none;
 }
 
-.id-prefix {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #475569;
-  flex-shrink: 0;
-}
-
-.id-auto-label {
-  flex: 1;
-  font-size: 0.75rem;
-  color: #64748b;
-  text-align: left;
+.password-box input::-webkit-credentials-auto-fill-button,
+.password-box input::-webkit-textfield-decoration-container {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   padding: 0;
   margin: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   background: transparent;
   color: #475569;
   cursor: pointer;
   z-index: 3;
-  pointer-events: auto;
-  position: relative;
 }
 
 .password-toggle:hover {

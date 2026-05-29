@@ -17,45 +17,41 @@
         <label>Username</label>
         <input v-model="loginData.username" type="text" required />
 
-        <label>Security Credentials</label>
-        <div class="password-wrapper">
-          <div class="password-row">
-            <input
-              v-model="loginData.password"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="Password"
-              required
-              autocomplete="current-password"
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
-              :aria-pressed="showPassword"
-              @click.stop="showPassword = !showPassword"
-            >
-              <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
-            </button>
-          </div>
-          <div class="unique-id-section">
-            <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input
-              id="login-unique-id"
-              v-model="loginData.uniqueId"
-              type="text"
-              name="uniqueId"
-              :placeholder="loginData.role === 'admin' ? 'STAFF-2026-000001' : 'MRN-2026-000001'"
-              class="id-input"
-              required
-              autocomplete="off"
-              spellcheck="false"
-              maxlength="64"
-            />
-          </div>
-          <p class="id-login-hint">
-            Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.
-          </p>
+        <label for="login-password">Password</label>
+        <div class="password-box">
+          <input
+            id="login-password"
+            v-model="loginData.password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Password"
+            required
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            :aria-pressed="showPassword"
+            @click.prevent="showPassword = !showPassword"
+          >
+            <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
+          </button>
         </div>
+
+        <label for="login-unique-id">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</label>
+        <input
+          id="login-unique-id"
+          v-model="loginData.uniqueId"
+          type="text"
+          name="uniqueId"
+          :placeholder="loginData.role === 'admin' ? 'STAFF-2026-000001' : 'MRN-2026-000001'"
+          required
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p class="id-login-hint">
+          Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.
+        </p>
         <button type="submit">Sign In</button>
 
         <p class="register-text">
@@ -207,101 +203,86 @@ const handleLogin = async () => {
   z-index: 1;
 }
 
-.password-wrapper,
-.login-form input[type="text"]:not(.id-input) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
+.login-form > input:not([type="radio"]),
+.password-box {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.4);
   border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
   z-index: 2;
-}
-
-.password-wrapper {
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
   transition: all 0.2s ease;
-  position: relative;
 }
 
-.password-wrapper:focus-within {
+.login-form > input:not([type="radio"]) {
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+}
+
+#login-unique-id {
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.login-form > input:not([type="radio"]):focus,
+.password-box:focus-within {
+  outline: none;
   border-color: #3b82f6;
+  background-color: rgba(255, 255, 255, 0.7);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
-.password-row {
+.password-box {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  width: 100%;
+  padding: 0;
+  overflow: hidden;
 }
 
-.password-row input {
+.password-box input {
   flex: 1;
   min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
-  padding: 0.8rem 0.5rem 0.8rem 1rem;
+  padding: 0.8rem 2.75rem 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
   box-sizing: border-box;
 }
 
-.unique-id-section {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.4rem;
-  padding: 0.6rem 1rem 0.5rem;
-  background: rgba(226, 232, 240, 0.3);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  z-index: 2;
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
+/* Hide browser built-in password reveal (stops double eye icon) */
+.password-box input::-ms-reveal,
+.password-box input::-ms-clear {
+  display: none;
 }
 
-.id-prefix {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #475569;
-  text-transform: uppercase;
-  text-align: left;
-}
-
-.id-input {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
-  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
-  letter-spacing: 0.02em;
-  outline: none;
-  background: rgba(255, 255, 255, 0.5);
-  box-sizing: border-box;
+.password-box input::-webkit-credentials-auto-fill-button,
+.password-box input::-webkit-textfield-decoration-container {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   padding: 0;
   margin: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   background: transparent;
   color: #475569;
   cursor: pointer;
   z-index: 3;
-  pointer-events: auto;
-  position: relative;
 }
 
 .password-toggle:hover {
@@ -309,26 +290,12 @@ const handleLogin = async () => {
   background: rgba(59, 130, 246, 0.1);
 }
 
-.login-form input[type="text"]:not(.id-input) {
-  padding: 0.8rem 1rem;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
 .id-login-hint {
-  margin: 0;
-  padding: 0.35rem 1rem 0.5rem;
+  margin: -0.6rem 0 0;
   font-size: 0.75rem;
   color: #64748b;
   z-index: 1;
   text-align: left;
-}
-
-.login-form input:focus:not(.id-input) {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .login-form button[type="submit"] {
@@ -408,10 +375,6 @@ const handleLogin = async () => {
 
   .radio-container {
     font-size: 0.85rem;
-  }
-
-  .id-input {
-    font-size: 0.75rem;
   }
 
   .login-form button[type="submit"] {
