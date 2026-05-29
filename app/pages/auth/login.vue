@@ -19,26 +19,14 @@
 
         <label>Security Credentials</label>
         <div class="password-wrapper">
-          <input
-            v-model="loginData.password"
-            :type="showPassword ? 'text' : 'password'"
-            placeholder="Password"
-            required
-            autocomplete="current-password"
-          />
-          <div class="unique-id-section">
-            <div class="id-field-group">
-              <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-              <input
-                v-model="loginData.uniqueId"
-                type="text"
-                :placeholder="loginData.role === 'admin' ? 'STAFF-2026-000001' : 'MRN-2026-000001'"
-                class="id-input"
-                required
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </div>
+          <div class="password-row">
+            <input
+              v-model="loginData.password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Password"
+              required
+              autocomplete="current-password"
+            />
             <button
               type="button"
               class="password-toggle"
@@ -48,6 +36,21 @@
             >
               <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
             </button>
+          </div>
+          <div class="unique-id-section">
+            <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+            <input
+              id="login-unique-id"
+              v-model="loginData.uniqueId"
+              type="text"
+              name="uniqueId"
+              :placeholder="loginData.role === 'admin' ? 'STAFF-2026-000001' : 'MRN-2026-000001'"
+              class="id-input"
+              required
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="64"
+            />
           </div>
           <p class="id-login-hint">
             Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.
@@ -148,7 +151,7 @@ const handleLogin = async () => {
 }
 
 .login-form {
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -163,7 +166,7 @@ const handleLogin = async () => {
   border-radius: 24px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .login-form::before {
@@ -215,7 +218,7 @@ const handleLogin = async () => {
 .password-wrapper {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -226,33 +229,36 @@ const handleLogin = async () => {
   background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
-.password-wrapper > input {
+.password-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.password-row input {
+  flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
-  padding: 0.8rem 1rem;
+  padding: 0.8rem 0.5rem 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
-  width: 100%;
   box-sizing: border-box;
 }
 
 .unique-id-section {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem 0.5rem;
   background: rgba(226, 232, 240, 0.3);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 2;
   position: relative;
-}
-
-.id-field-group {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .id-prefix {
@@ -260,19 +266,20 @@ const handleLogin = async () => {
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
-  flex-shrink: 0;
-  white-space: nowrap;
+  text-align: left;
 }
 
 .id-input {
-  flex: 1;
-  min-width: 0;
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  padding: 6px 8px;
-  font-size: 0.8rem;
-  font-family: monospace;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  letter-spacing: 0.02em;
   outline: none;
   background: rgba(255, 255, 255, 0.5);
   box-sizing: border-box;
