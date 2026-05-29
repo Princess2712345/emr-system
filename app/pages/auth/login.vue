@@ -17,21 +17,41 @@
         <label>Username</label>
         <input v-model="loginData.username" type="text" required />
 
-        <label>Security Credentials</label>
-        <div class="password-wrapper">
-          <input v-model="loginData.password" type="password" placeholder="Password" required />
-          <div class="unique-id-section">
-            <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input
-              v-model="loginData.uniqueId"
-              type="text"
-              :placeholder="loginData.role === 'admin' ? 'e.g. STAFF-2026-000001' : 'e.g. MRN-2026-000001'"
-              class="id-input"
-              required
-            />
-          </div>
-          <p class="id-login-hint">Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.</p>
+        <label for="login-password">Password</label>
+        <div class="password-field">
+          <input
+            id="login-password"
+            v-model="loginData.password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Password"
+            required
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            :aria-pressed="showPassword"
+            @click="showPassword = !showPassword"
+          >
+            <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
+          </button>
         </div>
+
+        <label for="login-unique-id">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</label>
+        <input
+          id="login-unique-id"
+          v-model="loginData.uniqueId"
+          type="text"
+          class="id-input-full"
+          :placeholder="loginData.role === 'admin' ? 'e.g. STAFF-2026-000001' : 'e.g. MRN-2026-000001'"
+          required
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p class="id-login-hint">
+          Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.
+        </p>
         <button type="submit">Sign In</button>
 
         <p class="register-text">
@@ -46,6 +66,8 @@
 <script setup>
 import { ref } from 'vue'
 import { getHomeRouteForRole } from '~/utils/authSession'
+
+const showPassword = ref(false)
 
 const loginData = ref({
   username: '',
@@ -125,7 +147,7 @@ const handleLogin = async () => {
 }
 
 .login-form {
-  max-width: 360px;
+  max-width: 420px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -181,63 +203,81 @@ const handleLogin = async () => {
   z-index: 1;
 }
 
-.password-wrapper,
-.login-form input[type="text"]:not(.id-input) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+  background-color: rgba(255, 255, 255, 0.4);
   border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  z-index: 1;
-}
-
-.password-wrapper {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
   transition: all 0.2s ease;
 }
 
-.password-wrapper:focus-within {
+.password-field:focus-within {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: rgba(255, 255, 255, 0.7) !important;
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
-.password-wrapper input[type="password"] {
+.password-field input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
-  padding: 0.8rem 1rem;
+  padding: 0.8rem 2.75rem 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
 }
 
-.unique-id-section {
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  background: rgba(226, 232, 240, 0.3);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.id-prefix {
-  font-size: 0.75rem;
-  font-weight: 700;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
   color: #475569;
-  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 3;
+  pointer-events: auto;
 }
 
-.id-input {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  width: 80px;
-  padding: 2px 8px;
-  font-size: 0.85rem;
-  font-family: monospace;
+.password-toggle:hover {
+  color: #1e40af;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.id-input-full {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.4);
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.id-input-full:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.5);
+  border-color: #3b82f6;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.login-form input[type="text"]:not(.id-input) {
+.login-form input[type="text"]:not(.id-input-full) {
   padding: 0.8rem 1rem;
   font-size: 1rem;
   transition: all 0.2s ease;
@@ -250,7 +290,7 @@ const handleLogin = async () => {
   z-index: 1;
 }
 
-.login-form input:focus:not(.id-input) {
+.login-form input:focus:not(.id-input-full) {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -334,10 +374,6 @@ const handleLogin = async () => {
 
   .radio-container {
     font-size: 0.85rem;
-  }
-
-  .id-input {
-    width: 65px;
   }
 
   .login-form button {

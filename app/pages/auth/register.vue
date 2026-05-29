@@ -30,8 +30,26 @@
         <label for="username">Username</label>
         <input id="username" v-model="registerData.username" type="text" required />
 
-        <label>Security Credentials</label>
-        <input v-model="registerData.password" type="password" placeholder="Password" required />
+        <label for="register-password">Security Credentials</label>
+        <div class="password-field">
+          <input
+            id="register-password"
+            v-model="registerData.password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="Password"
+            required
+            autocomplete="new-password"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            :aria-pressed="showPassword"
+            @click="showPassword = !showPassword"
+          >
+            <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
+          </button>
+        </div>
 
         <p class="id-auto-notice">
           <Icon name="lucide:badge-check" />
@@ -54,6 +72,8 @@
 import { ref } from 'vue'
 
 // 🚀 Grouped State Object Map synced seamlessly with layout models
+const showPassword = ref(false)
+
 const registerData = ref({
   username: '',
   email: '',
@@ -122,7 +142,7 @@ const handleRegister = async () => {
 }
 
 .register-form {
-  max-width: 380px;
+  max-width: 420px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -189,72 +209,73 @@ const handleRegister = async () => {
   z-index: 1;
 }
 
-.register-form input:not(.id-input):not([type="radio"]):not([type="password"]),
-.password-wrapper {
-  background-color: rgba(255, 255, 255, 0.4) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.password-wrapper {
+.password-field {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  z-index: 1;
+  align-items: center;
+  z-index: 2;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
-.password-wrapper:focus-within {
+.password-field:focus-within {
   border-color: #2563eb;
   background-color: rgba(255, 255, 255, 0.7);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-.password-wrapper input[type="password"] {
+.password-field input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
-  padding: 0.8rem 1rem;
+  padding: 0.8rem 2.75rem 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
-}
-
-.unique-id-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  background: rgba(226, 232, 240, 0.3);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 1;
 }
 
-.id-prefix {
-  font-size: 0.75rem;
-  font-weight: 700;
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
   color: #475569;
+  cursor: pointer;
+  z-index: 3;
+  pointer-events: auto;
 }
 
-.id-input {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  width: 80px;
-  padding: 2px 8px;
-  font-size: 0.85rem;
-  font-family: monospace;
-  outline: none;
-  background: rgba(255, 255, 255, 0.5);
+.password-toggle:hover {
+  color: #1e40af;
+  background: rgba(37, 99, 235, 0.08);
 }
 
-.register-form input:not(.id-input):not([type="radio"]):not([type="password"]) {
+.register-form > input:not([type="radio"]) {
   padding: 0.8rem 1rem;
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s ease;
   z-index: 1;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.register-form input:focus:not(.id-input) {
+.register-form > input:not([type="radio"]):focus {
   outline: none;
   border-color: #2563eb;
   background-color: rgba(255, 255, 255, 0.7);
