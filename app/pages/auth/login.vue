@@ -27,16 +27,18 @@
             autocomplete="current-password"
           />
           <div class="unique-id-section">
-            <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input
-              v-model="loginData.uniqueId"
-              type="text"
-              :placeholder="loginData.role === 'admin' ? 'STAFF-2026-000001' : 'MRN-2026-000001'"
-              class="id-input"
-              required
-              autocomplete="off"
-              spellcheck="false"
-            />
+            <div class="id-field-group">
+              <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+              <input
+                v-model="loginData.uniqueId"
+                type="text"
+                :placeholder="loginData.role === 'admin' ? 'STAFF-2026-000001' : 'MRN-2026-000001'"
+                class="id-input"
+                required
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
             <button
               type="button"
               class="password-toggle"
@@ -146,7 +148,7 @@ const handleLogin = async () => {
 }
 
 .login-form {
-  max-width: 380px;
+  max-width: 400px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -245,21 +247,30 @@ const handleLogin = async () => {
   position: relative;
 }
 
+.id-field-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .id-prefix {
   font-size: 0.75rem;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .id-input {
   flex: 1;
   min-width: 0;
-  width: auto;
+  width: 100%;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 6px 8px;
   font-size: 0.8rem;
   font-family: monospace;
   outline: none;
