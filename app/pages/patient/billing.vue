@@ -45,6 +45,7 @@
             <div class="card-header">
               <div class="header-title-group">
                 <h3><Icon name="lucide:history" /> Statement History</h3>
+                <NuxtLink to="/patient/history" class="view-more-link">See all history</NuxtLink>
               </div>
               <div class="filter-tabs">
                 <button 
@@ -309,7 +310,26 @@ const handleAssistance = () => alert('Opening Financial Aid Portal...')
 
 /* RECONSTRUCTED BOTTOM LAYOUT Elements */
 .content-card { background: white; padding: 1.8rem; border-radius: 24px; border: 1px solid #e2e8f0; }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.view-more-link {
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.view-more-link:hover { text-decoration: underline; }
 .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; }
 .tab { border: none; background: none; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; border-radius: 8px; cursor: pointer; transition: 0.2s; }
 .tab.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }

@@ -43,7 +43,10 @@
         <div class="bottom-layout portal-bottom-layout">
           <section class="content-card">
             <div class="card-header">
-              <h3><Icon name="lucide:list-todo" /> Scheduled & Past Visits</h3>
+              <div class="card-header-left">
+                <h3><Icon name="lucide:list-todo" /> Scheduled & Past Visits</h3>
+                <NuxtLink to="/patient/history" class="view-more-link">See all history</NuxtLink>
+              </div>
               <div class="filter-tabs">
                 <button 
                   v-for="tab in ['All', 'Upcoming', 'Completed']" 
@@ -59,7 +62,7 @@
             <div class="appointment-stack">
               <div v-if="isLoading" class="empty-state">Loading schedules...</div>
               
-              <div v-else v-for="(apt, index) in filteredAppointments" :key="index" :class="['apt-item', apt.status.toLowerCase()]">
+              <div v-else v-for="apt in filteredAppointments" :key="apt.id" :class="['apt-item', aptStatusClass(apt.status)]">
                 <div class="apt-date-box">
                   <span class="month">{{ apt.date.split(' ')[0] }}</span>
                   <span class="day">{{ apt.date.split(' ')[1]?.replace(',', '') }}</span>
@@ -68,7 +71,7 @@
                 <div class="apt-main-info">
                   <div class="apt-header">
                     <span class="dr-name">{{ apt.doctor }}</span>
-                    <span :class="['status-pill', apt.status.toLowerCase()]">{{ apt.status }}</span>
+                    <span :class="['status-pill', aptStatusClass(apt.status)]">{{ apt.status }}</span>
                   </div>
                   <div class="apt-meta">
                     <span><Icon name="lucide:clock" /> {{ apt.time }}</span>
@@ -77,7 +80,7 @@
                 </div>
 
                 <div class="apt-actions">
-                  <button v-if="apt.status === 'Upcoming'" class="btn-primary-sm" @click="prepareForVisit(apt)">
+                  <button v-if="isUpcoming(apt.status)" class="btn-primary-sm" @click="prepareForVisit(apt)">
                     Prepare for Visit
                   </button>
                   <button v-if="apt.status === 'Completed'" class="btn-outline-sm" @click="downloadSummary(apt)">
@@ -117,6 +120,140 @@
           </aside>
         </div>
       </div>
+
+    <Transition name="fade">
+      <div v-if="isBookModalOpen" class="modal-overlay" @click.self="closeBookModal">
+        <div class="book-modal">
+          <div class="book-modal-header">
+            <div>
+              <h3><Icon name="lucide:calendar-plus" /> Book new appointment</h3>
+              <p class="modal-sub">Submit a request — our team will confirm date and provider.</p>
+            </div>
+            <button type="button" class="modal-close clickable" @click="closeBookModal">
+              <Icon name="lucide:x" />
+            </button>
+          </div>
+
+          <form class="book-form" @submit.prevent="submitBooking">
+            <div class="form-section">
+              <h4>Visit details</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Visit type</label>
+                  <select v-model="bookForm.visitType" required>
+                    <option value="General consultation">General consultation</option>
+                    <option value="Follow-up visit">Follow-up visit</option>
+                    <option value="Lab / diagnostics">Lab / diagnostics</option>
+                    <option value="Specialist referral">Specialist referral</option>
+                    <option value="Telemedicine">Telemedicine</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Preferred clinic</label>
+                  <select v-model="bookForm.clinic" required>
+                    <option value="Main Clinic — EMR Hub">Main Clinic — EMR Hub</option>
+                    <option value="Outpatient Wing A">Outpatient Wing A</option>
+                    <option value="Telehealth (video)">Telehealth (video)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4>Schedule</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Preferred date</label>
+                  <input v-model="bookForm.date" type="date" :min="minDate" required />
+                </div>
+                <div class="form-group">
+                  <label>Preferred time</label>
+                  <select v-model="bookForm.time" required>
+                    <option value="08:00 AM">08:00 AM</option>
+                    <option value="09:00 AM">09:00 AM</option>
+                    <option value="10:00 AM">10:00 AM</option>
+                    <option value="11:00 AM">11:00 AM</option>
+                    <option value="01:00 PM">01:00 PM</option>
+                    <option value="02:00 PM">02:00 PM</option>
+                    <option value="03:00 PM">03:00 PM</option>
+                    <option value="04:00 PM">04:00 PM</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Estimated duration</label>
+                  <select v-model="bookForm.duration">
+                    <option value="30 min">30 minutes</option>
+                    <option value="45 min">45 minutes</option>
+                    <option value="1 hr">1 hour</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Preferred doctor (optional)</label>
+                  <select v-model="bookForm.staffId">
+                    <option value="">Any available physician</option>
+                    <option v-for="s in staffList" :key="s.id" :value="s.id">
+                      {{ s.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4>Clinical information</h4>
+              <div class="form-group full">
+                <label>Reason for visit</label>
+                <input v-model="bookForm.reason" type="text" placeholder="e.g. Annual check-up, medication review" required />
+              </div>
+              <div class="form-group full">
+                <label>Current symptoms (optional)</label>
+                <textarea v-model="bookForm.symptoms" rows="3" placeholder="Describe symptoms, duration, and severity" />
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4>Contact</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Contact phone</label>
+                  <input v-model="bookForm.phone" type="tel" placeholder="+63 9XX XXX XXXX" />
+                </div>
+                <div class="form-group">
+                  <label>Best way to reach you</label>
+                  <select v-model="bookForm.contactMethod">
+                    <option value="Phone call">Phone call</option>
+                    <option value="SMS">SMS</option>
+                    <option value="Email">Email</option>
+                  </select>
+                </div>
+              </div>
+              <label class="checkbox-row">
+                <input v-model="bookForm.agreed" type="checkbox" required />
+                <span>I understand this is a request pending staff confirmation, not a guaranteed booking.</span>
+              </label>
+            </div>
+
+            <div class="summary-box">
+              <h4>Request summary</h4>
+              <ul>
+                <li><strong>Type:</strong> {{ bookForm.visitType }}</li>
+                <li><strong>When:</strong> {{ bookForm.date || '—' }} at {{ bookForm.time }}</li>
+                <li><strong>Where:</strong> {{ bookForm.clinic }}</li>
+                <li><strong>Duration:</strong> {{ bookForm.duration }}</li>
+              </ul>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-cancel clickable" @click="closeBookModal">Cancel</button>
+              <button type="submit" class="btn-submit clickable" :disabled="isSubmitting">
+                <Icon v-if="isSubmitting" name="lucide:loader-2" class="spin" />
+                {{ isSubmitting ? 'Submitting…' : 'Submit request' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -128,6 +265,28 @@ import { ref, computed, onMounted } from 'vue'
 const isLoading = ref(true)
 const currentFilter = ref('All')
 const userInitials = ref('PR')
+const userId = ref('')
+const isBookModalOpen = ref(false)
+const isSubmitting = ref(false)
+const staffList = ref([])
+
+const minDate = new Date().toISOString().slice(0, 10)
+
+const defaultBookForm = () => ({
+  visitType: 'General consultation',
+  clinic: 'Main Clinic — EMR Hub',
+  date: '',
+  time: '09:00 AM',
+  duration: '30 min',
+  staffId: '',
+  reason: '',
+  symptoms: '',
+  phone: '',
+  contactMethod: 'Phone call',
+  agreed: false
+})
+
+const bookForm = ref(defaultBookForm())
 
 const metrics = ref({
   nextDate: '--',
@@ -145,9 +304,25 @@ const checklist = ref([
   { label: 'Valid Photo ID', done: false },
 ])
 
+const isUpcoming = (status) => ['Pending', 'Confirmed', 'In Progress', 'Upcoming'].includes(status)
+
+const aptStatusClass = (status) => {
+  const s = (status || '').toLowerCase().replace(/\s+/g, '-')
+  if (isUpcoming(status)) return 'upcoming'
+  if (status === 'Completed') return 'completed'
+  if (status === 'Cancelled') return 'cancelled'
+  return s
+}
+
 const filteredAppointments = computed(() => {
   if (currentFilter.value === 'All') return appointments.value
-  return appointments.value.filter(apt => apt.status === currentFilter.value)
+  if (currentFilter.value === 'Upcoming') {
+    return appointments.value.filter((apt) => isUpcoming(apt.status))
+  }
+  if (currentFilter.value === 'Completed') {
+    return appointments.value.filter((apt) => apt.status === 'Completed')
+  }
+  return appointments.value
 })
 
 onMounted(async () => {
@@ -156,14 +331,23 @@ onMounted(async () => {
     if (!cachedUser) return navigateTo('/auth/login')
 
     const user = JSON.parse(cachedUser)
-    
-    // Compute display initials dynamically
+    userId.value = user.id
+
     if (user.firstName && user.lastName) {
       userInitials.value = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
     }
 
-    // Hit our database API handler
-    const data = await $fetch(`/api/patient/appointments?userId=${user.id}`)
+    const [data, staff] = await Promise.all([
+      $fetch(`/api/patient/appointments?userId=${user.id}`),
+      $fetch('/api/admins').catch(() => [])
+    ])
+
+    if (Array.isArray(staff)) {
+      staffList.value = staff.map((s) => ({
+        id: s.id,
+        label: s.name || s.username || `${s.firstName || ''} ${s.lastName || ''}`.trim()
+      }))
+    }
     if (data.success) {
       metrics.value = data.metrics
       appointments.value = data.appointments
@@ -175,27 +359,56 @@ onMounted(async () => {
   }
 })
 
-const bookAppointment = async () => {
-  const cachedUser = localStorage.getItem('user_data')
-  if (!cachedUser) return navigateTo('/auth/login')
-  const user = JSON.parse(cachedUser)
-  const date = prompt('Preferred date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10))
-  if (!date) return
-  const time = prompt('Preferred time:', '09:00 AM') || '09:00 AM'
-  const reason = prompt('Reason for visit:', 'General consultation') || 'General consultation'
+const bookAppointment = () => {
+  bookForm.value = {
+    ...defaultBookForm(),
+    date: minDate
+  }
+  isBookModalOpen.value = true
+}
+
+const closeBookModal = () => {
+  isBookModalOpen.value = false
+  isSubmitting.value = false
+}
+
+const reloadAppointments = async () => {
+  if (!userId.value) return
+  const data = await $fetch(`/api/patient/appointments?userId=${userId.value}`)
+  if (data.success) {
+    metrics.value = data.metrics
+    appointments.value = data.appointments
+  }
+}
+
+const submitBooking = async () => {
+  if (!userId.value || !bookForm.value.agreed) return
+
+  isSubmitting.value = true
   try {
-    await $fetch(`/api/patient/appointments?userId=${user.id}`, {
+    const res = await $fetch(`/api/patient/appointments?userId=${userId.value}`, {
       method: 'POST',
-      body: { date, time, reason }
+      body: {
+        date: bookForm.value.date,
+        time: bookForm.value.time,
+        duration: bookForm.value.duration,
+        visitType: bookForm.value.visitType,
+        clinic: bookForm.value.clinic,
+        reason: bookForm.value.reason,
+        symptoms: bookForm.value.symptoms,
+        staffId: bookForm.value.staffId || null,
+        phone: bookForm.value.phone,
+        contactMethod: bookForm.value.contactMethod
+      }
     })
-    alert('Appointment request submitted. Staff will confirm shortly.')
-    const data = await $fetch(`/api/patient/appointments?userId=${user.id}`)
-    if (data.success) {
-      metrics.value = data.metrics
-      appointments.value = data.appointments
-    }
-  } catch {
-    alert('Could not book appointment. Please try again.')
+    alert(res.message || 'Appointment request submitted. Staff will confirm shortly.')
+    closeBookModal()
+    await reloadAppointments()
+  } catch (err) {
+    const msg = err?.data?.statusMessage || 'Could not book appointment. Please try again.'
+    alert(msg)
+  } finally {
+    isSubmitting.value = false
   }
 }
 const viewProfile = () => { alert('Opening Profile Settings...') }
@@ -230,22 +443,54 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 .trend-tag.success { background: #dcfce7; color: #166534; }
 
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.card-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.view-more-link {
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.view-more-link:hover { text-decoration: underline; }
 .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; }
 .tab { border: none; background: none; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; border-radius: 8px; cursor: pointer; transition: 0.2s; }
 .tab.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
 /* --- VISITS STACK --- */
-.appointment-stack { display: flex; flex-direction: column; gap: 1rem; }
-.apt-item { display: flex; align-items: center; padding: 1.2rem; border-radius: 16px; border: 1px solid #f1f5f9; background: #fafafa; gap: 1.5rem; transition: 0.2s; }
+.appointment-stack { display: flex; flex-direction: column; gap: 1.15rem; }
+.apt-item {
+  display: flex;
+  align-items: center;
+  padding: 1.35rem 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  background: #fafafa;
+  gap: 1.25rem;
+  transition: 0.2s;
+}
 .apt-item:hover { border-color: #dbeafe; background: white; transform: scale(1.01); }
 .apt-date-box { width: 60px; height: 60px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
 .apt-date-box .month { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #2563eb; }
 .apt-date-box .day { font-size: 1.2rem; font-weight: 800; color: #1e293b; }
 .dr-name { font-weight: 700; color: #1e3a8a; font-size: 1rem; }
 .status-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; }
-.status-pill.upcoming { background: #e0f2fe; color: #0369a1; }
+.status-pill.upcoming,
+.status-pill.pending,
+.status-pill.confirmed,
+.status-pill.in-progress { background: #e0f2fe; color: #0369a1; }
 .status-pill.completed { background: #f1f5f9; color: #475569; }
+.status-pill.cancelled { background: #fee2e2; color: #991b1b; }
 .apt-meta { display: flex; gap: 15px; font-size: 0.85rem; color: #64748b; }
 .apt-meta span { display: flex; align-items: center; gap: 5px; }
 .btn-primary-sm { background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
@@ -269,4 +514,175 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .clickable { cursor: pointer; }
 .clickable:active { transform: scale(0.98); }
+
+/* Booking modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 2200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.book-modal {
+  background: white;
+  border-radius: 20px;
+  width: min(640px, 100%);
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.book-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 1.5rem 0;
+  gap: 1rem;
+}
+
+.book-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-sub { margin: 0.35rem 0 0; font-size: 0.85rem; color: #64748b; }
+
+.modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.book-form { padding: 1.25rem 1.5rem 1.5rem; }
+
+.form-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.form-section h4 {
+  margin: 0 0 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.form-group.full { grid-column: 1 / -1; }
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.form-group textarea { resize: vertical; min-height: 4rem; }
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: #475569;
+  margin-top: 0.75rem;
+  cursor: pointer;
+}
+
+.summary-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.summary-box h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.summary-box ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+}
+
+.btn-submit {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .apt-item { flex-wrap: wrap; }
+}
 </style>

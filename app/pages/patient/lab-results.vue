@@ -44,6 +44,7 @@
           <section class="content-card">
             <div class="card-header">
               <h3><Icon name="lucide:flask-conical" /> Clinical Laboratory Results</h3>
+              <div class="header-actions-row">
               <div class="filter-tabs">
                 <button 
                   v-for="tab in ['All', 'Labs', 'Imaging', 'Reports']" 
@@ -53,6 +54,8 @@
                 >
                   {{ tab }}
                 </button>
+              </div>
+              <NuxtLink to="/patient/history" class="view-more-link">See all history</NuxtLink>
               </div>
             </div>
             
@@ -171,8 +174,8 @@
 
           <section v-else class="detail-results-section">
             <h3 class="section-title">Test results</h3>
-            <div class="results-table-wrap">
-              <table class="results-table">
+            <div class="results-table-wrap patient-table-wrap">
+              <table class="results-table patient-data-table">
                 <thead>
                   <tr>
                     <th>Test</th>
@@ -226,6 +229,8 @@ definePageMeta({ layout: 'patient' })
 
 import { ref, computed, onMounted } from 'vue'
 
+const route = useRoute()
+
 const recordFilter = ref('All')
 const bloodType = ref('—')
 const activeMeds = ref(0)
@@ -248,6 +253,12 @@ onMounted(async () => {
       bloodType.value = data.bloodType
       activeMeds.value = data.activeMeds
       records.value = data.records
+    }
+
+    const openLabId = route.query.open
+    if (openLabId && typeof openLabId === 'string') {
+      const match = records.value.find((r) => r.id === openLabId)
+      if (match) await handleViewResults(match)
     }
   } catch (e) {
     console.error('Labs load failed:', e)
@@ -363,7 +374,28 @@ const handleRequestRefill = () => {
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
 
 /* --- RECORDS --- */
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.view-more-link {
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.view-more-link:hover { text-decoration: underline; }
 .filter-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; gap: 4px; }
 .tab { border: none; background: none; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; color: #64748b; border-radius: 8px; cursor: pointer; transition: 0.2s; }
 .tab.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }

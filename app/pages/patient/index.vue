@@ -70,11 +70,11 @@
           <section class="content-card timeline-card">
             <div class="card-header">
               <h3><Icon name="lucide:history" /> Medical Timeline</h3>
-              <button class="view-more">See All History</button>
+              <NuxtLink to="/patient/history" class="view-more clickable">See All History</NuxtLink>
             </div>
             
             <div class="timeline-container">
-              <div v-for="(note, index) in patientNotes" :key="index" class="timeline-item">
+              <div v-for="(note, index) in displayedTimeline" :key="index" class="timeline-item">
                 <div class="timeline-marker"></div>
                 <div class="timeline-content">
                   <div class="timeline-header">
@@ -161,6 +161,8 @@ const currentDate = computed(() => {
   return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 })
 
+const displayedTimeline = computed(() => patientNotes.value.slice(0, 5))
+
 const printRecord = () => { window.print() }
 
 const addToCalendar = () => {
@@ -242,7 +244,19 @@ const addToCalendar = () => {
 .content-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.view-more { background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+.view-more {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.view-more:hover { background: #eff6ff; color: #1d4ed8; }
 
 .timeline-item { display: flex; gap: 15px; margin-bottom: 1.5rem; position: relative; }
 .timeline-marker { width: 3px; background: #e2e8f0; position: relative; margin-top: 10px; }

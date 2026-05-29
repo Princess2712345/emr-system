@@ -237,6 +237,69 @@ video {
   border-collapse: collapse;
 }
 
+/* Patient portal data tables */
+.patient-table-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.patient-data-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.patient-data-table th {
+  background: #f8fafc;
+  text-align: left;
+  padding: 1rem 1.25rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.patient-data-table td {
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.patient-data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.patient-data-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.portal-page .results-table th {
+  padding: 0.85rem 1rem;
+}
+
+.portal-page .results-table td {
+  padding: 0.85rem 1rem;
+}
+
+.portal-page .record-item,
+.portal-page .apt-item {
+  padding: 1.35rem 1.5rem;
+  gap: 1.25rem;
+}
+
+.portal-page .records-stack,
+.portal-page .appointment-stack {
+  gap: 1.15rem;
+}
+
 /* --- Cards & lists --- */
 .portal-page .record-item,
 .record-item,
