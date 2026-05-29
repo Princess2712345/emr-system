@@ -30,25 +30,28 @@
         <label for="username">Username</label>
         <input id="username" v-model="registerData.username" type="text" required />
 
-        <label for="register-password">Security Credentials</label>
-        <div class="password-field">
+        <label>Security Credentials</label>
+        <div class="password-wrapper">
           <input
-            id="register-password"
             v-model="registerData.password"
             :type="showPassword ? 'text' : 'password'"
             placeholder="Password"
             required
             autocomplete="new-password"
           />
-          <button
-            type="button"
-            class="password-toggle"
-            :aria-label="showPassword ? 'Hide password' : 'Show password'"
-            :aria-pressed="showPassword"
-            @click="showPassword = !showPassword"
-          >
-            <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
-          </button>
+          <div class="unique-id-section">
+            <span class="id-prefix">{{ registerData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
+            <span class="id-auto-label">Auto-assigned</span>
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+              :aria-pressed="showPassword"
+              @click.stop="showPassword = !showPassword"
+            >
+              <Icon :name="showPassword ? 'lucide:eye-off' : 'lucide:eye'" />
+            </button>
+          </div>
         </div>
 
         <p class="id-auto-notice">
@@ -142,7 +145,7 @@ const handleRegister = async () => {
 }
 
 .register-form {
-  max-width: 420px;
+  max-width: 380px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -209,59 +212,87 @@ const handleRegister = async () => {
   z-index: 1;
 }
 
-.password-field {
-  position: relative;
-  display: flex;
-  align-items: center;
-  z-index: 2;
-  background-color: rgba(255, 255, 255, 0.4);
+.register-form input:not(.id-input):not([type="radio"]),
+.password-wrapper {
+  background-color: rgba(255, 255, 255, 0.4) !important;
   border: 1.5px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
 }
 
-.password-field:focus-within {
+.password-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  z-index: 2;
+  border-radius: 8px;
+  position: relative;
+}
+
+.password-wrapper:focus-within {
   border-color: #2563eb;
   background-color: rgba(255, 255, 255, 0.7);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-.password-field input {
-  flex: 1;
-  width: 100%;
-  min-width: 0;
+.password-wrapper > input {
   border: none;
   background: transparent;
-  padding: 0.8rem 2.75rem 0.8rem 1rem;
+  padding: 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
-  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.unique-id-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(226, 232, 240, 0.3);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 2;
+  position: relative;
+}
+
+.id-prefix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.id-auto-label {
+  flex: 1;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: left;
 }
 
 .password-toggle {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
+  margin: 0;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
   color: #475569;
   cursor: pointer;
   z-index: 3;
   pointer-events: auto;
+  position: relative;
 }
 
 .password-toggle:hover {
   color: #1e40af;
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(37, 99, 235, 0.1);
 }
 
 .register-form > input:not([type="radio"]) {
@@ -282,7 +313,7 @@ const handleRegister = async () => {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-.register-form button {
+.register-form button[type="submit"] {
   background-color: #2563eb;
   color: white;
   padding: 1rem;
@@ -297,13 +328,13 @@ const handleRegister = async () => {
   z-index: 1;
 }
 
-.register-form button:hover {
+.register-form button[type="submit"]:hover {
   background-color: #059669; 
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
 }
 
-.register-form button:active {
+.register-form button[type="submit"]:active {
   transform: translateY(0);
 }
 
