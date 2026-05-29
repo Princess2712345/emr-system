@@ -2,6 +2,37 @@
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
+## Database (PostgreSQL + Prisma)
+
+Patient records live in the `Patient` table and are linked to portal logins in `User`.
+
+1. Copy `.env.example` to `.env` and set `DATABASE_URL`.
+2. Apply schema and migrations:
+
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+Or, for local development without migration history:
+
+```bash
+npm run db:push
+```
+
+3. Optional sample patients:
+
+```bash
+npm run db:seed
+```
+
+Default seed logins (password `Patient123!`):
+
+- `penny.rose@patient.emr` / MRN `MRN-1001`
+- `juan.delacruz@patient.emr` / MRN `MRN-1002`
+
+Staff can register more patients from **Dashboard → Registration** (`POST /api/patients`).
+
 ## Setup
 
 Make sure to install dependencies:

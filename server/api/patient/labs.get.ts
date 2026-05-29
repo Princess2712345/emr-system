@@ -21,8 +21,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const records = labs.map((lab) => ({
+    id: lab.id,
     name: lab.testName,
     type: categoryMap[lab.category] || lab.category,
+    category: lab.category,
     date: new Date(lab.dateReported).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     doctor: lab.uploadedBy || 'Clinical Lab',
     resultStatus: lab.status === 'Pending' ? 'Pending Review' : lab.status,

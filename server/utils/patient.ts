@@ -21,12 +21,18 @@ export async function requirePatientContext(userId: string) {
       statusMessage: 'Patient session required.'
     })
   }
-  const patient = await prisma.patient.findUnique({ where: { email: user.email } })
+  let patient = await prisma.patient.findUnique({ where: { email: user.email } })
+
   if (!patient) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Clinical patient profile not linked to this account.'
+    patient = await prisma.patient.create({
+      data: {
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        phone: 'N/A',
+        status: 'Active'
+      }
     })
   }
+
   return { user, patient }
 }

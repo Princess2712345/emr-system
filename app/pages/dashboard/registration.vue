@@ -64,7 +64,7 @@
                 </td>
                 <td><span class="id-badge">{{ patient.uniqueId || (patient.userAccount ? patient.userAccount.uniqueId : 'PAT-PENDING') }}</span></td>
                 <td><span class="role-text-badge">{{ patient.gender || (patient.userAccount ? 'Logged' : 'N/A') }}</span></td>
-                <td>{{ patient.birthDate || 'N/A' }}</td>
+                <td>{{ patient.birthDateDisplay || patient.birthDate || 'N/A' }}</td>
                 <td>
                   <span class="badge active">Active Portal</span>
                 </td>
@@ -119,7 +119,11 @@
               <label>Birth Date</label>
               <input v-model="form.birthDate" type="date" required />
             </div>
-            
+            <div class="form-group">
+              <label>Phone</label>
+              <input v-model="form.phone" type="tel" placeholder="Contact number" />
+            </div>
+
             <div class="form-group full-width" v-if="!isEditing">
               <label>Patient Portal Activation Password</label>
               <input v-model="form.password" type="password" placeholder="Temporary security access key" required />
@@ -159,7 +163,8 @@ const form = reactive({
   uniqueId: '',
   gender: 'Female',
   birthDate: '',
-  bloodType: 'O Positive'
+  bloodType: 'O Positive',
+  phone: ''
 })
 
 const { data: patients, refresh: reloadPatients } = await useFetch('/api/patients', {
@@ -187,7 +192,8 @@ const openCreateModal = () => {
     uniqueId: '',
     gender: 'Female',
     birthDate: '',
-    bloodType: 'O Positive'
+    bloodType: 'O Positive',
+    phone: ''
   })
   isModalOpen.value = true
 }
@@ -210,7 +216,8 @@ const openEditModal = (patient) => {
     uniqueId: rootId,
     gender: patient.gender || 'Female',
     birthDate: patient.birthDate || '',
-    bloodType: patient.bloodType || 'O Positive'
+    bloodType: patient.bloodType || 'O Positive',
+    phone: patient.phone || ''
   })
   isModalOpen.value = true
 }
@@ -249,12 +256,14 @@ const submitForm = async () => {
         middleName: form.middleName?.trim() || null,
         lastName: form.lastName.trim(),
         uniqueId: form.uniqueId.trim(),
-        role: 'PATIENT',
         age: calculatedAge || 24,
-        bloodType: form.bloodType || 'O Positive'
+        bloodType: form.bloodType || 'O Positive',
+        gender: form.gender,
+        birthDate: form.birthDate || null,
+        phone: form.phone?.trim() || 'N/A'
       }
 
-      const response = await $fetch('/api/auth/register', {
+      const response = await $fetch('/api/patients', {
         method: 'POST',
         body: payload
       })

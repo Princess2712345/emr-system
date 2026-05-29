@@ -1,4 +1,5 @@
 import { prisma } from '../../utils/prisma'
+import { requireResolvedPatient } from '../../utils/resolvePatient'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
@@ -13,18 +14,12 @@ export default defineEventHandler(async (event) => {
   if (method === 'POST') {
     const body = await readBody(event)
 
-    let targetedPatient = null
-    if (body.patientId) {
-      targetedPatient = await prisma.patient.findUnique({ where: { id: body.patientId } })
-    } else if (body.name) {
-      targetedPatient = await prisma.patient.findFirst({
-        where: { name: { contains: body.name, mode: 'insensitive' } }
-      })
-    }
-
-    if (!targetedPatient) {
-      throw createError({ statusCode: 404, statusMessage: 'Patient not found in registry.' })
-    }
+    const patient = await requireResolvedPatient({
+      patientId: body.patientId,
+      patientName: body.name || body.patientName,
+      uniqueId: body.uniqueId,
+      email: body.email
+    })
 
     const newAppointment = await prisma.appointment.create({
       data: {
@@ -33,8 +28,8 @@ export default defineEventHandler(async (event) => {
         duration: body.duration || '30 min',
         reason: body.reason || 'General Consultation',
         status: body.status || 'Pending',
-        patientId: targetedPatient.id,
-        patientName: targetedPatient.name,
+        patientId: patient.id,
+        patientName: patient.name,
         staffId: body.staffId || body.doctorId || null
       },
       include: { staff: true, patient: true }
@@ -43,8 +38,8 @@ export default defineEventHandler(async (event) => {
     await prisma.auditLog.create({
       data: {
         user: 'Staff',
-        action: `Scheduled appointment for ${targetedPatient.name}`,
-        resource: `Appointment-${newAppointment.id}`,
+        action: `Scheduled appointment for ${patient.name} on ${body.date}`,
+        resource: `Patient-${patient.id}`,
         severity: 'Info'
       }
     }).catch(() => {})

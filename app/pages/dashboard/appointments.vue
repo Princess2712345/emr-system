@@ -103,8 +103,8 @@
                 <label>Registered Patient File</label>
                 <select v-model="form.patientId" class="form-select">
                   <option value="">Select Target Profile</option>
-                  <option v-for="pat in patients" :key="pat.id" :value="pat.id">
-                    {{ pat.name }}
+                  <option v-for="pat in patientOptions" :key="pat.id" :value="pat.id">
+                    {{ pat.label }}
                   </option>
                 </select>
               </div>
@@ -172,9 +172,7 @@ const { data: staffMembers } = await useFetch('/api/admins', {
 });
 
 // Fetch master patients file registry 
-const { data: patients } = await useFetch('/api/patients', {
-  default: () => []
-});
+const { patientOptions } = usePatientRegistry();
 
 // Dynamic data filtering options based on state selections
 const filteredAppointments = computed(() => {
@@ -215,7 +213,7 @@ const submitBooking = async () => {
       }
     });
     
-    alert("Booking Confirmed and saved to system database!");
+    alert("Appointment linked to patient — it will appear on their portal account.");
     form.value = { patientId: '', staffId: '', time: '', date: '', reason: '', duration: '30 min' }; 
     refresh(); 
   } catch (err) {

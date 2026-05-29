@@ -1,21 +1,21 @@
-import { prisma } from '../../utils/prisma' // <-- Exactly 3 levels up to reach your root utils path!
+import { prisma } from '../../utils/prisma'
+import { requireResolvedPatient } from '../../utils/resolvePatient'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
-  
+
   try {
-    // === GET METHOD: FETCH RECORD MATCHES ===
     if (method === 'GET') {
       const query = getQuery(event)
       const search = (query.search as string || '').trim()
       const category = query.category as string || 'All'
 
-      const whereClause: any = {}
-      
+      const whereClause: Record<string, unknown> = {}
+
       if (category !== 'All') {
         whereClause.category = category
       }
-      
+
       if (search) {
         whereClause.OR = [
           { patientName: { contains: search, mode: 'insensitive' } },
@@ -26,57 +26,53 @@ export default defineEventHandler(async (event) => {
 
       return await prisma.labResult.findMany({
         where: whereClause,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        include: { patient: { select: { id: true, email: true, name: true } } }
       })
     }
 
-    // === POST METHOD: LOG NEW LAB RECORDS ===
     if (method === 'POST') {
       const body = await readBody(event)
-      const { testName, patientName, category, colorClass } = body
+      const { testName, category, colorClass, patientId, patientName } = body
 
-      if (!testName || !patientName || !category) {
-        throw createError({ statusCode: 400, statusMessage: 'Incomplete payload items.' })
+      if (!testName || !category) {
+        throw createError({ statusCode: 400, statusMessage: 'Test name and category are required.' })
       }
 
-      // 1. Search for the patient using the unified schema 'name' property
-      let patient = await prisma.patient.findFirst({
-        where: {
-          name: { equals: patientName.trim(), mode: 'insensitive' }
-        }
-      })
+      const patient = await requireResolvedPatient({ patientId, patientName })
+      const generatedRequestId = `#LAB-${Date.now().toString(36).toUpperCase()}`
 
-      if (!patient) {
-        throw createError({
-          statusCode: 404,
-          statusMessage: 'Patient must be registered before lab results can be uploaded.'
-        })
-      }
-
-      // 3. Generate a fresh lab tracking reference code
-      const generatedRequestId = `#LAB-${Math.floor(Math.random() * 8999) + 1000}`
-
-      // 4. Log the complete laboratory entry mapped tightly to the found or new patient ID
       const newRecord = await prisma.labResult.create({
         data: {
-          testName,
-          patientName,
+          testName: testName.trim(),
+          patientName: patient.name,
           category,
           requestId: generatedRequestId,
           colorClass: colorClass || 'teal',
           status: 'Pending',
-          patientId: patient.id
+          patientId: patient.id,
+          uploadedBy: 'Clinical Lab'
         }
       })
 
+      await prisma.auditLog.create({
+        data: {
+          user: 'Staff',
+          action: `Lab result uploaded for ${patient.name}: ${testName}`,
+          resource: `Patient-${patient.id}`,
+          severity: 'Info'
+        }
+      }).catch(() => {})
+
       return { success: true, record: newRecord }
     }
-
-  } catch (error: any) {
-    console.error("Database Endpoint Failure:", error)
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number; statusMessage?: string; message?: string }
+    console.error('Lab API error:', error)
+    if (err.statusCode) throw error
     throw createError({
       statusCode: 500,
-      statusMessage: error?.message || "Internal database operational write failure."
+      statusMessage: err.message || 'Lab operation failed.'
     })
   }
 })

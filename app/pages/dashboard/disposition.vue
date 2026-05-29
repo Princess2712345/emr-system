@@ -87,12 +87,13 @@
           </div>
           <form @submit.prevent="submitNewEntry">
             <div class="form-group">
-              <label>Patient Name</label>
-              <input v-model="newEntry.patientName" type="text" required placeholder="Enter name..." />
-            </div>
-            <div class="form-group">
-              <label>Patient ID</label>
-              <input v-model="newEntry.patientId" type="text" required placeholder="P-2026-XXXX" />
+              <label>Patient</label>
+              <select v-model="newEntry.patientId" class="modal-select" required>
+                <option value="">Select registered patient</option>
+                <option v-for="p in patientOptions" :key="p.id" :value="p.id">
+                  {{ p.label }}
+                </option>
+              </select>
             </div>
             <div class="form-group">
               <label>Disposition Type</label>
@@ -145,8 +146,9 @@ const filteredDispositions = computed(() => {
   });
 });
 
+const { patientOptions } = usePatientRegistry()
+
 const newEntry = ref({
-  patientName: '',
   patientId: '',
   type: 'Discharged',
   physician: ''
@@ -163,7 +165,7 @@ const submitNewEntry = async () => {
     alert('New patient disposition securely filed to clinical record database.')
     await reloadDispositions() // Triggers instant data refresh!
     
-    newEntry.value = { patientName: '', patientId: '', type: 'Discharged', physician: '' };
+    newEntry.value = { patientId: '', type: 'Discharged', physician: '' };
     isModalOpen.value = false;
   } catch (err) {
     console.error(err)

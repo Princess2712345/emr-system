@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
     const { user, patient } = await requirePatientContext(userId)
 
-    const [nextAppointment, recentLogs, recentDisposition] = await Promise.all([
+    const [nextAppointment, recentLabs, recentLogs, recentDisposition, upcomingCount] = await Promise.all([
       prisma.appointment.findFirst({
         where: {
           patientId: patient.id,
@@ -20,20 +20,61 @@ export default defineEventHandler(async (event) => {
         include: { staff: true },
         orderBy: { date: 'asc' }
       }),
+      prisma.labResult.findMany({
+        where: { patientId: patient.id },
+        take: 3,
+        orderBy: { dateReported: 'desc' }
+      }),
       prisma.auditLog.findMany({
-        where: { OR: [{ user: user.id }, { resource: { contains: patient.id } }] },
+        where: { resource: { contains: patient.id } },
         take: 5,
         orderBy: { timestamp: 'desc' }
       }),
       prisma.disposition.findFirst({
         where: { patientId: patient.id },
         orderBy: { dateTime: 'desc' }
+      }),
+      prisma.appointment.count({
+        where: {
+          patientId: patient.id,
+          status: { in: ['Pending', 'Confirmed', 'In Progress'] }
+        }
       })
     ])
 
     const staffLabel = nextAppointment?.staff
       ? `Dr. ${nextAppointment.staff.lastName}`
       : 'Clinical Staff'
+
+    const labNotes = recentLabs.map((lab) => ({
+      doctor: lab.uploadedBy || 'Clinical Lab',
+      date: new Date(lab.dateReported).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      content: `${lab.testName} (${lab.category}) — ${lab.status}`
+    }))
+
+    const auditNotes = recentLogs.map((log) => ({
+      doctor: log.user === 'Staff' ? 'Care team' : log.user,
+      date: new Date(log.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      content: log.action
+    }))
+
+    const dispositionNote = recentDisposition
+      ? [{
+          doctor: `Dr. ${recentDisposition.physician}`,
+          date: new Date(recentDisposition.dateTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          content: `Disposition: ${recentDisposition.type}`
+        }]
+      : []
+
+    const timelineNotes = [...labNotes, ...dispositionNote, ...auditNotes].slice(0, 6)
+
+    if (timelineNotes.length === 0) {
+      timelineNotes.push({
+        doctor: 'Registration',
+        date: new Date(patient.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        content: 'Patient portal account linked to clinical record.'
+      })
+    }
 
     return {
       success: true,
@@ -58,26 +99,15 @@ export default defineEventHandler(async (event) => {
             date: new Date(nextAppointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             details: `${nextAppointment.reason} • ${nextAppointment.time} • ${staffLabel}`
           }
-        : { date: 'None scheduled', details: 'Book from Appointments' },
-      timelineNotes: recentLogs.length > 0
-        ? recentLogs.map((log) => ({
-            doctor: log.user === user.id ? 'Your account' : log.user,
-            date: new Date(log.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            content: log.action
-          }))
-        : [
-            {
-              doctor: 'Registration',
-              date: new Date(patient.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              content: 'Patient portal account linked to clinical record.'
-            }
-          ]
+        : { date: 'None scheduled', details: upcomingCount > 0 ? 'Check Appointments tab' : 'Book from Appointments' },
+      timelineNotes
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number; statusMessage?: string; message?: string }
     console.error('Patient Dashboard API error:', error)
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to fetch clinical records.'
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || 'Failed to fetch clinical records.'
     })
   }
 })

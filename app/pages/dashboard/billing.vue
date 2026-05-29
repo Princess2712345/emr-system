@@ -116,8 +116,13 @@
           </div>
           <form @submit.prevent="handleInvoice">
             <div class="form-group">
-              <label>Select Patient Name</label>
-              <input type="text" v-model="newBill.patientName" placeholder="Type name..." required />
+              <label>Patient</label>
+              <select v-model="newBill.patientId" class="filter-dropdown" style="width: 100%;" required>
+                <option value="">Select registered patient</option>
+                <option v-for="p in patientOptions" :key="p.id" :value="p.id">
+                  {{ p.label }}
+                </option>
+              </select>
             </div>
             <div class="form-group">
               <label>Total Invoice Base Cost (₱)</label>
@@ -145,8 +150,10 @@ const searchQuery = ref('')
 const selectedStatus = ref('All')
 const isModalOpen = ref(false)
 
+const { patientOptions } = usePatientRegistry()
+
 const newBill = ref({
-  patientName: '',
+  patientId: '',
   amount: 150.00
 })
 
@@ -162,7 +169,7 @@ watch([searchQuery, selectedStatus], () => {
 })
 
 const openAddModal = () => {
-  newBill.value = { patientName: '', amount: 150.00 }
+  newBill.value = { patientId: '', amount: 150.00 }
   isModalOpen.value = true
 }
 
@@ -172,7 +179,7 @@ const handleInvoice = async () => {
       method: 'POST',
       body: newBill.value
     })
-    alert('Invoice generated successfully within systemic accounts.')
+    alert('Invoice linked to patient — it will appear on their billing portal.')
     await reloadInvoices()
     isModalOpen.value = false
   } catch (err) {

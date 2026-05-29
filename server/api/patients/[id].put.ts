@@ -19,12 +19,24 @@ export default defineEventHandler(async (event) => {
   const fullName = body.name
     || `${(body.firstName || patient.userAccount?.firstName || '').trim()} ${(body.lastName || patient.userAccount?.lastName || '').trim()}`.trim()
 
+  let birthDate: Date | null | undefined = undefined
+  if (body.birthDate !== undefined) {
+    if (!body.birthDate) {
+      birthDate = null
+    } else {
+      const parsed = new Date(body.birthDate)
+      birthDate = Number.isNaN(parsed.getTime()) ? null : parsed
+    }
+  }
+
   await prisma.$transaction(async (tx) => {
     await tx.patient.update({
       where: { id: patientId },
       data: {
         name: fullName || patient.name,
         phone: body.phone ?? patient.phone,
+        gender: body.gender ?? patient.gender,
+        birthDate: birthDate !== undefined ? birthDate : patient.birthDate,
         status: body.status ?? patient.status
       }
     })

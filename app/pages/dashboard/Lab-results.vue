@@ -101,8 +101,13 @@
           
           <form @submit.prevent="handleFileUpload">
             <div class="form-group">
-              <label>Patient Name</label>
-              <input v-model="newRecord.patientName" type="text" placeholder="Type patient name" required />
+              <label>Patient</label>
+              <select v-model="newRecord.patientId" class="modal-select" required>
+                <option value="">Select registered patient</option>
+                <option v-for="p in patientOptions" :key="p.id" :value="p.id">
+                  {{ p.label }}
+                </option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -131,7 +136,7 @@
 
             <div class="modal-actions">
               <button type="button" class="btn-secondary clickable" @click="isModalOpen = false">Cancel</button>
-              <button type="submit" class="add-btn clickable" :disabled="!selectedFile">
+              <button type="submit" class="add-btn clickable" :disabled="!newRecord.patientId || !newRecord.testName">
                 <Icon name="lucide:check" /> Complete Upload
               </button>
             </div>
@@ -204,8 +209,10 @@ const selectedLab = ref<any>(null)
 const selectedFile = ref<File | null>(null)
 
 // Modal Input Bindings Payload State Context
+const { patientOptions } = usePatientRegistry()
+
 const newRecord = ref({
-  patientName: '',
+  patientId: '',
   category: 'Hematology',
   testName: ''
 })
@@ -253,7 +260,7 @@ const handleFileUpload = async () => {
     const response = await $fetch<{ success: boolean }>('/api/labs/upload', {
       method: 'POST',
       body: {
-        patientName: newRecord.value.patientName,
+        patientId: newRecord.value.patientId,
         testName: newRecord.value.testName,
         category: newRecord.value.category,
         colorClass: assignedColor
@@ -264,12 +271,13 @@ const handleFileUpload = async () => {
       await reloadLabData() // Direct reactive refresh from the database
       isModalOpen.value = false
       selectedFile.value = null
-      newRecord.value = { patientName: '', category: 'Hematology', testName: '' }
-      alert('Lab result successfully saved to your database instance directory!')
+      newRecord.value = { patientId: '', category: 'Hematology', testName: '' }
+      alert('Lab result linked to patient — it will appear on their portal account.')
     }
   } catch (error) {
     console.error('Failed to submit document row payload:', error)
-    alert('Failed to insert record profile entries.')
+    const err = error as { data?: { statusMessage?: string } }
+    alert(err.data?.statusMessage || 'Failed to save lab result. Select a registered patient.')
   }
 }
 

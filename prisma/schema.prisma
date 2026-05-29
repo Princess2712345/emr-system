@@ -41,18 +41,24 @@ model User {
 model Patient {
   id           String        @id @default(uuid())
   name         String
-  email        String        @unique 
+  email        String        @unique
   phone        String        @default("N/A")
-  status       String        @default("Active")   
+  gender       String?
+  birthDate    DateTime?
+  status       String        @default("Active")
   createdAt    DateTime      @default(now())
-  
-  // The Patient record cleanly points back to the primary User account
+  updatedAt    DateTime      @updatedAt
+
+  // Clinical profile linked to portal login (User) by email
   userAccount  User          @relation(fields: [email], references: [email], onDelete: Cascade)
 
   appointments Appointment[]
   bills        Invoice[]
   labResults   LabResult[]
   dispositions Disposition[]
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Appointment {

@@ -22,6 +22,14 @@ export default defineEventHandler(async (event) => {
     return patients.map((patient) => {
       const ua = patient.userAccount
       const displayName = patient.name || (ua ? `${ua.firstName} ${ua.lastName}` : 'Unknown')
+      const birthDateFormatted = patient.birthDate
+        ? new Date(patient.birthDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })
+        : null
+
       return {
         id: patient.id,
         name: displayName,
@@ -34,7 +42,11 @@ export default defineEventHandler(async (event) => {
         middleName: ua?.middleName,
         bloodType: ua?.bloodType,
         age: ua?.age,
-        gender: ua ? 'Logged' : 'N/A',
+        gender: patient.gender || 'N/A',
+        birthDate: patient.birthDate
+          ? new Date(patient.birthDate).toISOString().slice(0, 10)
+          : null,
+        birthDateDisplay: birthDateFormatted,
         status: patient.status || 'Active',
         userAccount: ua,
         date: new Date(patient.createdAt).toLocaleDateString('en-US', {

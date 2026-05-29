@@ -1,31 +1,48 @@
-// server/api/dispositions.post.ts
 import { prisma } from '../utils/prisma'
+import { requireResolvedPatient } from '../utils/resolvePatient'
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
-    const { patientName, patientId, type, physician } = body
+    const { patientName, patientId, type, physician, uniqueId, email } = body
 
-    if (!patientName || !patientId || !type || !physician) {
-      throw createError({ statusCode: 400, statusMessage: 'All fields are strictly required.' })
+    if (!type || !physician) {
+      throw createError({ statusCode: 400, statusMessage: 'Disposition type and physician are required.' })
     }
+
+    const patient = await requireResolvedPatient({
+      patientId,
+      patientName,
+      uniqueId,
+      email
+    })
 
     const createdRecord = await prisma.disposition.create({
       data: {
-        patientName: patientName.trim(),
-        patientId: patientId.trim(),
+        patientName: patient.name,
+        patientId: patient.id,
         type,
         physician: physician.trim()
       }
     })
 
-    return { success: true, record: createdRecord }
+    await prisma.auditLog.create({
+      data: {
+        user: 'Staff',
+        action: `Disposition (${type}) recorded for ${patient.name}`,
+        resource: `Patient-${patient.id}`,
+        severity: 'Info'
+      }
+    }).catch(() => {})
 
-  } catch (error: any) {
-    console.error('Failed to write operational database entry:', error)
-    throw createError({ 
-      statusCode: error.statusCode || 500, 
-      statusMessage: error.statusMessage || 'Failed to complete operational database entry write.' 
+    return { success: true, record: createdRecord }
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number; statusMessage?: string; message?: string }
+    console.error('Disposition write failed:', error)
+    if (err.statusCode) throw error
+    throw createError({
+      statusCode: 500,
+      statusMessage: err.message || 'Failed to save disposition record.'
     })
   }
 })
