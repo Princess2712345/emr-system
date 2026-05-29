@@ -16,9 +16,12 @@ export function useAuth() {
   }
 
   const initials = computed(() => {
-    const u = user.value as { firstName?: string; lastName?: string } | null
-    if (!u?.firstName) return 'PT'
-    return `${u.firstName[0] || ''}${u.lastName?.[0] || ''}`.toUpperCase()
+    const u = user.value as { firstName?: string; lastName?: string; username?: string } | null
+    if (!u) return 'PT'
+    const first = u.firstName?.[0] || ''
+    const last = u.lastName?.[0] || ''
+    if (first || last) return `${first}${last}`.toUpperCase()
+    return (u.username?.slice(0, 2) || 'PT').toUpperCase()
   })
 
   onMounted(loadUser)

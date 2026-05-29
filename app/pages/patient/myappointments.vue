@@ -3,7 +3,7 @@
       <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>My Appointments</h1>
-          <p class="current-date">Manage your schedule and visit history</p>
+          <p class="current-date">{{ displayName }} • MRN {{ registryId }}</p>
         </div>
         
         <div class="header-actions portal-header-actions">
@@ -11,7 +11,7 @@
             <Icon name="lucide:calendar-plus" /> Book New Appointment
           </button>
           <div class="profile-chip">
-            <div class="avatar-circle purple-theme" title="View Profile" @click="viewProfile">{{ userInitials }}</div>
+            <div class="avatar-circle purple-theme" title="View Profile" @click="viewProfile">{{ initials }}</div>
           </div>
         </div>
       </header>
@@ -264,7 +264,7 @@ import { ref, computed, onMounted } from 'vue'
 
 const isLoading = ref(true)
 const currentFilter = ref('All')
-const userInitials = ref('PR')
+const { initials, displayName, registryId, requirePatientSession } = usePatientHeader()
 const userId = ref('')
 const isBookModalOpen = ref(false)
 const isSubmitting = ref(false)
@@ -327,15 +327,9 @@ const filteredAppointments = computed(() => {
 
 onMounted(async () => {
   try {
-    const cachedUser = localStorage.getItem('user_data')
-    if (!cachedUser) return navigateTo('/auth/login')
-
-    const user = JSON.parse(cachedUser)
+    const user = requirePatientSession()
+    if (!user) return
     userId.value = user.id
-
-    if (user.firstName && user.lastName) {
-      userInitials.value = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-    }
 
     const [data, staff] = await Promise.all([
       $fetch(`/api/patient/appointments?userId=${user.id}`),

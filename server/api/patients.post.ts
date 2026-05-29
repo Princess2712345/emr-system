@@ -19,10 +19,10 @@ export default defineEventHandler(async (event) => {
       birthDate
     } = body
 
-    if (!email || !password || !firstName || !lastName || !uniqueId) {
+    if (!email || !password || !firstName || !lastName) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Email, password, first name, last name, and patient ID are required.'
+        statusMessage: 'Email, password, first name, and last name are required.'
       })
     }
 
@@ -32,7 +32,6 @@ export default defineEventHandler(async (event) => {
       firstName,
       middleName,
       lastName,
-      uniqueId,
       age: age != null ? parseInt(age) : undefined,
       bloodType,
       phone,

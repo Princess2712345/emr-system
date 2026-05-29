@@ -2,6 +2,7 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { PrismaClient } from 'db-client'
 import bcrypt from 'bcryptjs'
 import { registerPatientAccount } from '../../utils/patientRegistry'
+import { generateUniqueStaffId, isStaffRole } from '../../utils/uniqueIdGenerator'
 
 const prisma = new PrismaClient()
 
@@ -24,7 +25,7 @@ export default defineEventHandler(async (event) => {
       birthDate
     } = body
 
-    if (!email || !password || !firstName || !lastName || !uniqueId || !role) {
+    if (!email || !password || !firstName || !lastName || !role) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Missing mandatory registration field attributes.'
@@ -53,7 +54,7 @@ export default defineEventHandler(async (event) => {
         firstName,
         middleName,
         lastName,
-        uniqueId,
+        uniqueId: uniqueId?.trim() || undefined,
         age: age ? parseInt(age) : undefined,
         bloodType,
         phone: body.phone,
@@ -73,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         success: true,
-        message: 'Patient account and clinical profile registered.',
+        message: `Patient registered. Assigned MRN: ${transactionResult.newUser.uniqueId}`,
         user: {
           id: transactionResult.newUser.id,
           email: transactionResult.newUser.email,
@@ -96,8 +97,7 @@ export default defineEventHandler(async (event) => {
       where: {
         OR: [
           { email: normalizedEmail },
-          { username: baseUsername.toLowerCase() },
-          { uniqueId: uniqueId.trim() }
+          { username: baseUsername.toLowerCase() }
         ]
       }
     })
@@ -105,11 +105,14 @@ export default defineEventHandler(async (event) => {
     if (existingUser) {
       throw createError({
         statusCode: 409,
-        statusMessage: 'User credentials (Email, Username, or unique ID) are already registered.'
+        statusMessage: 'Email or username is already registered.'
       })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
+    const assignedUniqueId = isStaffRole(normalizedRole)
+      ? await generateUniqueStaffId()
+      : await generateUniqueMrn()
 
     const newUser = await prisma.user.create({
       data: {
@@ -119,7 +122,7 @@ export default defineEventHandler(async (event) => {
         firstName: firstName.trim(),
         middleName: middleName ? middleName.trim() : null,
         lastName: lastName.trim(),
-        uniqueId: uniqueId.trim(),
+        uniqueId: assignedUniqueId,
         age: age ? parseInt(age) : 24,
         bloodType: bloodType || 'O Positive',
         role: normalizedRole,
@@ -138,7 +141,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      message: 'Account successfully registered to directory database.',
+      message: `Account registered. Assigned ${isStaffRole(normalizedRole) ? 'Staff #' : 'MRN #'}: ${assignedUniqueId}`,
       user: {
         id: newUser.id,
         email: newUser.email,

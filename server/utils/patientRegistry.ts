@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
+import { generateUniqueMrn } from './uniqueIdGenerator'
 
 export type RegisterPatientInput = {
   email: string
@@ -7,7 +8,7 @@ export type RegisterPatientInput = {
   firstName: string
   middleName?: string | null
   lastName: string
-  uniqueId: string
+  uniqueId?: string
   age?: number
   bloodType?: string
   phone?: string
@@ -25,14 +26,12 @@ function parseBirthDate(value?: string | Date | null) {
 export async function registerPatientAccount(input: RegisterPatientInput) {
   const normalizedEmail = input.email.toLowerCase().trim()
   const baseUsername = (input.username || normalizedEmail.split('@')[0]).toLowerCase().trim()
-  const uniqueId = input.uniqueId.trim()
 
   const existingUser = await prisma.user.findFirst({
     where: {
       OR: [
         { email: normalizedEmail },
-        { username: baseUsername },
-        { uniqueId }
+        { username: baseUsername }
       ]
     }
   })
@@ -40,7 +39,7 @@ export async function registerPatientAccount(input: RegisterPatientInput) {
   if (existingUser) {
     throw createError({
       statusCode: 409,
-      statusMessage: 'User credentials (Email, Username, or unique ID) are already registered.'
+      statusMessage: 'Email or username is already registered.'
     })
   }
 
@@ -49,6 +48,16 @@ export async function registerPatientAccount(input: RegisterPatientInput) {
   const fullName = `${input.firstName.trim()} ${input.lastName.trim()}`
 
   return prisma.$transaction(async (tx) => {
+    const uniqueId = input.uniqueId?.trim() || await generateUniqueMrn(tx)
+
+    const idTaken = await tx.user.findUnique({ where: { uniqueId } })
+    if (idTaken) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'Generated MRN conflict. Please retry registration.'
+      })
+    }
+
     const newUser = await tx.user.create({
       data: {
         email: normalizedEmail,

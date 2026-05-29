@@ -31,13 +31,13 @@
         <input id="username" v-model="registerData.username" type="text" required />
 
         <label>Security Credentials</label>
-        <div class="password-wrapper">
-          <input v-model="registerData.password" type="password" placeholder="Password" required />
-          <div class="unique-id-section">
-            <span class="id-prefix">{{ registerData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input v-model="registerData.uniqueId" type="text" placeholder="0000" class="id-input" required />
-          </div>
-        </div>
+        <input v-model="registerData.password" type="password" placeholder="Password" required />
+
+        <p class="id-auto-notice">
+          <Icon name="lucide:badge-check" />
+          Your {{ registerData.role === 'admin' ? 'Staff #' : 'MRN #' }} will be assigned automatically
+          when you complete registration (unique, system-generated).
+        </p>
 
         <button type="submit">Complete Registration</button>
         
@@ -61,19 +61,22 @@ const registerData = ref({
   firstName: '',
   middleName: '',
   lastName: '',
-  uniqueId: '',
   role: 'patient' 
 })
 
 const handleRegister = async () => {
   try {
-    const response = await $fetch<{ success: boolean }>('/api/auth/register', {
+    const response = await $fetch<{ success: boolean; user?: { uniqueId?: string; firstName?: string; lastName?: string } }>('/api/auth/register', {
       method: 'POST',
       body: registerData.value
     })
 
     if (response.success) {
-      alert('Registration successful! Redirecting to login page...')
+      const idLabel = registerData.value.role === 'admin' ? 'Staff #' : 'MRN #'
+      const assigned = response.user?.uniqueId || 'see email from clinic'
+      alert(
+        `Registration successful!\n\n${response.user?.firstName || ''} ${response.user?.lastName || ''}\n${idLabel}: ${assigned}\n\nUse this ID when signing in.`
+      )
       await navigateTo('/auth/login')
     }
   } catch (error: any) {
@@ -300,5 +303,19 @@ const handleRegister = async () => {
 .login-text a:hover {
   color: #1e3a8a;
   text-decoration: underline;
+}
+
+.id-auto-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  line-height: 1.45;
 }
 </style>

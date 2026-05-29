@@ -103,9 +103,13 @@
               <label>Log Email Address</label>
               <input v-model="form.email" type="email" placeholder="patient@example.com" required :disabled="isEditing" />
             </div>
-            <div class="form-group">
-              <label>Unique Patient ID Registry</label>
-              <input v-model="form.uniqueId" type="text" placeholder="e.g. PAT-2026-88" required :disabled="isEditing" />
+            <div v-if="isEditing" class="form-group">
+              <label>Medical Record Number (MRN)</label>
+              <input v-model="form.uniqueId" type="text" disabled />
+            </div>
+            <div v-else class="form-group full-width">
+              <label>Medical Record Number (MRN)</label>
+              <p class="field-hint">Assigned automatically by the system when the profile is created (e.g. MRN-2026-000042). No duplicates.</p>
             </div>
             <div class="form-group">
               <label>Biological Sex</label>
@@ -255,7 +259,6 @@ const submitForm = async () => {
         firstName: form.firstName.trim(),
         middleName: form.middleName?.trim() || null,
         lastName: form.lastName.trim(),
-        uniqueId: form.uniqueId.trim(),
         age: calculatedAge || 24,
         bloodType: form.bloodType || 'O Positive',
         gender: form.gender,
@@ -269,7 +272,8 @@ const submitForm = async () => {
       })
       
       if (response.success) {
-        alert('Patient profile successfully initialized across identity and clinical records.')
+        const mrn = response.user?.uniqueId || 'assigned'
+        alert(`Patient profile created.\n\nName: ${form.firstName} ${form.lastName}\nMRN: ${mrn}\n\nShare this MRN with the patient for portal login.`)
       }
     }
     
@@ -371,6 +375,16 @@ const submitForm = async () => {
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-group.full-width { grid-column: span 2; }
+.field-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+  padding: 0.65rem 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
 .form-group label { font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
 .form-group input, .form-group select { padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 0.9rem; }
 .form-group input:disabled { background: #f1f5f9; color: #64748b; cursor: not-allowed; }

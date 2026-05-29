@@ -3,15 +3,15 @@
       <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>Health Records</h1>
-          <p class="current-date">Your clinical history and test results</p>
+          <p class="current-date">{{ displayName }} • MRN {{ registryId }}</p>
         </div>
         
         <div class="header-actions portal-header-actions">
           <button class="add-btn clickable" @click="handleRequestRecord">
             <Icon name="lucide:file-up" /> Request Medical Record
           </button>
-          <div class="profile-chip" @click="handleProfileClick">
-            <div class="avatar-circle purple-theme">PRP</div>
+          <div class="profile-chip" @click="handleProfileClick" :title="displayName">
+            <div class="avatar-circle purple-theme">{{ initials }}</div>
           </div>
         </div>
       </header>
@@ -229,6 +229,7 @@ definePageMeta({ layout: 'patient' })
 
 import { ref, computed, onMounted } from 'vue'
 
+const { initials, displayName, registryId, requirePatientSession } = usePatientHeader()
 const route = useRoute()
 
 const recordFilter = ref('All')
@@ -244,9 +245,8 @@ const selectedRecord = ref(null)
 
 onMounted(async () => {
   try {
-    const cachedUser = localStorage.getItem('user_data')
-    if (!cachedUser) return navigateTo('/auth/login')
-    const user = JSON.parse(cachedUser)
+    const user = requirePatientSession()
+    if (!user) return
     userId.value = user.id
     const data = await $fetch(`/api/patient/labs?userId=${user.id}`)
     if (data.success) {

@@ -22,8 +22,15 @@
           <input v-model="loginData.password" type="password" placeholder="Password" required />
           <div class="unique-id-section">
             <span class="id-prefix">{{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</span>
-            <input v-model="loginData.uniqueId" type="text" placeholder="0000" class="id-input" required />
+            <input
+              v-model="loginData.uniqueId"
+              type="text"
+              :placeholder="loginData.role === 'admin' ? 'e.g. STAFF-2026-000001' : 'e.g. MRN-2026-000001'"
+              class="id-input"
+              required
+            />
           </div>
+          <p class="id-login-hint">Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.</p>
         </div>
         <button type="submit">Sign In</button>
 
@@ -234,6 +241,13 @@ const handleLogin = async () => {
   padding: 0.8rem 1rem;
   font-size: 1rem;
   transition: all 0.2s ease;
+}
+
+.id-login-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  z-index: 1;
 }
 
 .login-form input:focus:not(.id-input) {

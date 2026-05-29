@@ -3,15 +3,15 @@
       <header class="top-bar portal-top-bar">
         <div class="header-info">
           <h1>Billing & Payments</h1>
-          <p class="current-date">Manage your invoices and insurance coverage</p>
+          <p class="current-date">{{ displayName }} • MRN {{ registryId }}</p>
         </div>
         
         <div class="header-actions portal-header-actions">
           <button class="add-btn clickable" @click="openPaymentModal(null)">
             <Icon name="lucide:wallet" /> Quick Pay
           </button>
-          <div class="profile-chip" @click="handleProfileClick">
-            <div class="avatar-circle purple-theme">PRP</div>
+          <div class="profile-chip" @click="handleProfileClick" :title="displayName">
+            <div class="avatar-circle purple-theme">{{ initials }}</div>
           </div>
         </div>
       </header>
@@ -183,6 +183,8 @@ definePageMeta({ layout: 'patient' })
 
 import { ref, computed, onMounted } from 'vue'
 
+const { initials, displayName, registryId, requirePatientSession } = usePatientHeader()
+
 const billingFilter = ref('All')
 const isPaymentModalOpen = ref(false)
 const isInsuranceModalOpen = ref(false)
@@ -212,9 +214,8 @@ const dueByLabel = ref('No outstanding balance')
 
 onMounted(async () => {
   try {
-    const cachedUser = localStorage.getItem('user_data')
-    if (!cachedUser) return navigateTo('/auth/login')
-    const user = JSON.parse(cachedUser)
+    const user = requirePatientSession()
+    if (!user) return
     const data = await $fetch(`/api/patient/billing?userId=${user.id}`)
     if (data.success) {
       bills.value = data.bills
