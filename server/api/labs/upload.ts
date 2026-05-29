@@ -1,5 +1,9 @@
 import { prisma } from '../../utils/prisma'
 import { requireResolvedPatient } from '../../utils/resolvePatient'
+import {
+  buildDefaultInterpretation,
+  buildDefaultResultDetails
+} from '../../utils/labResultDetails'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
@@ -33,7 +37,16 @@ export default defineEventHandler(async (event) => {
 
     if (method === 'POST') {
       const body = await readBody(event)
-      const { testName, category, colorClass, patientId, patientName } = body
+      const {
+        testName,
+        category,
+        colorClass,
+        patientId,
+        patientName,
+        findings,
+        interpretation,
+        status: inputStatus
+      } = body
 
       if (!testName || !category) {
         throw createError({ statusCode: 400, statusMessage: 'Test name and category are required.' })
@@ -42,6 +55,9 @@ export default defineEventHandler(async (event) => {
       const patient = await requireResolvedPatient({ patientId, patientName })
       const generatedRequestId = `#LAB-${Date.now().toString(36).toUpperCase()}`
 
+      const resultLines = buildDefaultResultDetails(category)
+      const recordStatus = inputStatus === 'Pending' ? 'Pending' : 'Completed'
+
       const newRecord = await prisma.labResult.create({
         data: {
           testName: testName.trim(),
@@ -49,9 +65,16 @@ export default defineEventHandler(async (event) => {
           category,
           requestId: generatedRequestId,
           colorClass: colorClass || 'teal',
-          status: 'Pending',
+          status: recordStatus,
           patientId: patient.id,
-          uploadedBy: 'Clinical Lab'
+          uploadedBy: 'Clinical Lab',
+          findings: findings?.trim() || null,
+          interpretation:
+            interpretation?.trim()
+            || (recordStatus === 'Completed'
+              ? buildDefaultInterpretation(testName.trim(), category)
+              : null),
+          resultDetails: recordStatus === 'Completed' ? resultLines : undefined
         }
       })
 

@@ -57,7 +57,7 @@
             </div>
             
             <div class="records-stack">
-              <div v-for="(record, index) in filteredRecords" :key="index" class="record-item">
+              <div v-for="record in filteredRecords" :key="record.id" class="record-item">
                 <div class="record-icon-box">
                   <Icon :name="record.type === 'Labs' ? 'lucide:test-tube-2' : 'lucide:clipboard-list'" />
                 </div>
@@ -65,7 +65,7 @@
                 <div class="record-main-info">
                   <div class="record-header">
                     <span class="record-title">{{ record.name }}</span>
-                    <span :class="['status-pill', record.resultStatus.toLowerCase().replace(' ', '-')]">
+                    <span :class="['status-pill', statusClass(record.resultStatus)]">
                       {{ record.resultStatus }}
                     </span>
                   </div>
@@ -114,6 +114,110 @@
           </aside>
         </div>
       </div>
+
+    <Transition name="fade">
+      <div v-if="isDetailOpen" class="detail-overlay" @click.self="closeDetail" />
+    </Transition>
+
+    <Transition name="slide-panel">
+      <aside v-if="isDetailOpen" class="result-detail-panel">
+        <div class="detail-panel-header">
+          <button type="button" class="detail-close-btn clickable" @click="closeDetail">
+            <Icon name="lucide:x" />
+          </button>
+          <span v-if="selectedRecord" :class="['status-pill', statusClass(selectedRecord.resultStatus)]">
+            {{ selectedRecord.resultStatus }}
+          </span>
+        </div>
+
+        <div v-if="detailLoading" class="detail-loading">
+          <Icon name="lucide:loader-2" class="spin-icon" />
+          <p>Loading results…</p>
+        </div>
+
+        <div v-else-if="selectedRecord" class="detail-panel-body">
+          <div class="detail-hero">
+            <div class="detail-icon" :class="selectedRecord.colorClass || 'teal'">
+              <Icon name="lucide:flask-conical" />
+            </div>
+            <h2>{{ selectedRecord.name }}</h2>
+            <p class="detail-sub">{{ selectedRecord.category }} • {{ selectedRecord.requestId }}</p>
+          </div>
+
+          <div class="detail-meta-grid">
+            <div class="meta-cell">
+              <span class="meta-label">Report date</span>
+              <span class="meta-value">{{ selectedRecord.date }}</span>
+            </div>
+            <div class="meta-cell">
+              <span class="meta-label">Ordered by</span>
+              <span class="meta-value">{{ selectedRecord.doctor }}</span>
+            </div>
+            <div class="meta-cell">
+              <span class="meta-label">Patient</span>
+              <span class="meta-value">{{ selectedRecord.patientName }}</span>
+            </div>
+            <div class="meta-cell">
+              <span class="meta-label">Request ID</span>
+              <span class="meta-value id-mono">{{ selectedRecord.requestId }}</span>
+            </div>
+          </div>
+
+          <section v-if="selectedRecord.pending" class="detail-pending-box">
+            <Icon name="lucide:clock" />
+            <h3>Results pending review</h3>
+            <p>Your sample has been received. Final values will appear here once the laboratory completes review.</p>
+          </section>
+
+          <section v-else class="detail-results-section">
+            <h3 class="section-title">Test results</h3>
+            <div class="results-table-wrap">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th>Test</th>
+                    <th>Result</th>
+                    <th>Reference</th>
+                    <th>Flag</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(line, idx) in selectedRecord.lines" :key="idx">
+                    <td class="test-name">{{ line.name }}</td>
+                    <td class="test-value">
+                      {{ line.value }}<span v-if="line.unit" class="unit"> {{ line.unit }}</span>
+                    </td>
+                    <td class="test-range">{{ line.range }}</td>
+                    <td>
+                      <span :class="['flag-badge', line.flag]">{{ line.flag }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div v-if="selectedRecord.findings" class="findings-box">
+              <h4>Clinical findings</h4>
+              <p>{{ selectedRecord.findings }}</p>
+            </div>
+
+            <div v-if="selectedRecord.interpretation" class="interpretation-box">
+              <h4>Interpretation</h4>
+              <p>{{ selectedRecord.interpretation }}</p>
+            </div>
+          </section>
+
+          <div class="detail-panel-actions">
+            <button type="button" class="action-primary clickable" @click="handlePrint">
+              <Icon name="lucide:printer" /> Print report
+            </button>
+            <button type="button" class="action-secondary clickable" @click="handleDownload(selectedRecord)">
+              <Icon name="lucide:download" /> Download PDF
+            </button>
+          </div>
+        </div>
+      </aside>
+    </Transition>
   </div>
 </template>
 
@@ -127,12 +231,18 @@ const bloodType = ref('—')
 const activeMeds = ref(0)
 const records = ref([])
 const medications = ref([])
+const userId = ref('')
+
+const isDetailOpen = ref(false)
+const detailLoading = ref(false)
+const selectedRecord = ref(null)
 
 onMounted(async () => {
   try {
     const cachedUser = localStorage.getItem('user_data')
     if (!cachedUser) return navigateTo('/auth/login')
     const user = JSON.parse(cachedUser)
+    userId.value = user.id
     const data = await $fetch(`/api/patient/labs?userId=${user.id}`)
     if (data.success) {
       bloodType.value = data.bloodType
@@ -143,6 +253,18 @@ onMounted(async () => {
     console.error('Labs load failed:', e)
   }
 })
+
+const statusClass = (status) => {
+  const s = (status || '').toLowerCase()
+  if (s.includes('pending')) return 'pending-review'
+  if (s.includes('completed') || s.includes('normal')) return 'normal'
+  return 'needs-review'
+}
+
+const closeDetail = () => {
+  isDetailOpen.value = false
+  selectedRecord.value = null
+}
 
 // --- COMPUTED ---
 const filteredRecords = computed(() => {
@@ -163,12 +285,40 @@ const handleVitalClick = (type) => {
   alert(`Viewing historical trends for: ${type}`)
 }
 
-const handleViewResults = (record) => {
-  alert(`Displaying detailed lab breakdown for: ${record.name}\nDate: ${record.date}`)
+const handleViewResults = async (record) => {
+  if (!userId.value || !record?.id) return
+
+  isDetailOpen.value = true
+  detailLoading.value = true
+  selectedRecord.value = { ...record, lines: [] }
+
+  try {
+    const data = await $fetch(`/api/patient/labs/${record.id}?userId=${userId.value}`)
+    if (data.success && data.record) {
+      selectedRecord.value = data.record
+    }
+  } catch (e) {
+    console.error('Lab detail load failed:', e)
+    alert('Could not load result details. Please try again.')
+    closeDetail()
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+const handlePrint = () => {
+  if (!selectedRecord.value) return
+  window.print()
 }
 
 const handleDownload = (record) => {
-  alert(`Generating secure PDF for ${record.name}... Download starting soon.`)
+  const target = record || selectedRecord.value
+  if (!target) return
+  if (target.filePath) {
+    window.open(target.filePath, '_blank')
+    return
+  }
+  alert(`PDF for ${target.name} (${target.requestId}) will be available once the file is uploaded by the lab.`)
 }
 
 const handleOpenGuide = () => {
@@ -225,8 +375,10 @@ const handleRequestRefill = () => {
 .record-main-info { flex: 1; }
 .record-title { font-weight: 700; color: #1e3a8a; font-size: 1rem; }
 .status-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; margin-left: 10px; vertical-align: middle; }
-.status-pill.normal { background: #dcfce7; color: #166534; }
+.status-pill.normal,
+.status-pill.completed { background: #dcfce7; color: #166534; }
 .status-pill.needs-review { background: #fef2f2; color: #991b1b; }
+.status-pill.pending-review { background: #fef3c7; color: #b45309; }
 .record-meta { display: flex; gap: 15px; font-size: 0.85rem; color: #64748b; margin-top: 4px; }
 .record-meta span { display: flex; align-items: center; gap: 5px; }
 
@@ -258,4 +410,254 @@ const handleRequestRefill = () => {
 
 .clickable { cursor: pointer; }
 .clickable:active { transform: scale(0.98); }
+
+/* --- RESULT DETAIL PANEL --- */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 2100;
+  backdrop-filter: blur(2px);
+}
+
+.result-detail-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(480px, 100vw);
+  height: 100vh;
+  background: white;
+  z-index: 2101;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.detail-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.detail-close-btn {
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+}
+
+.detail-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #64748b;
+}
+
+.spin-icon { animation: spin 1s linear infinite; font-size: 1.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.detail-hero { text-align: center; margin-bottom: 1.5rem; }
+.detail-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+.detail-icon.teal { background: #ccfbf1; color: #0d9488; }
+.detail-icon.purple { background: #f3e8ff; color: #7e22ce; }
+.detail-icon.pink { background: #fce7f3; color: #db2777; }
+
+.detail-hero h2 {
+  font-size: 1.35rem;
+  color: #1e3a8a;
+  margin: 0 0 0.35rem;
+  font-weight: 800;
+}
+
+.detail-sub { color: #64748b; font-size: 0.85rem; margin: 0; }
+
+.detail-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.meta-cell {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.meta-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.meta-value { font-size: 0.85rem; font-weight: 600; color: #1e293b; }
+.id-mono { font-family: ui-monospace, monospace; font-size: 0.75rem; }
+
+.detail-pending-box {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  color: #92400e;
+}
+
+.detail-pending-box h3 { margin: 0.75rem 0 0.5rem; font-size: 1.1rem; }
+.detail-pending-box p { margin: 0; font-size: 0.9rem; line-height: 1.5; }
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.results-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.results-table {
+  width: 100%;
+  min-width: 360px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.results-table th {
+  background: #f8fafc;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.results-table td {
+  padding: 0.65rem 0.75rem;
+  border-top: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.test-name { font-weight: 600; color: #1e3a8a; }
+.test-value { font-weight: 700; }
+.unit { font-weight: 500; color: #64748b; font-size: 0.8rem; }
+
+.flag-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.flag-badge.normal { background: #dcfce7; color: #166534; }
+.flag-badge.high { background: #fee2e2; color: #991b1b; }
+.flag-badge.low { background: #dbeafe; color: #1d4ed8; }
+
+.findings-box,
+.interpretation-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.findings-box h4,
+.interpretation-box h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.findings-box p,
+.interpretation-box p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.detail-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.action-primary,
+.action-secondary {
+  width: 100%;
+  padding: 0.85rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+}
+
+.action-primary { background: #2563eb; color: white; }
+.action-primary:hover { background: #1d4ed8; }
+.action-secondary { background: white; border: 1.5px solid #e2e8f0; color: #475569; }
+.action-secondary:hover { border-color: #2563eb; color: #2563eb; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-panel-enter-active, .slide-panel-leave-active { transition: transform 0.3s ease; }
+.slide-panel-enter-from, .slide-panel-leave-to { transform: translateX(100%); }
+
+@media (max-width: 768px) {
+  .record-item { flex-wrap: wrap; }
+  .record-actions { width: 100%; justify-content: flex-end; }
+  .result-detail-panel { width: 100vw; }
+}
 </style>

@@ -1,5 +1,6 @@
 import { prisma } from '../../utils/prisma'
 import { requirePatientContext } from '../../utils/patient'
+import { enrichLabRecord } from '../../utils/labResultDetails'
 
 export default defineEventHandler(async (event) => {
   const userId = getQuery(event).userId as string
@@ -20,17 +21,24 @@ export default defineEventHandler(async (event) => {
     Report: 'Reports'
   }
 
-  const records = labs.map((lab) => ({
-    id: lab.id,
-    name: lab.testName,
-    type: categoryMap[lab.category] || lab.category,
-    category: lab.category,
-    date: new Date(lab.dateReported).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    doctor: lab.uploadedBy || 'Clinical Lab',
-    resultStatus: lab.status === 'Pending' ? 'Pending Review' : lab.status,
-    requestId: lab.requestId,
-    filePath: lab.filePath
-  }))
+  const records = labs.map((lab) => {
+    const detail = enrichLabRecord(lab)
+    return {
+      id: lab.id,
+      name: lab.testName,
+      type: categoryMap[lab.category] || lab.category,
+      category: lab.category,
+      colorClass: lab.colorClass,
+      date: new Date(lab.dateReported).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      doctor: lab.uploadedBy || 'Clinical Lab',
+      resultStatus: lab.status === 'Pending' ? 'Pending Review' : lab.status,
+      status: lab.status,
+      requestId: lab.requestId,
+      filePath: lab.filePath,
+      pending: detail.pending,
+      hasDetails: !detail.pending && detail.lines.length > 0
+    }
+  })
 
   return {
     success: true,

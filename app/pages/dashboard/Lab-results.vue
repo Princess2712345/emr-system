@@ -124,6 +124,16 @@
               </select>
             </div>
 
+            <div class="form-group">
+              <label>Clinical findings (optional)</label>
+              <textarea
+                v-model="newRecord.findings"
+                rows="2"
+                placeholder="Summary shown to patient in View Results"
+                class="modal-textarea"
+              />
+            </div>
+
             <div class="form-group file-input-group">
               <label>Select PDF/Image Report</label>
               <div class="file-dropzone">
@@ -214,7 +224,8 @@ const { patientOptions } = usePatientRegistry()
 const newRecord = ref({
   patientId: '',
   category: 'Hematology',
-  testName: ''
+  testName: '',
+  findings: ''
 })
 
 // 🚀 FIXED: Point directly to the correct server handler route
@@ -263,7 +274,8 @@ const handleFileUpload = async () => {
         patientId: newRecord.value.patientId,
         testName: newRecord.value.testName,
         category: newRecord.value.category,
-        colorClass: assignedColor
+        colorClass: assignedColor,
+        findings: newRecord.value.findings || undefined
       }
     })
 
@@ -271,7 +283,7 @@ const handleFileUpload = async () => {
       await reloadLabData() // Direct reactive refresh from the database
       isModalOpen.value = false
       selectedFile.value = null
-      newRecord.value = { patientId: '', category: 'Hematology', testName: '' }
+      newRecord.value = { patientId: '', category: 'Hematology', testName: '', findings: '' }
       alert('Lab result linked to patient — it will appear on their portal account.')
     }
   } catch (error) {
@@ -349,7 +361,8 @@ const resetFilters = () => {
 .close-modal { background: none; border: none; color: #94a3b8; }
 .form-group { margin-bottom: 1.25rem; }
 .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #475569; }
-.form-group input, .modal-select { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; }
+.form-group input, .modal-select, .modal-textarea { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-family: inherit; }
+.modal-textarea { resize: vertical; min-height: 4rem; }
 .file-dropzone { border: 2px dashed #cbd5e1; padding: 2rem; border-radius: 12px; text-align: center; position: relative; cursor: pointer; color: #64748b; }
 .file-dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .file-dropzone:hover { background: #f8fafc; border-color: #2563eb; }

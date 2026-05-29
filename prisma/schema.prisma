@@ -85,19 +85,24 @@ model Appointment {
 }
 
 model LabResult {
-  id           String    @id @default(uuid())
-  testName     String
-  patientId    String
-  createdAt    DateTime  @default(now())
-  category     String
-  colorClass   String    @default("teal")
-  dateReported DateTime  @default(now())
-  filePath     String?
-  patientName  String
-  requestId    String    @unique
-  status       String    @default("Pending")
-  uploadedBy   String?
-  patient      Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  id             String    @id @default(uuid())
+  testName       String
+  patientId      String
+  createdAt      DateTime  @default(now())
+  category       String
+  colorClass     String    @default("teal")
+  dateReported   DateTime  @default(now())
+  filePath       String?
+  patientName    String
+  requestId      String    @unique
+  status         String    @default("Pending")
+  uploadedBy     String?
+  findings       String?
+  interpretation String?
+  resultDetails  Json?
+  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
 }
 
 model Invoice {
