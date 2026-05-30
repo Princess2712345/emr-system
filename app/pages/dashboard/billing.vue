@@ -146,7 +146,7 @@ definePageMeta({ layout: 'dashboard' })
 
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 
-let billingPoll: ReturnType<typeof setInterval> | null = null
+let billingPoll = null
 
 const searchQuery = ref('')
 const selectedStatus = ref('All')

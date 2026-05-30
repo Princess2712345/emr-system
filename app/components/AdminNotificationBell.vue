@@ -68,7 +68,7 @@ const onDocClick = (e) => {
   }
 }
 
-let pollTimer: ReturnType<typeof setInterval> | null = null
+let pollTimer = null
 
 onMounted(() => {
   document.addEventListener('click', onDocClick)
