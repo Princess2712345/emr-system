@@ -113,6 +113,8 @@ model Invoice {
   status        String   @default("Unpaid") 
   patientId     String
   patientName   String
+  // Itemized breakdown entered by admin: [{ description, amount }]
+  items         Json?
   // Payment review workflow
   paymentMethod String?
   paymentRef    String?

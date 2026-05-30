@@ -45,6 +45,7 @@ export default defineEventHandler(async (event) => {
         patientName,
         findings,
         interpretation,
+        filePath,
         status: inputStatus
       } = body
 
@@ -68,6 +69,7 @@ export default defineEventHandler(async (event) => {
           status: recordStatus,
           patientId: patient.id,
           uploadedBy: 'Clinical Lab',
+          filePath: typeof filePath === 'string' && filePath.length ? filePath : null,
           findings: findings?.trim() || null,
           interpretation:
             interpretation?.trim()

@@ -209,6 +209,16 @@
               <h4>Interpretation</h4>
               <p>{{ selectedRecord.interpretation }}</p>
             </div>
+
+            <div v-if="selectedRecord.filePath" class="report-attachment">
+              <h4>Attached report</h4>
+              <div v-if="isImage(selectedRecord.filePath)" class="report-image">
+                <img :src="selectedRecord.filePath" alt="Lab report" />
+              </div>
+              <a :href="selectedRecord.filePath" target="_blank" rel="noopener" class="report-file-link">
+                <Icon name="lucide:external-link" /> Open full file
+              </a>
+            </div>
           </section>
 
           <div class="detail-panel-actions">
@@ -265,6 +275,8 @@ onMounted(async () => {
     console.error('Labs load failed:', e)
   }
 })
+
+const isImage = (src) => typeof src === 'string' && src.startsWith('data:image')
 
 const statusClass = (status) => {
   const s = (status || '').toLowerCase()
@@ -652,6 +664,13 @@ const handleRequestRefill = () => {
   line-height: 1.55;
   color: #334155;
 }
+
+.report-attachment { margin-bottom: 1rem; }
+.report-attachment h4 { margin: 0 0 0.5rem; font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; }
+.report-image { margin-bottom: 0.6rem; }
+.report-image img { width: 100%; max-height: 320px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.report-file-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; font-weight: 700; font-size: 0.85rem; text-decoration: none; }
+.report-file-link:hover { text-decoration: underline; }
 
 .detail-panel-actions {
   display: flex;

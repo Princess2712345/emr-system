@@ -84,6 +84,10 @@
                     ₱{{ bill.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                   </p>
                   
+                  <button class="btn-view-sm" @click="openBreakdown(bill)" title="View breakdown">
+                    <Icon name="lucide:list" /> View
+                  </button>
+
                   <button v-if="bill.status === 'Unpaid'" class="btn-primary-sm" @click="openPaymentModal(bill)">
                     Pay Now
                   </button>
@@ -218,6 +222,48 @@
       </div>
     </div>
 
+    <div v-if="isBreakdownOpen" class="modal-overlay" @click.self="isBreakdownOpen = false">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Statement Breakdown</h3>
+          <button class="close-modal" @click="isBreakdownOpen = false"><Icon name="lucide:x" /></button>
+        </div>
+        <div class="modal-body" v-if="breakdownBill">
+          <div class="bd-meta">
+            <span><Icon name="lucide:hash" /> INV-{{ breakdownBill.invoiceNo }}</span>
+            <span><Icon name="lucide:calendar" /> {{ breakdownBill.date }}</span>
+            <span :class="['status-pill', statusClass(breakdownBill.status)]">{{ breakdownBill.status }}</span>
+          </div>
+
+          <ul v-if="breakdownBill.items && breakdownBill.items.length" class="bd-list">
+            <li v-for="(item, i) in breakdownBill.items" :key="i" class="bd-row">
+              <span class="bd-desc">{{ item.description }}</span>
+              <span class="bd-amount">₱{{ item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+            </li>
+          </ul>
+          <div v-else class="bd-empty">
+            <Icon name="lucide:info" />
+            <p>No itemized breakdown was provided for this statement.</p>
+          </div>
+
+          <div class="bd-total">
+            <span>Total</span>
+            <strong>₱{{ (breakdownBill.total ?? breakdownBill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="isBreakdownOpen = false">Close</button>
+          <button
+            v-if="breakdownBill && breakdownBill.status === 'Unpaid'"
+            class="btn-primary"
+            @click="payFromBreakdown"
+          >
+            Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="isInsuranceModalOpen" class="modal-overlay" @click.self="isInsuranceModalOpen = false">
       <div class="modal-container">
         <div class="modal-header">
@@ -253,6 +299,8 @@ const { initials, displayName, registryId, requirePatientSession } = usePatientH
 const billingFilter = ref('All')
 const isPaymentModalOpen = ref(false)
 const isInsuranceModalOpen = ref(false)
+const isBreakdownOpen = ref(false)
+const breakdownBill = ref(null)
 const selectedBill = ref(null)
 
 // Payment flow state
@@ -337,6 +385,17 @@ const resetPaymentForm = () => {
   receiptPreview.value = ''
   paymentError.value = ''
   cardForm.value = { name: '', number: '', expiry: '', cvv: '' }
+}
+
+const openBreakdown = (bill) => {
+  breakdownBill.value = bill
+  isBreakdownOpen.value = true
+}
+
+const payFromBreakdown = () => {
+  const bill = breakdownBill.value
+  isBreakdownOpen.value = false
+  openPaymentModal(bill)
 }
 
 const openPaymentModal = (bill) => {
@@ -531,6 +590,8 @@ const handleAssistance = () => alert('Opening Financial Aid Portal...')
 .bill-amount { font-weight: 800; color: #1e293b; font-size: 1.1rem; }
 .text-muted { color: #94a3b8; text-decoration: line-through; opacity: 0.6; }
 
+.btn-view-sm { background: #eef2ff; color: #4f46e5; border: 1px solid #e0e7ff; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.btn-view-sm:hover { background: #e0e7ff; }
 .btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .btn-receipt-sm { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .icon-btn-more { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 8px; transition: color 0.2s; }
@@ -595,6 +656,22 @@ const handleAssistance = () => alert('Opening Financial Aid Portal...')
 .modal-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
 .btn-secondary { background: #f1f5f9; color: #475569; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .btn-primary { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+/* Statement breakdown modal */
+.bd-meta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 1.25rem; font-size: 0.82rem; color: #64748b; }
+.bd-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.bd-list { list-style: none; margin: 0; padding: 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.bd-row { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; }
+.bd-row:last-child { border-bottom: none; }
+.bd-row:nth-child(even) { background: #f8fafc; }
+.bd-desc { color: #1e293b; font-weight: 600; font-size: 0.9rem; }
+.bd-amount { color: #1e293b; font-weight: 700; font-family: ui-monospace, monospace; }
+.bd-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 1.5rem; color: #94a3b8; background: #f8fafc; border-radius: 12px; }
+.bd-empty :deep(svg) { font-size: 1.6rem; opacity: 0.6; }
+.bd-empty p { margin: 0; font-size: 0.85rem; }
+.bd-total { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding: 1rem; background: #1e3a8a; color: white; border-radius: 12px; }
+.bd-total span { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; opacity: 0.85; }
+.bd-total strong { font-size: 1.4rem; font-weight: 800; }
 
 /* UTILS */
 .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }

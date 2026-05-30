@@ -139,12 +139,53 @@
                 </option>
               </select>
             </div>
+
             <div class="form-group">
-              <label>Total Invoice Base Cost (₱)</label>
-              <div class="item-list">
-                 <input type="number" step="0.01" v-model="newBill.amount" placeholder="150.00" required />
+              <label>Charge breakdown</label>
+              <p class="field-hint">Add each charge (e.g. Clinic check-up, Medicine, Lab test). The total is calculated automatically.</p>
+              <div class="line-items">
+                <div v-for="(item, index) in newBill.items" :key="index" class="line-item-row">
+                  <input
+                    v-model="item.description"
+                    type="text"
+                    class="li-desc"
+                    placeholder="Description (e.g. Clinic check-up)"
+                    required
+                  />
+                  <div class="li-amount-wrap">
+                    <span class="li-peso">₱</span>
+                    <input
+                      v-model.number="item.amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="li-amount"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    class="li-remove"
+                    :disabled="newBill.items.length === 1"
+                    title="Remove line"
+                    @click="removeLineItem(index)"
+                  >
+                    <Icon name="lucide:trash-2" />
+                  </button>
+                </div>
               </div>
+              <button type="button" class="add-line-btn" @click="addLineItem">
+                <Icon name="lucide:plus" /> Add charge
+              </button>
             </div>
+
+            <div class="invoice-total-row">
+              <span>Invoice total</span>
+              <strong>₱{{ formatCurrency(newBillTotal) }}</strong>
+            </div>
+
             <div class="modal-actions">
               <button type="button" class="btn-secondary clickable" @click="isModalOpen = false">Cancel</button>
               <button type="submit" class="add-btn clickable">Create Statement</button>
@@ -200,7 +241,7 @@
 <script setup>
 definePageMeta({ layout: 'dashboard' })
 
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 let billingPoll = null
 
@@ -212,8 +253,21 @@ const { patientOptions } = usePatientRegistry()
 
 const newBill = ref({
   patientId: '',
-  amount: 150.00
+  items: [{ description: '', amount: null }]
 })
+
+const newBillTotal = computed(() =>
+  newBill.value.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+)
+
+const addLineItem = () => {
+  newBill.value.items.push({ description: '', amount: null })
+}
+
+const removeLineItem = (index) => {
+  if (newBill.value.items.length === 1) return
+  newBill.value.items.splice(index, 1)
+}
 
 // --- Fetch Pipeline ---
 const { data: billingPayload, refresh: reloadInvoices } = await useFetch('/api/billing', {
@@ -227,21 +281,34 @@ watch([searchQuery, selectedStatus], () => {
 })
 
 const openAddModal = () => {
-  newBill.value = { patientId: '', amount: 150.00 }
+  newBill.value = { patientId: '', items: [{ description: '', amount: null }] }
   isModalOpen.value = true
 }
 
 const handleInvoice = async () => {
+  const cleanItems = newBill.value.items
+    .map((i) => ({ description: (i.description || '').trim(), amount: Number(i.amount) || 0 }))
+    .filter((i) => i.description && i.amount > 0)
+
+  if (!cleanItems.length) {
+    alert('Please add at least one charge with a description and amount.')
+    return
+  }
+
   try {
     await $fetch('/api/billing', {
       method: 'POST',
-      body: newBill.value
+      body: {
+        patientId: newBill.value.patientId,
+        items: cleanItems,
+        amount: cleanItems.reduce((sum, i) => sum + i.amount, 0)
+      }
     })
     alert('Invoice linked to patient — it will appear on their billing portal.')
     await reloadInvoices()
     isModalOpen.value = false
   } catch (err) {
-    alert(err.statusMessage || 'Failed to match patient account information.')
+    alert(err.data?.statusMessage || err.statusMessage || 'Failed to match patient account information.')
   }
 }
 
@@ -458,6 +525,24 @@ onUnmounted(() => {
 .form-group input { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
 .item-list { display: flex; gap: 10px; }
 .item-list input { flex: 1; background: #f8fafc; color: #64748b; font-weight: 600; }
+
+.field-hint { margin: 0 0 0.6rem; font-size: 0.78rem; color: #94a3b8; }
+.line-items { display: flex; flex-direction: column; gap: 0.5rem; }
+.line-item-row { display: flex; gap: 8px; align-items: center; }
+.li-desc { flex: 1; min-width: 0; padding: 0.65rem 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
+.li-desc:focus { border-color: #2563eb; }
+.li-amount-wrap { display: flex; align-items: center; gap: 4px; width: 140px; flex-shrink: 0; padding: 0 0.7rem; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
+.li-amount-wrap:focus-within { border-color: #2563eb; }
+.li-peso { flex-shrink: 0; color: #94a3b8; font-weight: 700; line-height: 1; }
+.li-amount { width: 100%; padding: 0.65rem 0; border: none; outline: none; background: transparent; }
+.li-remove { flex-shrink: 0; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border: 1px solid #fecaca; background: #fef2f2; color: #ef4444; border-radius: 10px; cursor: pointer; }
+.li-remove:hover { background: #fee2e2; }
+.li-remove:disabled { opacity: 0.4; cursor: not-allowed; }
+.add-line-btn { margin-top: 0.6rem; display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; border: 1px dashed #bfdbfe; padding: 0.55rem 0.9rem; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.add-line-btn:hover { background: #dbeafe; }
+.invoice-total-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding: 0.9rem 1rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; }
+.invoice-total-row span { font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
+.invoice-total-row strong { font-size: 1.3rem; font-weight: 800; color: #1e3a8a; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.5rem; }
 .btn-secondary { background: #f1f5f9; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
 .clickable { cursor: pointer; transition: all 0.2s ease; }

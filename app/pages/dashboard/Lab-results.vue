@@ -134,13 +134,27 @@
               />
             </div>
 
+            <div class="form-group">
+              <label>Interpretation (optional)</label>
+              <textarea
+                v-model="newRecord.interpretation"
+                rows="2"
+                placeholder="Doctor's interpretation shown to the patient"
+                class="modal-textarea"
+              />
+            </div>
+
             <div class="form-group file-input-group">
               <label>Select PDF/Image Report</label>
               <div class="file-dropzone">
                 <Icon name="lucide:cloud-upload" />
-                <input type="file" @change="onFileChange" accept=".pdf,.jpg,.png" />
+                <input type="file" @change="onFileChange" accept=".pdf,.jpg,.jpeg,.png" />
                 <p v-if="!selectedFile">Click to browse files</p>
                 <p v-else class="file-name">{{ selectedFile.name }}</p>
+              </div>
+              <p v-if="fileError" class="file-error">{{ fileError }}</p>
+              <div v-if="filePreview && isImage(filePreview)" class="file-thumb">
+                <img :src="filePreview" alt="Report preview" />
               </div>
             </div>
 
@@ -190,6 +204,52 @@
             </div>
           </div>
 
+          <div v-if="detailLines.length" class="detail-section">
+            <h3 class="detail-section-title">Test results</h3>
+            <div class="results-table-wrap">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th>Test</th>
+                    <th>Result</th>
+                    <th>Reference</th>
+                    <th>Flag</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(line, idx) in detailLines" :key="idx">
+                    <td class="test-name">{{ line.name }}</td>
+                    <td class="test-value">
+                      {{ line.value }}<span v-if="line.unit" class="unit"> {{ line.unit }}</span>
+                    </td>
+                    <td class="test-range">{{ line.range }}</td>
+                    <td><span :class="['flag-badge', line.flag]">{{ line.flag }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div v-if="selectedLab.findings" class="detail-text-box">
+            <h4>Clinical findings</h4>
+            <p>{{ selectedLab.findings }}</p>
+          </div>
+
+          <div v-if="selectedLab.interpretation" class="detail-text-box">
+            <h4>Interpretation</h4>
+            <p>{{ selectedLab.interpretation }}</p>
+          </div>
+
+          <div v-if="selectedLab.filePath" class="detail-section">
+            <h3 class="detail-section-title">Uploaded report</h3>
+            <div v-if="isImage(selectedLab.filePath)" class="report-image">
+              <img :src="selectedLab.filePath" alt="Uploaded lab report" />
+            </div>
+            <a :href="selectedLab.filePath" target="_blank" rel="noopener" class="report-file-link">
+              <Icon name="lucide:external-link" /> Open full file
+            </a>
+          </div>
+
           <div class="detail-actions-vertical">
             <button class="action-btn-primary clickable">
               <Icon name="lucide:printer" /> Print Official Report
@@ -221,12 +281,18 @@ const selectedFile = ref<File | null>(null)
 // Modal Input Bindings Payload State Context
 const { patientOptions } = usePatientRegistry()
 
+const filePreview = ref<string>('')
+const fileError = ref<string>('')
+
 const newRecord = ref({
   patientId: '',
   category: 'Hematology',
   testName: '',
-  findings: ''
+  findings: '',
+  interpretation: ''
 })
+
+const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB cap keeps the base64 payload reasonable
 
 // 🚀 FIXED: Point directly to the correct server handler route
 const { data: filteredLabs, refresh: reloadLabData } = await useFetch<any[]>('/api/labs/upload', {
@@ -241,9 +307,32 @@ const openDetails = (lab: any) => {
   isDetailOpen.value = true
 }
 
+const detailLines = computed(() =>
+  Array.isArray(selectedLab.value?.resultDetails) ? selectedLab.value.resultDetails : []
+)
+
 const onFileChange = (e: any) => {
-  selectedFile.value = e.target.files[0] || null
+  fileError.value = ''
+  filePreview.value = ''
+  const file = e.target.files[0] || null
+  selectedFile.value = file
+  if (!file) return
+
+  if (file.size > MAX_FILE_BYTES) {
+    fileError.value = 'File is too large. Please keep it under 2 MB.'
+    selectedFile.value = null
+    e.target.value = ''
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    filePreview.value = typeof reader.result === 'string' ? reader.result : ''
+  }
+  reader.readAsDataURL(file)
 }
+
+const isImage = (src: string) => typeof src === 'string' && src.startsWith('data:image')
 
 // 🚀 FIXED: Formats raw database ISO dates into clean, beautiful text
 const formatDate = (dateString: string) => {
@@ -275,7 +364,9 @@ const handleFileUpload = async () => {
         testName: newRecord.value.testName,
         category: newRecord.value.category,
         colorClass: assignedColor,
-        findings: newRecord.value.findings || undefined
+        findings: newRecord.value.findings || undefined,
+        interpretation: newRecord.value.interpretation || undefined,
+        filePath: filePreview.value || undefined
       }
     })
 
@@ -283,7 +374,9 @@ const handleFileUpload = async () => {
       await reloadLabData() // Direct reactive refresh from the database
       isModalOpen.value = false
       selectedFile.value = null
-      newRecord.value = { patientId: '', category: 'Hematology', testName: '', findings: '' }
+      filePreview.value = ''
+      fileError.value = ''
+      newRecord.value = { patientId: '', category: 'Hematology', testName: '', findings: '', interpretation: '' }
       alert('Lab result linked to patient — it will appear on their portal account.')
     }
   } catch (error) {
@@ -389,4 +482,34 @@ const resetFilters = () => {
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .slide-enter-active, .slide-leave-active { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .slide-enter-from, .slide-leave-to { transform: translateX(100%); }
+
+/* Detail panel needs to scroll once results/photos are added */
+.detail-sidebar-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.file-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; }
+.file-thumb { margin-top: 10px; }
+.file-thumb img { width: 100%; max-height: 200px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+
+.detail-section { margin-top: 1.5rem; }
+.detail-section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em; margin: 0 0 0.75rem; }
+.results-table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
+.results-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.results-table th { background: #f8fafc; text-align: left; padding: 0.6rem 0.7rem; font-size: 0.68rem; text-transform: uppercase; color: #64748b; font-weight: 700; }
+.results-table td { padding: 0.6rem 0.7rem; border-top: 1px solid #f1f5f9; color: #334155; }
+.results-table .test-name { font-weight: 600; color: #1e3a8a; }
+.results-table .test-value { font-weight: 700; }
+.results-table .unit { font-weight: 500; color: #64748b; font-size: 0.8rem; }
+.flag-badge { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
+.flag-badge.normal { background: #dcfce7; color: #166534; }
+.flag-badge.high { background: #fee2e2; color: #991b1b; }
+.flag-badge.low { background: #dbeafe; color: #1d4ed8; }
+
+.detail-text-box { margin-top: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; }
+.detail-text-box h4 { margin: 0 0 0.5rem; font-size: 0.78rem; font-weight: 800; color: #475569; text-transform: uppercase; }
+.detail-text-box p { margin: 0; font-size: 0.9rem; line-height: 1.55; color: #334155; }
+
+.report-image { margin-bottom: 0.75rem; }
+.report-image img { width: 100%; max-height: 320px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.report-file-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; font-weight: 700; font-size: 0.85rem; text-decoration: none; }
+.report-file-link:hover { text-decoration: underline; }
 </style>

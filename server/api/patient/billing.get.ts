@@ -24,15 +24,25 @@ export default defineEventHandler(async (event) => {
     return !earliest || d < earliest ? d : earliest
   }, null as Date | null)
 
-  const bills = invoices.map((inv) => ({
-    id: inv.id,
-    service: `Clinical services — ${inv.patientName}`,
-    date: new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    invoiceNo: inv.id.slice(-6).toUpperCase(),
-    amount: inv.balance > 0 ? inv.balance : inv.amount,
-    status: inv.status,
-    dueDate: inv.dueDate
-  }))
+  const bills = invoices.map((inv) => {
+    const rawItems = Array.isArray(inv.items) ? (inv.items as Array<{ description?: string; amount?: number }>) : []
+    const items = rawItems.map((i) => ({
+      description: String(i?.description ?? '').trim() || 'Charge',
+      amount: Number(i?.amount) || 0
+    }))
+
+    return {
+      id: inv.id,
+      service: `Clinical services — ${inv.patientName}`,
+      date: new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      invoiceNo: inv.id.slice(-6).toUpperCase(),
+      amount: inv.balance > 0 ? inv.balance : inv.amount,
+      total: inv.amount,
+      status: inv.status,
+      dueDate: inv.dueDate,
+      items
+    }
+  })
 
   return {
     success: true,

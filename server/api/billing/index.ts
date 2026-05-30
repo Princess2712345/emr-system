@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
         status: true,
         patientId: true,
         patientName: true,
+        items: true,
         paymentMethod: true,
         paymentRef: true,
         submittedAt: true,
@@ -65,7 +66,18 @@ export default defineEventHandler(async (event) => {
       email: body.email
     })
 
-    const amount = parseFloat(body.amount || 150)
+    // Normalize itemized breakdown entered by the admin
+    const rawItems = Array.isArray(body.items) ? body.items : []
+    const items = rawItems
+      .map((i: { description?: string; amount?: number | string }) => ({
+        description: String(i?.description ?? '').trim(),
+        amount: Number(i?.amount) || 0
+      }))
+      .filter((i: { description: string; amount: number }) => i.description && i.amount > 0)
+
+    const amount = items.length
+      ? items.reduce((sum: number, i: { amount: number }) => sum + i.amount, 0)
+      : parseFloat(body.amount || 150)
 
     const createdBill = await prisma.invoice.create({
       data: {
@@ -73,6 +85,7 @@ export default defineEventHandler(async (event) => {
         patientName: patient.name,
         amount,
         balance: amount,
+        items: items.length ? items : undefined,
         dueDate: body.dueDate ? new Date(body.dueDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         status: 'Unpaid'
       }
