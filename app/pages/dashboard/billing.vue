@@ -144,7 +144,9 @@
 <script setup>
 definePageMeta({ layout: 'dashboard' })
 
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+
+let billingPoll: ReturnType<typeof setInterval> | null = null
 
 const searchQuery = ref('')
 const selectedStatus = ref('All')
@@ -200,6 +202,14 @@ const formatDate = (dateString) => {
 const downloadInvoice = (inv) => alert(`Downloading Invoice #${inv.id.substring(0,8).toUpperCase()}...`)
 const recordPayment = (inv) => alert(`Opening processing window for ${inv.patientName}...`)
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
+
+onMounted(() => {
+  billingPoll = setInterval(() => reloadInvoices(), 15000)
+})
+
+onUnmounted(() => {
+  if (billingPoll) clearInterval(billingPoll)
+})
 </script>
 
 <style scoped>

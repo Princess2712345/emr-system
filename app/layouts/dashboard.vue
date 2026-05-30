@@ -15,7 +15,10 @@
         <Icon name="lucide:menu" />
       </button>
       <span class="mobile-logo-text logo-text">EMR System</span>
-      <div class="avatar-sm">{{ initials }}</div>
+      <div class="mobile-bar-actions">
+        <AdminNotificationBell />
+        <div class="avatar-sm">{{ initials }}</div>
+      </div>
     </header>
 
     <aside class="portal-sidebar sidebar">
@@ -146,6 +149,12 @@ const onLogout = () => {
   cursor: pointer;
   width: 100%;
 }
+.mobile-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .avatar-sm {
   width: 32px;
   height: 32px;
@@ -158,4 +167,5 @@ const onLogout = () => {
   font-weight: 800;
   color: white;
 }
+
 </style>

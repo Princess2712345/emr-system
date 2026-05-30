@@ -8,10 +8,7 @@
         
         <div class="header-actions">
            <div class="user-profile">
-            <div class="notification-wrapper clickable" @click="clearNotifications">
-              <Icon name="lucide:bell" class="notification-icon" />
-              <span v-if="hasNotifications" class="notification-dot"></span>
-            </div>
+            <AdminNotificationBell />
             <div class="avatar clickable" @click="goToProfile">
               {{ userInitials }}
             </div>
@@ -130,8 +127,6 @@ import { ref, computed, onMounted } from 'vue'
 const doctorName = ref('User') 
 const userInitials = ref('U')
 const searchQuery = ref('')
-const hasNotifications = ref(true)
-
 // 🚀 CHANGE 2: Read the logged-in user's details when the component loads on the client
 onMounted(() => {
   if (process.client) {
@@ -239,7 +234,6 @@ const handleLogout = async () => {
   }
 }
 
-const clearNotifications = () => { hasNotifications.value = false }
 const goToProfile = () => { alert('Navigating to profile...') }
 </script>
 

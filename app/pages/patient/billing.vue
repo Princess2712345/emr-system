@@ -248,24 +248,39 @@ const openPaymentModal = (bill) => {
   isPaymentModalOpen.value = true
 }
 
-const executePayment = () => {
-  if (selectedBill.value) {
-    const target = bills.value.find(b => b.id === selectedBill.value.id)
-    if (target) {
-      target.status = 'Paid'
-      lastPayment.value = {
-        amount: target.amount,
-        date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-      }
-    }
-  } else {
-    bills.value.forEach(b => {
-      if (b.status === 'Unpaid') b.status = 'Paid'
-    })
+const reloadBilling = async () => {
+  const user = requirePatientSession()
+  if (!user) return
+  const data = await $fetch(`/api/patient/billing?userId=${user.id}`)
+  if (data.success) {
+    bills.value = data.bills
+    lastPayment.value = data.lastPayment
+    dueByLabel.value = data.dueBy ? `Due by ${data.dueBy}` : 'No outstanding balance'
   }
-  isPaymentModalOpen.value = false
-  selectedBill.value = null
-  alert('Transaction processed successfully.')
+}
+
+const executePayment = async () => {
+  const user = requirePatientSession()
+  if (!user) return
+
+  try {
+    const response = await $fetch('/api/patient/billing/pay', {
+      method: 'POST',
+      body: {
+        userId: user.id,
+        invoiceId: selectedBill.value?.id,
+        payAll: !selectedBill.value
+      }
+    })
+
+    await reloadBilling()
+    isPaymentModalOpen.value = false
+    selectedBill.value = null
+    alert(response.message || 'Payment successful. Admin has been notified.')
+  } catch (e) {
+    console.error('Payment failed:', e)
+    alert(e.data?.statusMessage || e.statusMessage || 'Payment could not be processed.')
+  }
 }
 
 const saveInsurance = () => {
