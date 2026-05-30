@@ -80,8 +80,8 @@
           <label>Username or Email</label>
           <input v-model="forgotData.identifier" type="text" required placeholder="you@example.com" />
 
-          <label>Last Name</label>
-          <input v-model="forgotData.lastName" type="text" required placeholder="Surname on record" />
+          <label>Last Name <span class="optional-tag">(optional)</span></label>
+          <input v-model="forgotData.lastName" type="text" placeholder="Surname on record" />
 
           <p v-if="forgotMessage" class="forgot-feedback">{{ forgotMessage }}</p>
 
@@ -444,6 +444,12 @@ const handleLogin = async () => {
   font-weight: 600;
   color: #334155;
   margin-bottom: -0.75rem;
+}
+
+.optional-tag {
+  font-weight: 500;
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
 .forgot-form input {
