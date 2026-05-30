@@ -20,7 +20,8 @@
           </div>
           <div class="b-stat-card orange">
             <span class="b-label">Pending Insurance</span>
-            <p class="b-value">₱12,840.00</p> </div>
+            <p class="b-value">₱12,840.00</p>
+          </div>
           <div class="b-stat-card green">
             <span class="b-label">Collected (Total)</span>
             <p class="b-value">₱{{ formatCurrency(billingPayload?.stats?.collected || 0) }}</p>
@@ -241,15 +242,66 @@ onUnmounted(() => {
 .top-bar h1 { font-size: 1.6rem; color: #1e3a8a; margin: 0; font-weight: 700; }
 .top-bar p { color: #64748b; margin-top: 4px; font-size: 0.9rem; }
 .billing-body { padding: 2.5rem 3rem; width: 100%; box-sizing: border-box; }
-.billing-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
-@keyframes fadeInUp { from { opacity: 0; margin-top: 20px; } to { opacity: 1; margin-top: 0px; } }
-.b-stat-card { padding: 1.5rem; border-radius: 16px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.05); animation: fadeInUp 0.6s ease-out forwards; opacity: 0; cursor: pointer; transform: translateY(0); transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease; }
+.billing-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.b-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+  min-width: 0;
+  min-height: 120px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 .b-stat-card.blue { background: linear-gradient(135deg, #3b82f6, #1e3a8a); animation-delay: 0.1s; }
 .b-stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); animation-delay: 0.2s; }
 .b-stat-card.green { background: linear-gradient(135deg, #10b981, #059669); animation-delay: 0.3s; }
-.b-stat-card:hover { transform: translateY(-5px); filter: brightness(90%); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
-.b-label { font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; font-weight: 600; }
-.b-value { font-size: 1.8rem; font-weight: 800; margin: 5px 0 0; }
+
+.b-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.b-label {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  opacity: 0.95;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.b-value {
+  display: block;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+  word-break: break-word;
+}
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 2rem; }
 .search-wrapper { position: relative; flex: 1; max-width: 600px; display: flex; align-items: center; }
 .search-wrapper input { width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; font-size: 0.95rem; }
@@ -306,8 +358,19 @@ onUnmounted(() => {
   .filter-group { display: grid; grid-template-columns: 1fr auto; }
   .modal-content { width: 90%; margin: 10px; padding: 1.5rem; }
 }
+@media (max-width: 1200px) {
+  .billing-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
-  .billing-stats { grid-template-columns: 1fr; }
-  .top-bar h1 { font-size: 1.3rem; }
+  .billing-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .top-bar h1 {
+    font-size: 1.3rem;
+  }
 }
 </style>

@@ -52,6 +52,10 @@
       </nav>
 
       <div class="sidebar-footer">
+        <div v-if="!isCollapsed || isMobileOpen" class="sidebar-theme">
+          <ThemeToggle />
+        </div>
+        <ThemeToggle v-else compact />
         <button type="button" class="logout-btn" @click="onLogout">
           <Icon name="lucide:log-out" />
           <span v-if="!isCollapsed || isMobileOpen">Logout</span>
