@@ -39,6 +39,40 @@ video {
   overflow-x: hidden;
 }
 
+/* Desktop: fixed sidebar, scrollable main content only */
+@media (min-width: 769px) {
+  .portal-layout,
+  .dashboard-layout {
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .portal-sidebar,
+  .dashboard-layout .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    max-height: 100vh;
+    flex-shrink: 0;
+    overflow: hidden;
+    transform: none !important;
+  }
+
+  .portal-main,
+  .dashboard-layout .main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    height: 100vh;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .portal-sidebar-overlay,
 .sidebar-overlay {
   display: none;
@@ -66,18 +100,7 @@ video {
   padding: 1.5rem 1rem;
   flex-shrink: 0;
   height: 100vh;
-  position: sticky;
-  top: 0;
   z-index: 2000;
-  transition: width 0.3s ease, transform 0.3s ease, padding 0.3s ease;
-}
-
-.portal-layout.is-collapsed .portal-sidebar,
-.portal-layout.sidebar-collapsed .portal-sidebar,
-.dashboard-layout.is-collapsed .sidebar {
-  width: 80px;
-  padding: 1.5rem 0.75rem;
-  align-items: center;
 }
 
 .portal-main,
@@ -393,19 +416,33 @@ video {
     border-collapse: collapse;
   }
 
-  .portal-layout, .dashboard-layout {
+  .portal-layout,
+  .dashboard-layout {
     flex-direction: column;
     height: auto;
     min-height: 100vh;
+    overflow: visible;
   }
 
-  .portal-sidebar, .dashboard-layout .sidebar {
+  .portal-main,
+  .dashboard-layout .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .portal-sidebar,
+  .dashboard-layout .sidebar {
     position: fixed !important;
     left: 0;
     top: 0;
     width: min(280px, 88vw) !important;
     height: 100vh !important;
+    max-height: 100vh !important;
     transform: translateX(-100%);
+    transition: transform 0.25s ease;
   }
 
   .portal-layout.mobile-open .portal-sidebar,

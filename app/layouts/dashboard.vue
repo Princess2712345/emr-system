@@ -1,7 +1,7 @@
 <template>
   <div
     class="portal-layout dashboard-layout"
-    :class="{ 'is-collapsed': isCollapsed, 'mobile-open': isMobileOpen }"
+    :class="{ 'mobile-open': isMobileOpen }"
   >
     <div class="portal-sidebar-overlay sidebar-overlay" @click="closeMobile" />
 
@@ -23,18 +23,10 @@
 
     <aside class="portal-sidebar sidebar">
       <div class="sidebar-header">
-        <div v-if="!isCollapsed || isMobileOpen" class="sidebar-logo">
+        <div class="sidebar-logo">
           <Icon name="mdi:hospital-building" class="icon-blue-light logo-icon" />
           <span class="logo-text">EMR System</span>
         </div>
-        <button
-          type="button"
-          class="menu-toggle desktop-only"
-          aria-label="Toggle sidebar"
-          @click="isCollapsed = !isCollapsed"
-        >
-          <Icon :name="isCollapsed ? 'lucide:menu' : 'lucide:chevron-left'" />
-        </button>
       </div>
 
       <nav class="sidebar-nav">
@@ -46,19 +38,14 @@
           @click="closeMobile"
         >
           <Icon :name="link.icon" />
-          <span v-if="!isCollapsed || isMobileOpen" class="nav-label">{{ link.label }}</span>
-          <span v-if="isCollapsed && !isMobileOpen" class="sidebar-tooltip">{{ link.label }}</span>
+          <span class="nav-label">{{ link.label }}</span>
         </NuxtLink>
       </nav>
 
       <div class="sidebar-footer">
-        <div v-if="!isCollapsed || isMobileOpen" class="sidebar-theme">
-          <ThemeToggle />
-        </div>
-        <ThemeToggle v-else compact />
         <button type="button" class="logout-btn" @click="onLogout">
           <Icon name="lucide:log-out" />
-          <span v-if="!isCollapsed || isMobileOpen">Logout</span>
+          <span>Logout</span>
         </button>
       </div>
     </aside>
@@ -71,7 +58,7 @@
 
 <script setup>
 const { navLinks } = useDashboardNav()
-const { isCollapsed, isMobileOpen, closeMobile } = usePortalLayout()
+const { isMobileOpen, closeMobile } = usePortalLayout()
 const { logout, initials, loadUser } = useAuth()
 
 loadUser()
@@ -105,11 +92,12 @@ const onLogout = () => {
 .sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 2rem;
   padding: 0 0.5rem;
   width: 100%;
+  flex-shrink: 0;
 }
+
 .sidebar-logo {
   display: flex;
   align-items: center;
@@ -118,17 +106,22 @@ const onLogout = () => {
   font-weight: 800;
   white-space: nowrap;
 }
-.icon-blue-light { color: #60a5fa; font-size: 1.6rem; }
-.menu-toggle {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
+
+.icon-blue-light {
+  color: #60a5fa;
+  font-size: 1.6rem;
 }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; width: 100%; }
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -138,10 +131,27 @@ const onLogout = () => {
   text-decoration: none;
   border-radius: 8px;
   font-weight: 500;
+  flex-shrink: 0;
 }
-.nav-item.router-link-active { background: #2563eb; color: white; }
-.nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; }
-.sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); width: 100%; }
+
+.nav-item.router-link-active {
+  background: #2563eb;
+  color: white;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  flex-shrink: 0;
+}
+
 .logout-btn {
   background: none;
   border: none;
@@ -153,6 +163,7 @@ const onLogout = () => {
   cursor: pointer;
   width: 100%;
 }
+
 .mobile-bar-actions {
   display: flex;
   align-items: center;
@@ -171,5 +182,4 @@ const onLogout = () => {
   font-weight: 800;
   color: white;
 }
-
 </style>
