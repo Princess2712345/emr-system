@@ -17,7 +17,7 @@
             <Icon name="lucide:bell-ring" class="panel-title-icon" />
             <div>
               <h3>Notifications</h3>
-              <p>{{ paymentCount }} payment alert{{ paymentCount === 1 ? '' : 's' }}</p>
+              <p>{{ paymentCount }} payment · {{ requestCount }} ID request{{ requestCount === 1 ? '' : 's' }}</p>
             </div>
           </div>
           <button type="button" class="panel-close" aria-label="Close" @click="isOpen = false">
@@ -40,6 +40,13 @@
               @click="activeFilter = 'payments'"
             >
               Payments
+            </button>
+            <button
+              type="button"
+              :class="['tab', { active: activeFilter === 'requests' }]"
+              @click="activeFilter = 'requests'"
+            >
+              Requests
             </button>
           </div>
           <button type="button" class="mark-read-btn" @click="markAllRead">
@@ -64,25 +71,27 @@
               v-for="item in filteredNotifications"
               :key="item.id"
               class="notif-card"
-              :class="{ payment: item.type === 'payment' }"
+              :class="item.type"
             >
               <div class="notif-icon-wrap" :class="item.type">
-                <Icon :name="item.type === 'payment' ? 'lucide:badge-check' : 'lucide:info'" />
+                <Icon :name="iconFor(item.type)" />
               </div>
               <div class="notif-content">
                 <div class="notif-top">
                   <span class="notif-title">{{ item.title }}</span>
                   <span v-if="item.type === 'payment'" class="status-chip paid">Paid</span>
+                  <span v-else-if="item.type === 'review'" class="status-chip review">Pending</span>
+                  <span v-else-if="item.type === 'mrn'" class="status-chip mrn">Action</span>
                 </div>
                 <p class="notif-patient">
                   <Icon name="lucide:user" />
                   {{ item.patient }}
                 </p>
                 <p v-if="item.amount" class="notif-amount">₱{{ item.amount }}</p>
-                <p v-if="item.invoiceRef" class="notif-meta">
+                <p v-if="item.invoiceRef && item.type !== 'mrn'" class="notif-meta">
                   Invoice #{{ item.invoiceRef }}
                 </p>
-                <p v-else class="notif-meta notif-msg-truncate">{{ item.message }}</p>
+                <p v-else class="notif-meta notif-msg-clamp">{{ item.message }}</p>
                 <span class="notif-time">
                   <Icon name="lucide:clock" />
                   {{ item.timeLabel }}
@@ -113,6 +122,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const {
   filteredNotifications,
   paymentCount,
+  requestCount,
   unreadCount,
   isOpen,
   isLoading,
@@ -122,6 +132,13 @@ const {
 } = useAdminNotifications()
 
 const rootRef = ref(null)
+
+const iconFor = (type) => {
+  if (type === 'payment') return 'lucide:badge-check'
+  if (type === 'review') return 'lucide:clock-alert'
+  if (type === 'mrn') return 'lucide:id-card'
+  return 'lucide:info'
+}
 
 const onBellClick = () => {
   if (isOpen.value) {
@@ -373,6 +390,14 @@ onUnmounted(() => {
   border-left: 3px solid #10b981;
 }
 
+.notif-card.review {
+  border-left: 3px solid #f59e0b;
+}
+
+.notif-card.mrn {
+  border-left: 3px solid #6366f1;
+}
+
 .notif-icon-wrap {
   flex-shrink: 0;
   width: 2.25rem;
@@ -386,6 +411,16 @@ onUnmounted(() => {
 .notif-icon-wrap.payment {
   background: #dcfce7;
   color: #059669;
+}
+
+.notif-icon-wrap.review {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.notif-icon-wrap.mrn {
+  background: #e0e7ff;
+  color: #4f46e5;
 }
 
 .notif-icon-wrap.other {
@@ -412,14 +447,29 @@ onUnmounted(() => {
   color: var(--emr-text, #1e293b);
 }
 
-.status-chip.paid {
+.status-chip.paid,
+.status-chip.review,
+.status-chip.mrn {
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
+}
+
+.status-chip.paid {
   background: #dcfce7;
   color: #15803d;
+}
+
+.status-chip.review {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-chip.mrn {
+  background: #e0e7ff;
+  color: #4338ca;
 }
 
 .notif-patient {
@@ -446,10 +496,12 @@ onUnmounted(() => {
   font-family: ui-monospace, monospace;
 }
 
-.notif-msg-truncate {
+.notif-msg-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-family: inherit;
 }
 
 .notif-time {

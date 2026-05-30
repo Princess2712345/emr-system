@@ -40,6 +40,7 @@
           <div class="filter-group">
             <select v-model="selectedStatus" class="filter-dropdown">
               <option value="All">All Payments</option>
+              <option value="Pending Approval">Pending Approval</option>
               <option value="Paid">Paid</option>
               <option value="Unpaid">Unpaid</option>
               <option value="Partial">Partial</option>
@@ -83,16 +84,29 @@
                 </td>
                 <td>{{ formatDate(invoice.dueDate) }}</td>
                 <td>
-                  <span class="badge" :class="invoice.status.toLowerCase()">
+                  <span class="badge" :class="badgeClass(invoice.status)">
                     {{ invoice.status }}
                   </span>
                 </td>
                 <td class="text-right">
                   <div class="action-btns">
-                    <button class="icon-btn clickable" title="Download PDF" @click="downloadInvoice(invoice)">
-                      <Icon name="lucide:download" />
-                    </button>
-                    <button class="view-link clickable" @click="recordPayment(invoice)">Pay</button>
+                    <template v-if="invoice.status === 'Pending Approval'">
+                      <button class="icon-btn clickable" title="View receipt" @click="openReview(invoice)">
+                        <Icon name="lucide:receipt-text" />
+                      </button>
+                      <button class="approve-link clickable" @click="decideInvoice(invoice, 'approve')">
+                        <Icon name="lucide:check" /> Approve
+                      </button>
+                      <button class="reject-link clickable" @click="decideInvoice(invoice, 'reject')">
+                        Reject
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button class="icon-btn clickable" title="Download PDF" @click="downloadInvoice(invoice)">
+                        <Icon name="lucide:download" />
+                      </button>
+                      <button class="view-link clickable" @click="recordPayment(invoice)">Pay</button>
+                    </template>
                   </div>
                 </td>
               </tr>
@@ -136,6 +150,47 @@
               <button type="submit" class="add-btn clickable">Create Statement</button>
             </div>
           </form>
+        </div>
+      </div>
+    </Transition>
+
+    <Transition name="fade">
+      <div v-if="isReviewOpen" class="modal-overlay" @click.self="isReviewOpen = false">
+        <div class="modal-content review-modal">
+          <div class="modal-header">
+            <h3>Review Payment</h3>
+            <button class="close-modal clickable" @click="isReviewOpen = false">
+              <Icon name="lucide:x" />
+            </button>
+          </div>
+
+          <div v-if="reviewLoading" class="review-loading">
+            <Icon name="lucide:loader-2" class="spin" /> Loading receipt…
+          </div>
+
+          <div v-else-if="reviewData" class="review-body">
+            <div class="review-rows">
+              <div class="review-row"><span>Patient</span><strong>{{ reviewData.patientName }}</strong></div>
+              <div class="review-row"><span>Method</span><strong>{{ reviewData.method || '—' }}</strong></div>
+              <div class="review-row"><span>Amount</span><strong>₱{{ formatCurrency(reviewData.amount) }}</strong></div>
+              <div class="review-row"><span>Reference</span><strong>{{ reviewData.reference || '—' }}</strong></div>
+            </div>
+
+            <div v-if="reviewData.proof" class="review-proof">
+              <span class="proof-label">Receipt screenshot</span>
+              <img :src="reviewData.proof" alt="Payment receipt" />
+            </div>
+            <div v-else class="review-noproof">
+              <Icon name="lucide:image-off" /> No screenshot attached (card payment).
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="reject-link clickable" @click="decideFromReview('reject')">Reject</button>
+            <button class="add-btn clickable" @click="decideFromReview('approve')">
+              <Icon name="lucide:check" /> Approve payment
+            </button>
+          </div>
         </div>
       </div>
     </Transition>
@@ -203,6 +258,51 @@ const formatDate = (dateString) => {
 const downloadInvoice = (inv) => alert(`Downloading Invoice #${inv.id.substring(0,8).toUpperCase()}...`)
 const recordPayment = (inv) => alert(`Opening processing window for ${inv.patientName}...`)
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
+
+const badgeClass = (status) => (status || '').toLowerCase().replace(/\s+/g, '-')
+
+// --- Payment review / approval ---
+const isReviewOpen = ref(false)
+const reviewLoading = ref(false)
+const reviewData = ref(null)
+
+const openReview = async (invoice) => {
+  isReviewOpen.value = true
+  reviewLoading.value = true
+  reviewData.value = null
+  try {
+    const data = await $fetch('/api/billing/proof', { query: { invoiceId: invoice.id } })
+    if (data.success) reviewData.value = data.invoice
+  } catch (e) {
+    alert(e.data?.statusMessage || 'Could not load receipt.')
+    isReviewOpen.value = false
+  } finally {
+    reviewLoading.value = false
+  }
+}
+
+const decideInvoice = async (invoice, decision) => {
+  if (decision === 'reject' && !confirm(`Reject ${invoice.patientName}'s payment for #${invoice.id.substring(0,8).toUpperCase()}?`)) {
+    return
+  }
+  try {
+    const res = await $fetch('/api/billing/approve', {
+      method: 'POST',
+      body: { invoiceId: invoice.id, decision }
+    })
+    await reloadInvoices()
+    alert(res.message || 'Done.')
+  } catch (e) {
+    alert(e.data?.statusMessage || 'Action failed.')
+  }
+}
+
+const decideFromReview = async (decision) => {
+  if (!reviewData.value) return
+  await decideInvoice({ id: reviewData.value.id, patientName: reviewData.value.patientName }, decision)
+  isReviewOpen.value = false
+  reviewData.value = null
+}
 
 onMounted(() => {
   billingPoll = setInterval(() => reloadInvoices(), 15000)
@@ -322,6 +422,26 @@ onUnmounted(() => {
 .badge.paid { background: #dcfce7; color: #15803d; }
 .badge.unpaid { background: #fee2e2; color: #b91c1c; }
 .badge.partial { background: #fef3c7; color: #b45309; }
+.badge.pending-approval { background: #fef3c7; color: #b45309; }
+
+.approve-link { color: white; background: #059669; padding: 0.5rem 1rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+.approve-link:hover { background: #047857; }
+.reject-link { color: #b91c1c; background: #fee2e2; padding: 0.5rem 1rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.reject-link:hover { background: #fecaca; }
+
+/* Review modal */
+.review-modal { width: 520px; max-width: 92vw; }
+.review-loading { display: flex; align-items: center; gap: 10px; color: #64748b; padding: 2rem 0; justify-content: center; }
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.review-body { display: flex; flex-direction: column; gap: 1.25rem; }
+.review-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+.review-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #475569; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; }
+.review-row strong { color: #1e293b; }
+.review-proof { display: flex; flex-direction: column; gap: 0.5rem; }
+.proof-label { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #64748b; }
+.review-proof img { width: 100%; max-height: 360px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.review-noproof { display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 0.9rem; padding: 1rem; background: #f8fafc; border-radius: 12px; }
 .action-btns { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .icon-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; color: #64748b; }
 .icon-btn:hover { background: #e2e8f0; color: #1e3a8a; }

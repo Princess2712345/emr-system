@@ -10,7 +10,10 @@
         <Icon name="lucide:menu" />
       </button>
       <span class="logo-text" style="font-weight: 800;">MyHealth<span style="color: #93c5fd;">Portal</span></span>
-      <div class="avatar-circle purple-theme" style="width: 32px; height: 32px; font-size: 0.7rem;">{{ initials }}</div>
+      <div class="mobile-bar-actions">
+        <PatientNotificationBell />
+        <div class="avatar-circle purple-theme" style="width: 32px; height: 32px; font-size: 0.7rem;">{{ initials }}</div>
+      </div>
     </header>
 
     <aside class="portal-sidebar sidebar">
@@ -167,5 +170,11 @@ const onLogout = () => {
 
 .purple-theme {
   background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+.mobile-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 </style>

@@ -10,6 +10,7 @@
           <button class="action-outline clickable" @click="printRecord">
             <Icon name="lucide:printer" /> Download E-Record
           </button>
+          <PatientNotificationBell />
           <div class="profile-chip">
             <div class="avatar-circle" :class="patientInfo.colorClass">{{ patientInfo.initials }}</div>
           </div>

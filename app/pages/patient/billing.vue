@@ -10,6 +10,7 @@
           <button class="add-btn clickable" @click="openPaymentModal(null)">
             <Icon name="lucide:wallet" /> Quick Pay
           </button>
+          <PatientNotificationBell />
           <div class="profile-chip" @click="handleProfileClick" :title="displayName">
             <div class="avatar-circle purple-theme">{{ initials }}</div>
           </div>
@@ -61,14 +62,14 @@
             
             <div class="records-stack">
               <div v-for="bill in filteredBills" :key="bill.id" class="record-item" :class="{ 'item-paid': bill.status === 'Paid' }">
-                <div class="record-icon-box" :class="bill.status === 'Paid' ? 'paid-icon' : 'unpaid-icon'">
-                  <Icon :name="bill.status === 'Paid' ? 'lucide:badge-check' : 'lucide:file-warning'" />
+                <div class="record-icon-box" :class="iconClass(bill.status)">
+                  <Icon :name="statusIcon(bill.status)" />
                 </div>
                 
                 <div class="record-main-info">
                   <div class="record-header">
                     <span class="record-title">{{ bill.service }}</span>
-                    <span :class="['status-pill', bill.status.toLowerCase()]">
+                    <span :class="['status-pill', statusClass(bill.status)]">
                       {{ bill.status }}
                     </span>
                   </div>
@@ -86,6 +87,9 @@
                   <button v-if="bill.status === 'Unpaid'" class="btn-primary-sm" @click="openPaymentModal(bill)">
                     Pay Now
                   </button>
+                  <span v-else-if="bill.status === 'Pending Approval'" class="pending-tag">
+                    <Icon name="lucide:clock" /> Awaiting approval
+                  </span>
                   <button v-else class="btn-receipt-sm" @click="handleDownloadInvoice(bill)">
                     <Icon name="lucide:receipt-text" /> Receipt
                   </button>
@@ -124,31 +128,92 @@
           </aside>
         </div>
       </div>
-    <div v-if="isPaymentModalOpen" class="modal-overlay" @click.self="isPaymentModalOpen = false">
+    <div v-if="isPaymentModalOpen" class="modal-overlay" @click.self="closePaymentModal">
       <div class="modal-container">
         <div class="modal-header">
           <h3>Secure Payment Gateway</h3>
-          <button class="close-modal" @click="isPaymentModalOpen = false"><Icon name="lucide:x" /></button>
+          <button class="close-modal" @click="closePaymentModal"><Icon name="lucide:x" /></button>
         </div>
         <div class="modal-body">
-          <p v-if="selectedBill">Processing payment for <strong>{{ selectedBill.service }}</strong></p>
-          <p v-else>Processing custom checkout settlement amount.</p>
+          <p v-if="selectedBill">Settling <strong>{{ selectedBill.service }}</strong></p>
+          <p v-else>Settling your full outstanding balance.</p>
           <div class="amount-summary">
-            <span>Total Outstanding Amount:</span>
+            <span>Amount to pay:</span>
             <span class="amount-highlight">₱{{ (selectedBill ? selectedBill.amount : totalBalance).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
           </div>
+
           <div class="payment-methods-grid">
-            <button class="method-option active">
+            <button
+              type="button"
+              class="method-option"
+              :class="{ active: paymentMethod === 'GCash' }"
+              @click="paymentMethod = 'GCash'"
+            >
               <Icon name="lucide:wallet" /> GCash
             </button>
-            <button class="method-option" @click="alert('Credit/Debit system integration pending.')">
+            <button
+              type="button"
+              class="method-option"
+              :class="{ active: paymentMethod === 'Card' }"
+              @click="paymentMethod = 'Card'"
+            >
               <Icon name="lucide:credit-card" /> Card
             </button>
           </div>
+
+          <!-- GCash flow -->
+          <div v-if="paymentMethod === 'GCash'" class="method-panel">
+            <div class="gcash-instructions">
+              <Icon name="lucide:smartphone" />
+              <p>Send your payment to <strong>GCash 0917-555-0142 (MyHealth Clinic)</strong>, then upload the receipt screenshot below.</p>
+            </div>
+
+            <label class="upload-label">Receipt screenshot <span class="req">*</span></label>
+            <label class="upload-dropzone" :class="{ filled: receiptPreview }">
+              <input type="file" accept="image/*" class="upload-input" @change="onReceiptChange" />
+              <template v-if="receiptPreview">
+                <img :src="receiptPreview" alt="Receipt preview" class="receipt-preview" />
+                <span class="upload-change">Click to change</span>
+              </template>
+              <template v-else>
+                <Icon name="lucide:image-up" class="upload-icon" />
+                <span>Tap to upload your GCash receipt</span>
+                <small>PNG or JPG, up to 3MB</small>
+              </template>
+            </label>
+
+            <label class="upload-label">GCash reference no. (optional)</label>
+            <input v-model="paymentRef" type="text" class="form-input" placeholder="e.g. 1234567890123" />
+          </div>
+
+          <!-- Card flow -->
+          <div v-else class="method-panel">
+            <label class="upload-label">Cardholder name <span class="req">*</span></label>
+            <input v-model="cardForm.name" type="text" class="form-input" placeholder="Name on card" />
+
+            <label class="upload-label">Card number <span class="req">*</span></label>
+            <input v-model="cardForm.number" type="text" inputmode="numeric" maxlength="19" class="form-input" placeholder="0000 0000 0000 0000" />
+
+            <div class="card-row">
+              <div class="card-col">
+                <label class="upload-label">Expiry <span class="req">*</span></label>
+                <input v-model="cardForm.expiry" type="text" maxlength="5" class="form-input" placeholder="MM/YY" />
+              </div>
+              <div class="card-col">
+                <label class="upload-label">CVV <span class="req">*</span></label>
+                <input v-model="cardForm.cvv" type="password" maxlength="4" class="form-input" placeholder="•••" />
+              </div>
+            </div>
+            <p class="card-note"><Icon name="lucide:shield-check" /> Card payments are reviewed and confirmed by an administrator.</p>
+          </div>
+
+          <p v-if="paymentError" class="pay-error">{{ paymentError }}</p>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="isPaymentModalOpen = false">Cancel</button>
-          <button class="btn-primary" @click="executePayment">Confirm Settlement</button>
+          <button class="btn-secondary" @click="closePaymentModal">Cancel</button>
+          <button class="btn-primary" :disabled="paymentSending" @click="executePayment">
+            {{ paymentSending ? 'Submitting…' : 'Submit for approval' }}
+          </button>
         </div>
       </div>
     </div>
@@ -189,6 +254,16 @@ const billingFilter = ref('All')
 const isPaymentModalOpen = ref(false)
 const isInsuranceModalOpen = ref(false)
 const selectedBill = ref(null)
+
+// Payment flow state
+const paymentMethod = ref('GCash')
+const paymentRef = ref('')
+const receiptPreview = ref('')
+const paymentError = ref('')
+const paymentSending = ref(false)
+const cardForm = ref({ name: '', number: '', expiry: '', cvv: '' })
+
+const MAX_RECEIPT_BYTES = 3 * 1024 * 1024
 
 // Application Mock Reactive Targets
 const insurance = ref({
@@ -242,10 +317,55 @@ const totalBalance = computed(() => {
     .reduce((sum, current) => sum + current.amount, 0)
 })
 
+// Status helpers
+const statusClass = (status) => (status || '').toLowerCase().replace(/\s+/g, '-')
+const statusIcon = (status) => {
+  if (status === 'Paid') return 'lucide:badge-check'
+  if (status === 'Pending Approval') return 'lucide:clock'
+  return 'lucide:file-warning'
+}
+const iconClass = (status) => {
+  if (status === 'Paid') return 'paid-icon'
+  if (status === 'Pending Approval') return 'pending-icon'
+  return 'unpaid-icon'
+}
+
 // Handlers
+const resetPaymentForm = () => {
+  paymentMethod.value = 'GCash'
+  paymentRef.value = ''
+  receiptPreview.value = ''
+  paymentError.value = ''
+  cardForm.value = { name: '', number: '', expiry: '', cvv: '' }
+}
+
 const openPaymentModal = (bill) => {
   selectedBill.value = bill
+  resetPaymentForm()
   isPaymentModalOpen.value = true
+}
+
+const closePaymentModal = () => {
+  isPaymentModalOpen.value = false
+  selectedBill.value = null
+  resetPaymentForm()
+}
+
+const onReceiptChange = (e) => {
+  paymentError.value = ''
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    paymentError.value = 'Please choose an image file.'
+    return
+  }
+  if (file.size > MAX_RECEIPT_BYTES) {
+    paymentError.value = 'Image is too large (max 3MB).'
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = () => { receiptPreview.value = reader.result }
+  reader.readAsDataURL(file)
 }
 
 const reloadBilling = async () => {
@@ -263,23 +383,47 @@ const executePayment = async () => {
   const user = requirePatientSession()
   if (!user) return
 
+  paymentError.value = ''
+
+  // Client-side validation per method
+  if (paymentMethod.value === 'GCash' && !receiptPreview.value) {
+    paymentError.value = 'Please upload your GCash receipt screenshot.'
+    return
+  }
+
+  let reference = paymentRef.value.trim()
+  if (paymentMethod.value === 'Card') {
+    const { name, number, expiry, cvv } = cardForm.value
+    if (!name.trim() || !number.trim() || !expiry.trim() || !cvv.trim()) {
+      paymentError.value = 'Please complete all card details.'
+      return
+    }
+    const digits = number.replace(/\D/g, '')
+    reference = `Card •••• ${digits.slice(-4) || '0000'}`
+  }
+
+  paymentSending.value = true
   try {
-    const response = await $fetch('/api/patient/billing/pay', {
+    const response = await $fetch('/api/patient/billing/submit-payment', {
       method: 'POST',
       body: {
         userId: user.id,
         invoiceId: selectedBill.value?.id,
-        payAll: !selectedBill.value
+        payAll: !selectedBill.value,
+        method: paymentMethod.value,
+        reference,
+        proof: paymentMethod.value === 'GCash' ? receiptPreview.value : null
       }
     })
 
     await reloadBilling()
-    isPaymentModalOpen.value = false
-    selectedBill.value = null
-    alert(response.message || 'Payment successful. Admin has been notified.')
+    closePaymentModal()
+    alert(response.message || 'Payment submitted. An admin will confirm it shortly.')
   } catch (e) {
     console.error('Payment failed:', e)
-    alert(e.data?.statusMessage || e.statusMessage || 'Payment could not be processed.')
+    paymentError.value = e.data?.statusMessage || e.statusMessage || 'Payment could not be submitted.'
+  } finally {
+    paymentSending.value = false
   }
 }
 
@@ -369,6 +513,19 @@ const handleAssistance = () => alert('Opening Financial Aid Portal...')
 .status-pill { font-size: 0.65rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; margin-left: 10px; vertical-align: middle; }
 .status-pill.unpaid { background: #fee2e2; color: #ef4444; }
 .status-pill.paid { background: #dcfce7; color: #10b981; }
+.status-pill.pending-approval { background: #fef3c7; color: #b45309; }
+.pending-icon { background: #fef3c7; color: #d97706; }
+.pending-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 6px 12px;
+  border-radius: 10px;
+}
 
 .record-actions { display: flex; align-items: center; gap: 15px; }
 .bill-amount { font-weight: 800; color: #1e293b; font-size: 1.1rem; }
@@ -404,6 +561,34 @@ const handleAssistance = () => alert('Opening Financial Aid Portal...')
 .payment-methods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
 .method-option { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; font-weight: 700; cursor: pointer; color: #475569; }
 .method-option.active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+/* Payment method panels */
+.method-panel { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.gcash-instructions {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
+  padding: 0.85rem; color: #1e40af; font-size: 0.82rem; line-height: 1.45; margin-bottom: 0.5rem;
+}
+.gcash-instructions :deep(svg) { flex-shrink: 0; font-size: 1.1rem; margin-top: 2px; }
+.upload-label { font-size: 0.78rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-top: 0.4rem; }
+.req { color: #ef4444; }
+.upload-dropzone {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; text-align: center; padding: 1.5rem 1rem; border: 2px dashed #cbd5e1; border-radius: 14px;
+  background: #f8fafc; color: #64748b; cursor: pointer; transition: 0.2s; font-size: 0.85rem;
+}
+.upload-dropzone:hover { border-color: #2563eb; background: #eff6ff; }
+.upload-dropzone.filled { padding: 0.75rem; }
+.upload-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 1.8rem; opacity: 0.6; }
+.upload-dropzone small { font-size: 0.72rem; opacity: 0.7; }
+.receipt-preview { max-height: 180px; max-width: 100%; border-radius: 10px; object-fit: contain; }
+.upload-change { font-size: 0.72rem; color: #2563eb; font-weight: 700; }
+.card-row { display: flex; gap: 12px; }
+.card-col { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.card-note { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #64748b; margin-top: 0.5rem; }
+.pay-error { margin-top: 0.75rem; font-size: 0.82rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; padding: 0.6rem 0.75rem; border-radius: 8px; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .form-group { margin-bottom: 1.2rem; }
 .form-label { display: block; font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px; }
 .form-input { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }

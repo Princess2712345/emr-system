@@ -10,6 +10,7 @@
           <button class="add-btn clickable" @click="bookAppointment">
             <Icon name="lucide:calendar-plus" /> Book New Appointment
           </button>
+          <PatientNotificationBell />
           <div class="profile-chip">
             <div class="avatar-circle purple-theme" title="View Profile" @click="viewProfile">{{ initials }}</div>
           </div>

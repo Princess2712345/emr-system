@@ -106,16 +106,21 @@ model LabResult {
 }
 
 model Invoice {
-  id          String   @id @default(cuid())
-  amount      Float    @default(0.00)
-  balance     Float    @default(0.00)
-  dueDate     DateTime
-  status      String   @default("Unpaid") 
-  patientId   String
-  patientName String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  amount        Float    @default(0.00)
+  balance       Float    @default(0.00)
+  dueDate       DateTime
+  status        String   @default("Unpaid") 
+  patientId     String
+  patientName   String
+  // Payment review workflow
+  paymentMethod String?
+  paymentRef    String?
+  paymentProof  String?  @db.Text
+  submittedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 }
 
 model Disposition {

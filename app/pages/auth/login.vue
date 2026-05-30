@@ -51,6 +51,9 @@
         />
         <p class="id-login-hint">
           Enter the {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }} you received at registration.
+          <button type="button" class="forgot-id-link" @click="openForgotModal">
+            Forgot your {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}?
+          </button>
         </p>
         <button type="submit">Sign In</button>
 
@@ -59,6 +62,37 @@
           <NuxtLink to="/auth/register">Register</NuxtLink>
         </p>
       </form>
+    </div>
+
+    <div v-if="isForgotOpen" class="forgot-overlay" @click.self="isForgotOpen = false">
+      <div class="forgot-modal">
+        <div class="forgot-header">
+          <h3>Recover your {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}</h3>
+          <button type="button" class="forgot-close" @click="isForgotOpen = false">
+            <Icon name="lucide:x" />
+          </button>
+        </div>
+        <p class="forgot-desc">
+          Confirm your identity and an administrator will be notified to relay your
+          {{ loginData.role === 'admin' ? 'Staff #' : 'MRN #' }}.
+        </p>
+        <form @submit.prevent="submitForgot" class="forgot-form">
+          <label>Username or Email</label>
+          <input v-model="forgotData.identifier" type="text" required placeholder="you@example.com" />
+
+          <label>Last Name</label>
+          <input v-model="forgotData.lastName" type="text" required placeholder="Surname on record" />
+
+          <p v-if="forgotMessage" class="forgot-feedback">{{ forgotMessage }}</p>
+
+          <div class="forgot-actions">
+            <button type="button" class="forgot-cancel" @click="isForgotOpen = false">Close</button>
+            <button type="submit" class="forgot-submit" :disabled="forgotSending">
+              {{ forgotSending ? 'Sending…' : 'Send request' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -75,6 +109,37 @@ const loginData = ref({
   uniqueId: '',
   role: 'patient' // Toggles between 'admin' and 'patient' via UI radio buttons
 })
+
+const isForgotOpen = ref(false)
+const forgotSending = ref(false)
+const forgotMessage = ref('')
+const forgotData = ref({ identifier: '', lastName: '' })
+
+const openForgotModal = () => {
+  forgotMessage.value = ''
+  forgotData.value = { identifier: '', lastName: '' }
+  isForgotOpen.value = true
+}
+
+const submitForgot = async () => {
+  forgotSending.value = true
+  forgotMessage.value = ''
+  try {
+    const response = await $fetch('/api/auth/request-id', {
+      method: 'POST',
+      body: {
+        identifier: forgotData.value.identifier.trim(),
+        lastName: forgotData.value.lastName.trim(),
+        role: loginData.value.role.toUpperCase()
+      }
+    })
+    forgotMessage.value = response.message || 'Request sent to the administrator.'
+  } catch (error) {
+    forgotMessage.value = error.data?.statusMessage || 'Could not send your request. Please try again.'
+  } finally {
+    forgotSending.value = false
+  }
+}
 
 const handleLogin = async () => {
   try {
@@ -296,6 +361,146 @@ const handleLogin = async () => {
   color: #64748b;
   z-index: 1;
   text-align: left;
+}
+
+.forgot-id-link {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.25rem;
+  color: #1e40af;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.forgot-id-link:hover {
+  color: #1d4ed8;
+}
+
+/* Forgot ID modal */
+.forgot-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.forgot-modal {
+  background: #fff;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  text-align: left;
+}
+
+.forgot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.forgot-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.forgot-close {
+  border: none;
+  background: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+}
+
+.forgot-desc {
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.forgot-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.forgot-form label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: -0.75rem;
+}
+
+.forgot-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.forgot-form input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.forgot-feedback {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+
+.forgot-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.forgot-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.forgot-submit {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.forgot-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .login-form button[type="submit"] {

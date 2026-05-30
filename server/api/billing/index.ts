@@ -25,7 +25,21 @@ export default defineEventHandler(async (event) => {
     const databaseInvoices = await prisma.invoice.findMany({
       where: whereCondition,
       orderBy: { createdAt: 'desc' },
-      include: { patient: { select: { id: true, email: true, name: true } } }
+      select: {
+        id: true,
+        amount: true,
+        balance: true,
+        dueDate: true,
+        status: true,
+        patientId: true,
+        patientName: true,
+        paymentMethod: true,
+        paymentRef: true,
+        submittedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        patient: { select: { id: true, email: true, name: true } }
+      }
     })
 
     const allInvoices = await prisma.invoice.findMany()

@@ -10,6 +10,7 @@
           <button class="add-btn clickable" @click="handleRequestRecord">
             <Icon name="lucide:file-up" /> Request Medical Record
           </button>
+          <PatientNotificationBell />
           <div class="profile-chip" @click="handleProfileClick" :title="displayName">
             <div class="avatar-circle purple-theme">{{ initials }}</div>
           </div>

@@ -1,19 +1,28 @@
 import { prisma } from '../../utils/prisma'
-
-const ADMIN_SEVERITIES = ['Payment', 'PaymentReview', 'MrnRequest']
+import { requirePatientContext } from '../../utils/patient'
 
 export default defineEventHandler(async (event) => {
-  const sinceRaw = getQuery(event).since as string | undefined
+  const query = getQuery(event)
+  const userId = query.userId as string | undefined
+  const sinceRaw = query.since as string | undefined
   const since = sinceRaw ? new Date(sinceRaw) : null
 
+  if (!userId) {
+    throw createError({ statusCode: 400, statusMessage: 'User id required.' })
+  }
+
+  const { patient } = await requirePatientContext(userId)
+  const resource = `Patient-${patient.id}`
+
   const unreadFilter = {
-    severity: { in: ADMIN_SEVERITIES },
+    severity: 'PatientNotify' as const,
+    resource,
     ...(since && !Number.isNaN(since.getTime()) ? { timestamp: { gt: since } } : {})
   }
 
   const [notifications, unreadCount] = await Promise.all([
     prisma.auditLog.findMany({
-      where: { severity: { in: ADMIN_SEVERITIES } },
+      where: { severity: 'PatientNotify', resource },
       orderBy: { timestamp: 'desc' },
       take: 30
     }),
@@ -26,9 +35,7 @@ export default defineEventHandler(async (event) => {
     notifications: notifications.map((log) => ({
       id: log.id,
       message: log.action,
-      patient: log.user,
       resource: log.resource,
-      severity: log.severity,
       time: log.timestamp,
       timeLabel: new Date(log.timestamp).toLocaleString('en-US', {
         month: 'short',

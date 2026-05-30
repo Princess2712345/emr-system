@@ -27,6 +27,68 @@ video {
   height: auto;
 }
 
+/* ==========================================================================
+   Uniform typographic scale (patient + admin portals)
+   Keeps text sizes consistent across every page. Uses !important so it wins
+   over per-page scoped styles that previously set ad-hoc sizes.
+   ========================================================================== */
+:root {
+  --fs-page-title: 1.5rem;   /* main page H1 */
+  --fs-section: 1.05rem;     /* card / section headings */
+  --fs-subsection: 0.95rem;  /* secondary headings */
+  --fs-body: 0.9rem;         /* default body text */
+  --fs-small: 0.8rem;        /* meta / hints */
+  --fs-label: 0.7rem;        /* uppercase mini labels */
+  --fs-button: 0.85rem;      /* buttons */
+  --fs-table-head: 0.72rem;  /* table headers */
+  --fs-table-cell: 0.85rem;  /* table body cells */
+}
+
+.portal-page {
+  font-size: var(--fs-body);
+}
+
+.portal-page .top-bar h1,
+.portal-top-bar h1 {
+  font-size: var(--fs-page-title) !important;
+  line-height: 1.25;
+}
+
+.portal-page .top-bar p,
+.portal-top-bar p,
+.portal-page .current-date {
+  font-size: var(--fs-small) !important;
+}
+
+.portal-page h3,
+.portal-page .content-card h3,
+.portal-page section h3 {
+  font-size: var(--fs-section) !important;
+}
+
+.portal-page h4 {
+  font-size: var(--fs-subsection) !important;
+}
+
+.portal-page .label-caps {
+  font-size: var(--fs-label) !important;
+}
+
+.portal-page table th {
+  font-size: var(--fs-table-head) !important;
+}
+
+.portal-page table td {
+  font-size: var(--fs-table-cell) !important;
+}
+
+.portal-page .add-btn,
+.portal-page .action-outline,
+.portal-page .btn-primary,
+.portal-page .btn-secondary {
+  font-size: var(--fs-button) !important;
+}
+
 /* --- Layout shells (patient + dashboard) --- */
 .portal-layout,
 .dashboard-layout {
