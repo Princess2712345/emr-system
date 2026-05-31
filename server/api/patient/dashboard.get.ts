@@ -84,15 +84,25 @@ export default defineEventHandler(async (event) => {
         initials: `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'PT',
         age: user.age ?? 24,
         bloodType: user.bloodType || 'O Positive',
+        avatar: patient.avatar || '',
         status: patient.status === 'Active' ? 'Outpatient' : patient.status
       },
       vitals: {
         bloodPressure: recentDisposition ? 'See last visit' : '120/80',
         heartRate: '72 bpm',
-        criticalAllergy: 'Review with physician',
+        criticalAllergy: patient.allergies || 'None on file',
         lastRecorded: recentDisposition
           ? new Date(recentDisposition.dateTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           : 'At registration'
+      },
+      emergencyContact: {
+        name: patient.emergencyContactName || '',
+        relation: patient.emergencyContactRelation || '',
+        phone: patient.emergencyContactPhone || ''
+      },
+      insurance: {
+        provider: patient.insuranceProvider || '',
+        number: patient.insuranceNumber || ''
       },
       nextAppointment: nextAppointment
         ? {

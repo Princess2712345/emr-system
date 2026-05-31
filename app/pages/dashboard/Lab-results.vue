@@ -125,6 +125,43 @@
             </div>
 
             <div class="form-group">
+              <label>Test Results</label>
+              <p class="field-hint">Enter each measured value. Rows left blank are skipped.</p>
+              <div class="result-rows">
+                <div class="result-row-head">
+                  <span>Test</span>
+                  <span>Result</span>
+                  <span>Unit</span>
+                  <span>Reference</span>
+                  <span>Flag</span>
+                  <span></span>
+                </div>
+                <div v-for="(line, idx) in resultLines" :key="idx" class="result-row">
+                  <input v-model="line.name" type="text" placeholder="e.g. Hemoglobin" />
+                  <input v-model="line.value" type="text" placeholder="13.4" />
+                  <input v-model="line.unit" type="text" placeholder="g/dL" />
+                  <input v-model="line.range" type="text" placeholder="12.0–15.5" />
+                  <select v-model="line.flag" class="flag-select">
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="row-remove"
+                    @click="removeResultLine(idx)"
+                    title="Remove row"
+                  >
+                    <Icon name="lucide:trash-2" />
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="add-row-btn" @click="addResultLine">
+                <Icon name="lucide:plus" /> Add test row
+              </button>
+            </div>
+
+            <div class="form-group">
               <label>Clinical findings (optional)</label>
               <textarea
                 v-model="newRecord.findings"
@@ -146,16 +183,19 @@
 
             <div class="form-group file-input-group">
               <label>Select PDF/Image Report</label>
-              <div class="file-dropzone">
-                <Icon name="lucide:cloud-upload" />
+              <div class="file-dropzone" :class="{ 'has-preview': filePreview && isImage(filePreview) }">
                 <input type="file" @change="onFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-                <p v-if="!selectedFile">Click to browse files</p>
-                <p v-else class="file-name">{{ selectedFile.name }}</p>
+                <template v-if="filePreview && isImage(filePreview)">
+                  <img :src="filePreview" alt="Report preview" class="dropzone-preview" />
+                  <p class="file-name">{{ selectedFile?.name }}</p>
+                </template>
+                <template v-else>
+                  <Icon name="lucide:cloud-upload" />
+                  <p v-if="!selectedFile">Click to browse files</p>
+                  <p v-else class="file-name">{{ selectedFile.name }}</p>
+                </template>
               </div>
               <p v-if="fileError" class="file-error">{{ fileError }}</p>
-              <div v-if="filePreview && isImage(filePreview)" class="file-thumb">
-                <img :src="filePreview" alt="Report preview" />
-              </div>
             </div>
 
             <div class="modal-actions">
@@ -269,7 +309,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'dashboard' })
 
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const searchQuery = ref('')
 const selectedCategory = ref('All')
@@ -293,6 +333,47 @@ const newRecord = ref({
 })
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 // 2 MB cap keeps the base64 payload reasonable
+
+type ResultLine = { name: string; value: string; unit: string; range: string; flag: string }
+
+const CATEGORY_TEMPLATES: Record<string, ResultLine[]> = {
+  Hematology: [
+    { name: 'Hemoglobin', value: '', unit: 'g/dL', range: '12.0–15.5', flag: 'normal' },
+    { name: 'WBC Count', value: '', unit: '×10³/µL', range: '4.0–11.0', flag: 'normal' },
+    { name: 'Platelets', value: '', unit: '×10³/µL', range: '150–400', flag: 'normal' }
+  ],
+  Chemistry: [
+    { name: 'Fasting Glucose', value: '', unit: 'mg/dL', range: '70–99', flag: 'normal' },
+    { name: 'Creatinine', value: '', unit: 'mg/dL', range: '0.6–1.2', flag: 'normal' },
+    { name: 'Total Cholesterol', value: '', unit: 'mg/dL', range: '<200', flag: 'normal' }
+  ],
+  Microbiology: [
+    { name: 'Culture Result', value: '', unit: '', range: 'Negative', flag: 'normal' },
+    { name: 'Sensitivity Panel', value: '', unit: '', range: '—', flag: 'normal' }
+  ]
+}
+
+const blankLine = (): ResultLine => ({ name: '', value: '', unit: '', range: '', flag: 'normal' })
+const templateFor = (cat: string): ResultLine[] =>
+  (CATEGORY_TEMPLATES[cat] || []).map((l) => ({ ...l }))
+
+const resultLines = ref<ResultLine[]>(templateFor('Hematology'))
+
+watch(
+  () => newRecord.value.category,
+  (cat) => {
+    const tpl = templateFor(cat)
+    resultLines.value = tpl.length ? tpl : [blankLine()]
+  }
+)
+
+const addResultLine = () => {
+  resultLines.value.push(blankLine())
+}
+const removeResultLine = (idx: number) => {
+  resultLines.value.splice(idx, 1)
+  if (resultLines.value.length === 0) resultLines.value.push(blankLine())
+}
 
 // 🚀 FIXED: Point directly to the correct server handler route
 const { data: filteredLabs, refresh: reloadLabData } = await useFetch<any[]>('/api/labs/upload', {
@@ -357,6 +438,16 @@ const handleFileUpload = async () => {
     }
     const assignedColor = colorMap[newRecord.value.category] || 'teal'
 
+    const cleanedLines = resultLines.value
+      .filter((l) => l.name.trim() && l.value.trim())
+      .map((l) => ({
+        name: l.name.trim(),
+        value: l.value.trim(),
+        unit: l.unit.trim(),
+        range: l.range.trim(),
+        flag: l.flag || 'normal'
+      }))
+
     const response = await $fetch<{ success: boolean }>('/api/labs/upload', {
       method: 'POST',
       body: {
@@ -366,6 +457,7 @@ const handleFileUpload = async () => {
         colorClass: assignedColor,
         findings: newRecord.value.findings || undefined,
         interpretation: newRecord.value.interpretation || undefined,
+        resultDetails: cleanedLines.length ? cleanedLines : undefined,
         filePath: filePreview.value || undefined
       }
     })
@@ -377,6 +469,7 @@ const handleFileUpload = async () => {
       filePreview.value = ''
       fileError.value = ''
       newRecord.value = { patientId: '', category: 'Hematology', testName: '', findings: '', interpretation: '' }
+      resultLines.value = templateFor('Hematology')
       alert('Lab result linked to patient — it will appear on their portal account.')
     }
   } catch (error) {
@@ -447,7 +540,7 @@ const resetFilters = () => {
 .view-link { display: inline-flex; align-items: center; gap: 6px; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; }
 .add-btn { background: #2563eb; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.modal-content { background: white; width: 90%; max-width: 480px; border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+.modal-content { background: white; width: 90%; max-width: 560px; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .header-with-icon { display: flex; align-items: center; gap: 12px; color: #1e3a8a; }
 .modal-title-icon { font-size: 1.5rem; }
@@ -486,9 +579,23 @@ const resetFilters = () => {
 /* Detail panel needs to scroll once results/photos are added */
 .detail-sidebar-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
+.field-hint { margin: 0 0 0.6rem; font-size: 0.78rem; color: #94a3b8; }
+.result-rows { display: flex; flex-direction: column; gap: 6px; }
+.result-row-head,
+.result-row { display: grid; grid-template-columns: 1.4fr 1fr 0.9fr 1.1fr 0.9fr 34px; gap: 6px; align-items: center; }
+.result-row-head { padding: 0 2px; }
+.result-row-head span { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.03em; }
+.result-row input, .result-row .flag-select { width: 100%; padding: 0.5rem 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.82rem; font-family: inherit; min-width: 0; }
+.result-row input:focus, .result-row .flag-select:focus { border-color: #2563eb; }
+.row-remove { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 1px solid #fecaca; background: #fef2f2; color: #ef4444; border-radius: 8px; cursor: pointer; }
+.row-remove:hover { background: #fee2e2; }
+.add-row-btn { margin-top: 0.6rem; display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; border: 1px dashed #bfdbfe; padding: 0.5rem 0.9rem; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+.add-row-btn:hover { background: #dbeafe; }
+
 .file-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; }
-.file-thumb { margin-top: 10px; }
-.file-thumb img { width: 100%; max-height: 200px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+.file-dropzone.has-preview { padding: 0.75rem; }
+.dropzone-preview { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; background: #f8fafc; display: block; }
+.file-dropzone.has-preview .file-name { margin-top: 8px; }
 
 .detail-section { margin-top: 1.5rem; }
 .detail-section-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em; margin: 0 0 0.75rem; }

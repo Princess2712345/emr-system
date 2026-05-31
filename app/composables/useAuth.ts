@@ -24,7 +24,12 @@ export function useAuth() {
     return (u.username?.slice(0, 2) || 'PT').toUpperCase()
   })
 
+  const avatarUrl = computed(() => {
+    const u = user.value as { avatar?: string } | null
+    return u?.avatar || ''
+  })
+
   onMounted(loadUser)
 
-  return { user, loadUser, logout, initials }
+  return { user, loadUser, logout, initials, avatarUrl }
 }

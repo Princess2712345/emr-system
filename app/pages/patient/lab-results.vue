@@ -11,9 +11,9 @@
             <Icon name="lucide:file-up" /> Request Medical Record
           </button>
           <PatientNotificationBell />
-          <div class="profile-chip" @click="handleProfileClick" :title="displayName">
+          <NuxtLink to="/patient/profile" class="profile-chip" :title="displayName">
             <div class="avatar-circle purple-theme">{{ initials }}</div>
-          </div>
+          </NuxtLink>
         </div>
       </header>
 
@@ -299,10 +299,6 @@ const filteredRecords = computed(() => {
 // --- FUNCTIONS ---
 const handleRequestRecord = () => {
   alert('Your request for a certified Medical Record has been submitted. You will be notified via email when it is ready for download.')
-}
-
-const handleProfileClick = () => {
-  alert('Redirecting to Patient Profile Settings...')
 }
 
 const handleVitalClick = (type) => {

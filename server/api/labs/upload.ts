@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
         findings,
         interpretation,
         filePath,
+        resultDetails: inputResultDetails,
         status: inputStatus
       } = body
 
@@ -56,7 +57,10 @@ export default defineEventHandler(async (event) => {
       const patient = await requireResolvedPatient({ patientId, patientName })
       const generatedRequestId = `#LAB-${Date.now().toString(36).toUpperCase()}`
 
-      const resultLines = buildDefaultResultDetails(category)
+      const hasManualLines = Array.isArray(inputResultDetails) && inputResultDetails.length > 0
+      const resultLines = hasManualLines
+        ? inputResultDetails
+        : buildDefaultResultDetails(category)
       const recordStatus = inputStatus === 'Pending' ? 'Pending' : 'Completed'
 
       const newRecord = await prisma.labResult.create({

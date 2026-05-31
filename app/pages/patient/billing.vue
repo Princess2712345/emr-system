@@ -11,9 +11,9 @@
             <Icon name="lucide:wallet" /> Quick Pay
           </button>
           <PatientNotificationBell />
-          <div class="profile-chip" @click="handleProfileClick" :title="displayName">
+          <NuxtLink to="/patient/profile" class="profile-chip" :title="displayName">
             <div class="avatar-circle purple-theme">{{ initials }}</div>
-          </div>
+          </NuxtLink>
         </div>
       </header>
 
@@ -492,7 +492,6 @@ const saveInsurance = () => {
   alert('Insurance dataset updated.')
 }
 
-const handleProfileClick = () => alert('Accessing Profile Settings...')
 const handleStatClick = (type) => alert(`Detail view for: ${type}`)
 const handleDownloadInvoice = (bill) => alert(`Generating INV-${bill.invoiceNo}.pdf...`)
 const handleAssistance = () => alert('Opening Financial Aid Portal...')

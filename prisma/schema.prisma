@@ -46,6 +46,17 @@ model Patient {
   gender       String?
   birthDate    DateTime?
   status       String        @default("Active")
+
+  // Patient-editable profile details
+  avatar                    String?   @db.Text
+  address                   String?
+  allergies                 String?
+  emergencyContactName      String?
+  emergencyContactRelation  String?
+  emergencyContactPhone     String?
+  insuranceProvider         String?
+  insuranceNumber           String?
+
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 

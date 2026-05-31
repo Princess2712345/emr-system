@@ -11,9 +11,9 @@
             <Icon name="lucide:calendar-plus" /> Book New Appointment
           </button>
           <PatientNotificationBell />
-          <div class="profile-chip">
-            <div class="avatar-circle purple-theme" title="View Profile" @click="viewProfile">{{ initials }}</div>
-          </div>
+          <NuxtLink to="/patient/profile" class="profile-chip" title="My Profile">
+            <div class="avatar-circle purple-theme">{{ initials }}</div>
+          </NuxtLink>
         </div>
       </header>
 
@@ -406,7 +406,6 @@ const submitBooking = async () => {
     isSubmitting.value = false
   }
 }
-const viewProfile = () => { alert('Opening Profile Settings...') }
 const openClinicMap = () => { window.open('https://maps.google.com', '_blank') }
 const prepareForVisit = (apt) => { alert(`Preparation guide sent for ${apt.doctor}`) }
 const downloadSummary = (apt) => { alert(`Downloading Summary for ${apt.date}`) }

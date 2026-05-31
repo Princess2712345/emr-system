@@ -11,9 +11,12 @@
             <Icon name="lucide:printer" /> Download E-Record
           </button>
           <PatientNotificationBell />
-          <div class="profile-chip">
-            <div class="avatar-circle" :class="patientInfo.colorClass">{{ patientInfo.initials }}</div>
-          </div>
+          <NuxtLink to="/patient/profile" class="profile-chip" title="My Profile">
+            <div class="avatar-circle" :class="patientInfo.colorClass">
+              <img v-if="patientInfo.avatar" :src="patientInfo.avatar" alt="Profile" class="avatar-img" />
+              <span v-else>{{ patientInfo.initials }}</span>
+            </div>
+          </NuxtLink>
         </div>
       </header>
 
@@ -21,8 +24,11 @@
         <section class="patient-hero">
           <div class="hero-content">
             <div class="avatar-large-container">
-              <div class="avatar-large shadow-sm" :class="patientInfo.colorClass">{{ patientInfo.initials }}</div>
-              <div class="status-badge-online"></div>
+            <div class="avatar-large shadow-sm" :class="patientInfo.colorClass">
+              <img v-if="patientInfo.avatar" :src="patientInfo.avatar" alt="Profile" class="avatar-img" />
+              <span v-else>{{ patientInfo.initials }}</span>
+            </div>
+            <div class="status-badge-online"></div>
             </div>
             <div class="hero-text">
               <div class="title-row">
@@ -94,10 +100,14 @@
                 <Icon name="lucide:phone-call" />
                 <span>Emergency Contact</span>
               </div>
-              <div class="contact-details">
-                <p class="c-name">Maria Peduhan</p>
-                <p class="c-rel">Mother</p>
-                <a href="tel:+639123456789" class="c-phone">+63 912 345 6789</a>
+              <div v-if="emergencyContact.name || emergencyContact.phone" class="contact-details">
+                <p class="c-name">{{ emergencyContact.name || 'Not set' }}</p>
+                <p v-if="emergencyContact.relation" class="c-rel">{{ emergencyContact.relation }}</p>
+                <a v-if="emergencyContact.phone" :href="`tel:${emergencyContact.phone}`" class="c-phone">{{ emergencyContact.phone }}</a>
+              </div>
+              <div v-else class="contact-empty">
+                <p>No emergency contact yet.</p>
+                <NuxtLink to="/patient/profile" class="contact-add-link">Add one in your profile</NuxtLink>
               </div>
             </div>
 
@@ -105,7 +115,7 @@
               <label class="label-caps">Insurance</label>
               <div class="provider-row">
                 <Icon name="lucide:shield-check" class="text-blue-600" />
-                <p>PhilHealth • Verified</p>
+                <p>{{ insurance.provider ? `${insurance.provider}${insurance.number ? ' • ' + insurance.number : ''}` : 'Not on file' }}</p>
               </div>
             </div>
           </aside>
@@ -122,10 +132,12 @@ import { ref, onMounted, computed } from 'vue'
 const isLoading = ref(true)
 
 // Reactive holders initialized with safe placeholder defaults
-const patientInfo = ref({ initials: '...', name: 'Loading...', id: '#...', colorClass: 'purple-theme', age: '--', bloodType: '--' })
+const patientInfo = ref({ initials: '...', name: 'Loading...', id: '#...', colorClass: 'purple-theme', age: '--', bloodType: '--', avatar: '' })
 const vitalsData = ref({ bloodPressure: '--/--', heartRate: '--', criticalAllergy: 'None', lastRecorded: '' })
 const nextAppt = ref({ date: 'No upcoming visits', details: '' })
 const patientNotes = ref([])
+const emergencyContact = ref({ name: '', relation: '', phone: '' })
+const insurance = ref({ provider: '', number: '' })
 
 onMounted(async () => {
   try {
@@ -150,6 +162,8 @@ onMounted(async () => {
       vitalsData.value = data.vitals
       nextAppt.value = data.nextAppointment
       patientNotes.value = data.timelineNotes
+      if (data.emergencyContact) emergencyContact.value = data.emergencyContact
+      if (data.insurance) insurance.value = data.insurance
     }
   } catch (error) {
     console.error('Failed to load profile parameters:', error)
@@ -196,8 +210,9 @@ const addToCalendar = () => {
 
 .avatar-circle { 
   width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-  font-weight: 700; font-size: 0.85rem;
+  font-weight: 700; font-size: 0.85rem; overflow: hidden;
 }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
 /* --- ENHANCED BODY --- */
 /* scrollable-body padding: portal.css */
@@ -209,7 +224,7 @@ const addToCalendar = () => {
 }
 .hero-content { display: flex; align-items: center; gap: 24px; }
 .avatar-large-container { position: relative; }
-.avatar-large { width: 85px; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; }
+.avatar-large { width: 85px; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; overflow: hidden; }
 .status-badge-online { width: 14px; height: 14px; background: #22c55e; border: 3px solid white; border-radius: 50%; position: absolute; bottom: -2px; right: -2px; }
 .purple-theme { background: #f3e8ff; color: #7e22ce; }
 
@@ -274,6 +289,9 @@ const addToCalendar = () => {
 .c-name { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
 .c-rel { font-size: 0.85rem; opacity: 0.8; margin-bottom: 12px; }
 .c-phone { display: block; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; text-align: center; color: white; text-decoration: none; font-weight: 700; }
+.contact-empty { font-size: 0.85rem; opacity: 0.92; }
+.contact-empty p { margin: 0 0 8px; }
+.contact-add-link { color: white; font-weight: 700; text-decoration: underline; }
 
 .provider-row { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #1e293b; margin-top: 10px; }
 

@@ -12,7 +12,10 @@
       <span class="logo-text" style="font-weight: 800;">MyHealth<span style="color: #93c5fd;">Portal</span></span>
       <div class="mobile-bar-actions">
         <PatientNotificationBell />
-        <div class="avatar-circle purple-theme" style="width: 32px; height: 32px; font-size: 0.7rem;">{{ initials }}</div>
+        <NuxtLink to="/patient/profile" class="avatar-circle purple-theme" title="My Profile" style="width: 32px; height: 32px; font-size: 0.7rem; text-decoration: none; overflow: hidden;">
+          <img v-if="avatarUrl" :src="avatarUrl" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;" />
+          <span v-else>{{ initials }}</span>
+        </NuxtLink>
       </div>
     </header>
 
@@ -51,7 +54,7 @@
 
 <script setup>
 const { isMobileOpen, closeMobile } = usePortalLayout()
-const { logout, initials, loadUser } = useAuth()
+const { logout, initials, avatarUrl, loadUser } = useAuth()
 
 loadUser()
 
@@ -78,7 +81,8 @@ const navLinks = [
   { to: '/patient/myappointments', icon: 'lucide:calendar-days', label: 'Appointments' },
   { to: '/patient/lab-results', icon: 'lucide:file-heart', label: 'Health Records' },
   { to: '/patient/history', icon: 'lucide:history', label: 'History' },
-  { to: '/patient/billing', icon: 'lucide:credit-card', label: 'Billing & Payments' }
+  { to: '/patient/billing', icon: 'lucide:credit-card', label: 'Billing & Payments' },
+  { to: '/patient/profile', icon: 'lucide:user-cog', label: 'My Profile' }
 ]
 
 const onLogout = () => {
