@@ -43,6 +43,7 @@ export default defineEventHandler(async (event) => {
         bloodType: ua?.bloodType,
         age: ua?.age,
         gender: patient.gender || 'N/A',
+        avatar: patient.avatar || '',
         birthDate: patient.birthDate
           ? new Date(patient.birthDate).toISOString().slice(0, 10)
           : null,

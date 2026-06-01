@@ -233,6 +233,13 @@ video {
   width: 100%;
 }
 
+/* Space between stat cards (bento) and main content tables below */
+.portal-page .scrollable-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .portal-page .top-bar,
 .portal-top-bar,
 .dashboard-layout .top-bar {
@@ -304,8 +311,25 @@ video {
 .bottom-layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 1.5rem;
+  gap: 1.75rem;
   width: 100%;
+  margin-top: 0.25rem;
+}
+
+.portal-page .content-card {
+  margin-top: 0;
+}
+
+.portal-page .content-card .card-header {
+  margin-bottom: 1.35rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.portal-page .widget-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .side-by-side-container {

@@ -293,6 +293,7 @@
 definePageMeta({ layout: 'patient' })
 
 import { ref, computed, onMounted } from 'vue'
+import { downloadWord, buildInfoTable, buildTable } from '~/utils/exporters'
 
 const { initials, displayName, registryId, requirePatientSession } = usePatientHeader()
 
@@ -493,7 +494,27 @@ const saveInsurance = () => {
 }
 
 const handleStatClick = (type) => alert(`Detail view for: ${type}`)
-const handleDownloadInvoice = (bill) => alert(`Generating INV-${bill.invoiceNo}.pdf...`)
+const handleDownloadInvoice = (bill) => {
+  const peso = (n) => `\u20B1${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  const items = Array.isArray(bill.items) ? bill.items : []
+  const itemsHtml = items.length
+    ? buildTable(['Description', 'Amount'], items.map((it) => [it.description || 'Charge', peso(it.amount)]))
+    : '<p class="muted">No itemized breakdown was recorded for this statement.</p>'
+
+  const body =
+    `<h1>Statement of Account</h1>` +
+    `<p class="muted">Invoice INV-${bill.invoiceNo}</p>` +
+    buildInfoTable([
+      ['Service', bill.service],
+      ['Date', bill.date],
+      ['Status', bill.status],
+      ['Total amount', peso(bill.total ?? bill.amount)]
+    ]) +
+    `<h2>Charge Breakdown</h2>${itemsHtml}` +
+    `<p style="margin-top:24pt;" class="muted">Generated on ${new Date().toLocaleString('en-US')}</p>`
+
+  downloadWord(`Invoice_INV-${bill.invoiceNo}`, `Invoice INV-${bill.invoiceNo}`, body)
+}
 const handleAssistance = () => alert('Opening Financial Aid Portal...')
 
 </script>

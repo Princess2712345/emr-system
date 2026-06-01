@@ -40,12 +40,47 @@ export default defineEventHandler(async (event) => {
     }
   })
 
+  const medRows = await prisma.patientMedication.findMany({
+    where: { patientId: patient.id, status: 'Active' },
+    orderBy: { createdAt: 'asc' }
+  })
+
+  const medications = medRows.map((m) => ({
+    id: m.id,
+    name: m.name,
+    dose: m.dose,
+    timing: m.timing,
+    prescribedBy: m.prescribedBy || ''
+  }))
+
+  const latestRefill = await prisma.medicationRefill.findFirst({
+    where: { patientId: patient.id },
+    orderBy: { createdAt: 'desc' }
+  })
+
   return {
     success: true,
     bloodType: user.bloodType || 'O Positive',
-    allergies: 'Review with care team',
+    allergies: patient.allergies || 'Review with care team',
     lastBp: '118/76',
-    activeMeds: 0,
-    records
+    activeMeds: medications.length,
+    medications,
+    records,
+    refillRequest: latestRefill
+      ? {
+          id: latestRefill.id,
+          requestRef: `RX-${latestRefill.id.slice(0, 8).toUpperCase()}`,
+          status: latestRefill.status,
+          medications: Array.isArray(latestRefill.medications) ? latestRefill.medications : [],
+          medSummary: (Array.isArray(latestRefill.medications) ? latestRefill.medications : []).join(', '),
+          notes: latestRefill.notes || '',
+          requestedAt: new Date(latestRefill.createdAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          })
+        }
+      : null
   }
 })

@@ -5,6 +5,7 @@ export function useDashboardNav() {
     { to: '/dashboard/registration', icon: 'mdi:account-plus', label: 'Registration' },
     { to: '/dashboard/disposition', icon: 'lucide:file-output', label: 'Disposition' },
     { to: '/dashboard/inventory', icon: 'lucide:package', label: 'Inventory' },
+    { to: '/dashboard/medication-refills', icon: 'lucide:pill', label: 'Pharmacy Refills' },
     { to: '/dashboard/billing', icon: 'lucide:credit-card', label: 'Statement of Account' },
     { to: '/dashboard/appointments', icon: 'lucide:calendar-days', label: 'Appointments' },
     { to: '/dashboard/statistic', icon: 'lucide:bar-chart-3', label: 'Statistics' },

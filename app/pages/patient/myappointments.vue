@@ -72,7 +72,6 @@
                 <div class="apt-main-info">
                   <div class="apt-header">
                     <span class="dr-name">{{ apt.doctor }}</span>
-                    <span :class="['status-pill', aptStatusClass(apt.status)]">{{ apt.status }}</span>
                   </div>
                   <div class="apt-meta">
                     <span><Icon name="lucide:clock" /> {{ apt.time }}</span>
@@ -81,14 +80,12 @@
                 </div>
 
                 <div class="apt-actions">
+                  <span :class="['status-pill', 'status-pill-action', aptStatusClass(apt.status)]">{{ apt.status }}</span>
+                  <button class="btn-view-sm" @click="openAppt(apt)">
+                    <Icon name="lucide:eye" /> View
+                  </button>
                   <button v-if="isUpcoming(apt.status)" class="btn-primary-sm" @click="prepareForVisit(apt)">
                     Prepare for Visit
-                  </button>
-                  <button v-if="apt.status === 'Completed'" class="btn-outline-sm" @click="downloadSummary(apt)">
-                    Download Summary
-                  </button>
-                  <button class="icon-btn-more" @click="toggleAptMenu(apt)">
-                    <Icon name="lucide:more-vertical" />
                   </button>
                 </div>
               </div>
@@ -255,6 +252,63 @@
         </div>
       </div>
     </Transition>
+
+    <Transition name="fade">
+      <div v-if="viewAppt" class="modal-overlay" @click.self="viewAppt = null">
+        <div class="view-modal">
+          <div class="view-modal-head">
+            <div class="view-modal-title">
+              <div class="view-modal-icon"><Icon name="lucide:calendar-check" /></div>
+              <div>
+                <h3>Appointment details</h3>
+                <p>Reference #{{ viewAppt.id }}</p>
+              </div>
+            </div>
+            <button type="button" class="modal-close clickable" @click="viewAppt = null">
+              <Icon name="lucide:x" />
+            </button>
+          </div>
+
+          <div class="view-modal-body">
+            <div class="view-status-row">
+              <span :class="['status-pill', aptStatusClass(viewAppt.status)]">{{ viewAppt.status }}</span>
+            </div>
+
+            <div class="view-grid">
+              <div class="view-field">
+                <span class="vf-label">Provider</span>
+                <span class="vf-value">{{ viewAppt.doctor }}</span>
+              </div>
+              <div class="view-field">
+                <span class="vf-label">Date</span>
+                <span class="vf-value">{{ viewAppt.date }}</span>
+              </div>
+              <div class="view-field">
+                <span class="vf-label">Time</span>
+                <span class="vf-value">{{ viewAppt.time }}</span>
+              </div>
+              <div class="view-field" v-if="viewAppt.duration">
+                <span class="vf-label">Duration</span>
+                <span class="vf-value">{{ viewAppt.duration }}</span>
+              </div>
+              <div class="view-field view-field-wide">
+                <span class="vf-label">Reason for visit</span>
+                <span class="vf-value">{{ viewAppt.reason || '—' }}</span>
+              </div>
+            </div>
+
+            <div class="view-modal-actions">
+              <button v-if="isUpcoming(viewAppt.status)" class="btn-primary-sm" @click="prepareForVisit(viewAppt)">
+                <Icon name="lucide:clipboard-check" /> Prepare for Visit
+              </button>
+              <button v-if="viewAppt.status === 'Completed'" class="btn-outline-sm" @click="downloadSummary(viewAppt)">
+                <Icon name="lucide:download" /> Download Summary
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -262,6 +316,7 @@
 definePageMeta({ layout: 'patient' })
 
 import { ref, computed, onMounted } from 'vue'
+import { downloadWord, buildInfoTable } from '~/utils/exporters'
 
 const isLoading = ref(true)
 const currentFilter = ref('All')
@@ -270,6 +325,7 @@ const userId = ref('')
 const isBookModalOpen = ref(false)
 const isSubmitting = ref(false)
 const staffList = ref([])
+const viewAppt = ref(null)
 
 const minDate = new Date().toISOString().slice(0, 10)
 
@@ -408,10 +464,48 @@ const submitBooking = async () => {
 }
 const openClinicMap = () => { window.open('https://maps.google.com', '_blank') }
 const prepareForVisit = (apt) => { alert(`Preparation guide sent for ${apt.doctor}`) }
-const downloadSummary = (apt) => { alert(`Downloading Summary for ${apt.date}`) }
-const toggleAptMenu = (apt) => { alert(`Opening contextual menu for ${apt.doctor}`) }
+const downloadSummary = (apt) => {
+  const body =
+    `<h1>Appointment Summary</h1>` +
+    `<p class="muted">Reference #${apt.id}</p>` +
+    buildInfoTable([
+      ['Provider', apt.doctor],
+      ['Date', apt.date],
+      ['Time', apt.time],
+      ['Status', apt.status],
+      ['Reason for visit', apt.reason]
+    ]) +
+    `<p style="margin-top:24pt;" class="muted">Generated on ${new Date().toLocaleString('en-US')}</p>`
+
+  downloadWord(`Appointment_Summary_${String(apt.date).replace(/[^a-z0-9]/gi, '_')}`, 'Appointment Summary', body)
+}
+const openAppt = (apt) => { viewAppt.value = apt }
 const showChecklistHelp = () => { alert('Checklist options help clear check-in protocols quickly.') }
-const switchToVideoCall = () => { alert('Requesting change to virtual format...') }
+const isTelemedicineVisit = (apt) => {
+  const text = `${apt.reason || ''} ${apt.doctor || ''}`.toLowerCase()
+  return text.includes('telemedicine') || text.includes('telehealth') || text.includes('video')
+}
+
+const switchToVideoCall = () => {
+  const teleAppt = appointments.value.find(
+    (apt) => isUpcoming(apt.status) && isTelemedicineVisit(apt)
+  )
+
+  if (teleAppt) {
+    const room = `emr-visit-${String(teleAppt.id).replace(/[^a-zA-Z0-9-]/g, '')}`
+    window.open(`https://meet.jit.si/${room}#userInfo.displayName="${encodeURIComponent(displayName.value || 'Patient')}"`, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  bookForm.value = {
+    ...defaultBookForm(),
+    visitType: 'Telemedicine',
+    clinic: 'Telehealth (video)',
+    date: minDate,
+    reason: 'Telemedicine video consultation'
+  }
+  isBookModalOpen.value = true
+}
 
 </script>
 
@@ -424,7 +518,19 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 .purple-theme { background: #f3e8ff; color: #7e22ce; }
 
 /* --- CONTENT FRAMES --- */
-.bento-card { background: white; padding: 1.5rem; border-radius: 18px; border: 1px solid #e2e8f0; }
+.bento-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.bento-card:hover {
+  border-color: #2563eb;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
 .highlight-card { background: #1e3a8a; color: white; border: none; }
 .label-caps { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
 .highlight-card .label-caps { color: #93c5fd; }
@@ -464,32 +570,90 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 /* --- VISITS STACK --- */
 .appointment-stack { display: flex; flex-direction: column; gap: 1.15rem; }
 .apt-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   align-items: center;
+  column-gap: 1.5rem;
+  row-gap: 0.75rem;
   padding: 1.35rem 1.5rem;
   border-radius: 16px;
   border: 1px solid #f1f5f9;
   background: #fafafa;
-  gap: 1.25rem;
   transition: 0.2s;
 }
 .apt-item:hover { border-color: #dbeafe; background: white; transform: scale(1.01); }
-.apt-date-box { width: 60px; height: 60px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+.apt-date-box { width: 64px; height: 64px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
 .apt-date-box .month { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #2563eb; }
 .apt-date-box .day { font-size: 1.2rem; font-weight: 800; color: #1e293b; }
-.dr-name { font-weight: 700; color: #1e3a8a; font-size: 1rem; }
+.apt-main-info { min-width: 0; padding-right: 0.25rem; }
+.apt-header { margin-bottom: 6px; }
+.dr-name { font-weight: 700; color: #1e3a8a; font-size: 1rem; margin: 0; display: block; }
 .status-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; }
+.status-pill-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-align: center;
+  box-sizing: border-box;
+}
 .status-pill.upcoming,
 .status-pill.pending,
 .status-pill.confirmed,
 .status-pill.in-progress { background: #e0f2fe; color: #0369a1; }
 .status-pill.completed { background: #f1f5f9; color: #475569; }
 .status-pill.cancelled { background: #fee2e2; color: #991b1b; }
-.apt-meta { display: flex; gap: 15px; font-size: 0.85rem; color: #64748b; }
+.apt-meta { display: flex; flex-wrap: wrap; gap: 12px 18px; font-size: 0.85rem; color: #64748b; }
 .apt-meta span { display: flex; align-items: center; gap: 5px; }
-.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
-.btn-outline-sm { background: white; border: 1.5px solid #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.apt-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-left: 1.25rem;
+  margin-left: 0.25rem;
+  border-left: 1px solid #e2e8f0;
+  min-width: 130px;
+}
+.apt-actions .status-pill-action,
+.apt-actions .btn-view-sm,
+.apt-actions .btn-primary-sm {
+  width: 100%;
+  min-height: 36px;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.apt-actions .btn-view-sm,
+.apt-actions .btn-primary-sm { display: inline-flex; align-items: center; }
+.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary-sm:hover { background: #1d4ed8; }
+.btn-outline-sm { background: white; border: 1.5px solid #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.btn-outline-sm:hover { border-color: #2563eb; color: #2563eb; }
+.btn-view-sm { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.15s; }
+.btn-view-sm:hover { background: #2563eb; color: white; border-color: #2563eb; }
 .icon-btn-more { background: none; border: none; color: #94a3b8; cursor: pointer; }
+
+/* View details modal */
+.view-modal { background: white; border-radius: 20px; width: min(520px, 100%); box-shadow: 0 25px 50px rgba(0,0,0,0.18); overflow: hidden; }
+.view-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; background: #eff6ff; border-bottom: 1px solid #dbeafe; }
+.view-modal-title { display: flex; align-items: center; gap: 0.75rem; }
+.view-modal-icon { width: 2.5rem; height: 2.5rem; border-radius: 12px; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.view-modal-title h3 { margin: 0; font-size: 1.05rem; font-weight: 800; color: #1e3a8a; }
+.view-modal-title p { margin: 2px 0 0; font-size: 0.78rem; color: #3b82f6; font-family: ui-monospace, monospace; }
+.view-modal-body { padding: 1.25rem; }
+.view-status-row { margin-bottom: 1rem; }
+.view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem 1.25rem; }
+.view-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.view-field-wide { grid-column: 1 / -1; }
+.vf-label { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: #94a3b8; }
+.vf-value { font-size: 0.92rem; font-weight: 600; color: #1e293b; word-break: break-word; }
+.view-modal-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.view-modal-actions .btn-primary-sm, .view-modal-actions .btn-outline-sm { padding: 0.6rem 1rem; font-size: 0.85rem; }
 
 /* --- SIDE WIDGETS --- */
 .widget-stack { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -677,6 +841,24 @@ const switchToVideoCall = () => { alert('Requesting change to virtual format...'
 
 @media (max-width: 640px) {
   .form-grid { grid-template-columns: 1fr; }
-  .apt-item { flex-wrap: wrap; }
+  .apt-item {
+    grid-template-columns: 56px minmax(0, 1fr);
+    column-gap: 1rem;
+  }
+  .apt-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+    margin-left: 0;
+    padding: 1rem 0 0;
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+  }
+  .apt-actions .status-pill-action,
+  .apt-actions .btn-view-sm,
+  .apt-actions .btn-primary-sm { width: auto; min-width: 110px; }
 }
 </style>

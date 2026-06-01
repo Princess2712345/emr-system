@@ -81,7 +81,7 @@
 
                 <div class="record-actions">
                   <button class="btn-outline-sm" @click="handleViewResults(record)">View Results</button>
-                  <button class="icon-btn-more" @click="handleDownload(record)" title="Download PDF">
+                  <button class="icon-btn-more" @click="handleDownload(record)" title="Download report (Word)">
                     <Icon name="lucide:download" />
                   </button>
                 </div>
@@ -101,7 +101,10 @@
             </div>
 
             <div class="content-card medication-widget">
-              <h4>Active Medications</h4>
+              <div class="med-widget-head">
+                <h4><Icon name="lucide:pill" /> Active Medications</h4>
+                <span class="med-count-badge">{{ medications.length }} Rx</span>
+              </div>
               <div class="med-item" v-for="med in medications" :key="med.name">
                 <div class="med-info">
                   <p class="med-name">{{ med.name }}</p>
@@ -111,8 +114,38 @@
                   <Icon name="lucide:info" />
                 </button>
               </div>
-              <button class="btn-text-link" @click="handleRequestRefill">
-                Request Refill <Icon name="lucide:arrow-right" />
+
+              <div
+                v-if="refillRequest"
+                class="refill-tracker"
+                :class="refillTrackerClass(refillRequest.status)"
+              >
+                <div class="refill-tracker-top">
+                  <div class="refill-tracker-icon">
+                    <Icon :name="refillTrackerIcon(refillRequest.status)" />
+                  </div>
+                  <div class="refill-tracker-text">
+                    <p class="refill-tracker-title">{{ refillTrackerTitle(refillRequest.status) }}</p>
+                    <p class="refill-tracker-meta">
+                      {{ refillRequest.requestRef }} • {{ refillRequest.requestedAt }}
+                    </p>
+                  </div>
+                  <span class="refill-status-pill">{{ refillRequest.status }}</span>
+                </div>
+                <p class="refill-tracker-meds">{{ refillRequest.medSummary }}</p>
+                <p v-if="refillRequest.status === 'Denied' && refillRequest.notes" class="refill-tracker-note">
+                  {{ refillRequest.notes }}
+                </p>
+              </div>
+
+              <button
+                class="btn-text-link"
+                :disabled="refillSubmitting || !medications.length || refillRequest?.status === 'Pending'"
+                @click="handleRequestRefill"
+              >
+                <Icon v-if="refillSubmitting" name="lucide:loader-2" class="spin" />
+                {{ refillSubmitting ? 'Sending…' : refillRequest?.status === 'Pending' ? 'Awaiting pharmacy review' : 'Request Refill' }}
+                <Icon v-if="!refillSubmitting && refillRequest?.status !== 'Pending'" name="lucide:arrow-right" />
               </button>
             </div>
           </aside>
@@ -226,7 +259,7 @@
               <Icon name="lucide:printer" /> Print report
             </button>
             <button type="button" class="action-secondary clickable" @click="handleDownload(selectedRecord)">
-              <Icon name="lucide:download" /> Download PDF
+              <Icon name="lucide:download" /> Download Report
             </button>
           </div>
         </div>
@@ -239,6 +272,7 @@
 definePageMeta({ layout: 'patient' })
 
 import { ref, computed, onMounted } from 'vue'
+import { downloadWord, buildInfoTable, buildTable } from '~/utils/exporters'
 
 const { initials, displayName, registryId, requirePatientSession } = usePatientHeader()
 const route = useRoute()
@@ -248,6 +282,7 @@ const bloodType = ref('—')
 const activeMeds = ref(0)
 const records = ref([])
 const medications = ref([])
+const refillRequest = ref(null)
 const userId = ref('')
 
 const isDetailOpen = ref(false)
@@ -263,7 +298,9 @@ onMounted(async () => {
     if (data.success) {
       bloodType.value = data.bloodType
       activeMeds.value = data.activeMeds
+      medications.value = data.medications || []
       records.value = data.records
+      refillRequest.value = data.refillRequest || null
     }
 
     const openLabId = route.query.open
@@ -331,14 +368,48 @@ const handlePrint = () => {
   window.print()
 }
 
-const handleDownload = (record) => {
+const buildLabDoc = (rec) => {
+  const lines = Array.isArray(rec.lines) ? rec.lines : []
+  const resultsHtml = lines.length
+    ? buildTable(
+        ['Test', 'Result', 'Reference', 'Flag'],
+        lines.map((l) => [l.name, `${l.value || ''}${l.unit ? ' ' + l.unit : ''}`, l.range || '', l.flag || 'normal'])
+      )
+    : '<p class="muted">Results are pending and not yet available.</p>'
+
+  const body =
+    `<h1>Laboratory Report</h1>` +
+    `<p class="muted">${rec.requestId || ''}</p>` +
+    buildInfoTable([
+      ['Test', rec.name],
+      ['Category', rec.category],
+      ['Patient', rec.patientName],
+      ['Date reported', rec.date],
+      ['Ordered by', rec.doctor],
+      ['Status', rec.resultStatus]
+    ]) +
+    `<h2>Test Results</h2>${resultsHtml}` +
+    (rec.findings ? `<h2>Clinical Findings</h2><p>${rec.findings}</p>` : '') +
+    (rec.interpretation ? `<h2>Interpretation</h2><p>${rec.interpretation}</p>` : '') +
+    `<p style="margin-top:24pt;" class="muted">Generated on ${new Date().toLocaleString('en-US')}</p>`
+
+  downloadWord(`Lab_Report_${(rec.requestId || rec.name || 'result').replace(/[^a-z0-9]/gi, '_')}`, `Lab Report — ${rec.name}`, body)
+}
+
+const handleDownload = async (record) => {
   const target = record || selectedRecord.value
   if (!target) return
-  if (target.filePath) {
-    window.open(target.filePath, '_blank')
-    return
+  // Ensure we have detailed result lines before exporting
+  let full = target
+  if (!Array.isArray(target.lines) || !target.lines.length) {
+    try {
+      const data = await $fetch(`/api/patient/labs/${target.id}?userId=${userId.value}`)
+      if (data?.record) full = data.record
+    } catch (e) {
+      console.error('Could not load full lab record for export:', e)
+    }
   }
-  alert(`PDF for ${target.name} (${target.requestId}) will be available once the file is uploaded by the lab.`)
+  buildLabDoc(full)
 }
 
 const handleOpenGuide = () => {
@@ -349,9 +420,49 @@ const handleMedInfo = (med) => {
   alert(`Clinical Information for ${med.name}:\nUsed to treat blood pressure/cholesterol. Do not skip doses.`)
 }
 
-const handleRequestRefill = () => {
-  const confirmRefill = confirm('Send a refill request to your primary physician for all active medications?')
-  if (confirmRefill) alert('Refill request sent! Check your notifications for approval status.')
+const refillSubmitting = ref(false)
+
+const refillTrackerClass = (status) => {
+  if (status === 'Approved') return 'approved'
+  if (status === 'Denied') return 'denied'
+  return 'pending'
+}
+
+const refillTrackerIcon = (status) => {
+  if (status === 'Approved') return 'lucide:check-circle'
+  if (status === 'Denied') return 'lucide:x-circle'
+  return 'lucide:clock'
+}
+
+const refillTrackerTitle = (status) => {
+  if (status === 'Approved') return 'Refill approved — ready for pickup'
+  if (status === 'Denied') return 'Refill not approved'
+  return 'Pharmacy review in progress'
+}
+
+const handleRequestRefill = async () => {
+  if (!userId.value || !medications.value.length) {
+    alert('No active medications on file to refill.')
+    return
+  }
+  const names = medications.value.map((m) => m.name).join(', ')
+  if (!confirm(`Submit a pharmacy refill request for:\n\n${names}\n\nYour care team will review it within 1–2 business days.`)) return
+
+  refillSubmitting.value = true
+  try {
+    const res = await $fetch(`/api/patient/medication-refill?userId=${userId.value}`, {
+      method: 'POST',
+      body: { medications: medications.value.map((m) => m.name) }
+    })
+    alert(res.message || 'Refill request submitted. Staff will review it shortly.')
+    const data = await $fetch(`/api/patient/labs?userId=${userId.value}`)
+    if (data.success) refillRequest.value = data.refillRequest || null
+  } catch (e) {
+    console.error('Refill request failed:', e)
+    alert(e?.data?.statusMessage || 'Could not submit refill request. Please try again.')
+  } finally {
+    refillSubmitting.value = false
+  }
 }
 
 </script>
@@ -442,7 +553,103 @@ const handleRequestRefill = () => {
 .med-instruction { font-size: 0.8rem; color: #64748b; }
 .med-icon-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; padding: 4px; border-radius: 4px; }
 .med-icon-btn:hover { color: #2563eb; background: #eff6ff; }
+.med-widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.med-widget-head h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.med-count-badge {
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.refill-tracker {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.refill-tracker.pending {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+.refill-tracker.approved {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+.refill-tracker.denied {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.refill-tracker-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.refill-tracker-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: white;
+}
+.refill-tracker.pending .refill-tracker-icon { color: #7c3aed; }
+.refill-tracker.approved .refill-tracker-icon { color: #059669; }
+.refill-tracker.denied .refill-tracker-icon { color: #dc2626; }
+.refill-tracker-text { flex: 1; min-width: 0; }
+.refill-tracker-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+.refill-tracker-meta {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+}
+.refill-status-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.refill-tracker.pending .refill-status-pill { background: #ede9fe; color: #6d28d9; }
+.refill-tracker.approved .refill-status-pill { background: #dcfce7; color: #15803d; }
+.refill-tracker.denied .refill-status-pill { background: #fee2e2; color: #b91c1c; }
+.refill-tracker-meds {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.4;
+}
+.refill-tracker-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #b91c1c;
+  font-style: italic;
+}
+
 .btn-text-link { background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.85rem; margin-top: 1rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.btn-text-link:disabled { color: #94a3b8; cursor: not-allowed; }
 
 .empty-state { padding: 3rem; text-align: center; color: #94a3b8; font-style: italic; }
 
@@ -514,7 +721,9 @@ const handleRequestRefill = () => {
   color: #64748b;
 }
 
-.spin-icon { animation: spin 1s linear infinite; font-size: 1.5rem; }
+.spin-icon,
+.spin { animation: spin 1s linear infinite; }
+.spin-icon { font-size: 1.5rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .detail-hero { text-align: center; margin-bottom: 1.5rem; }

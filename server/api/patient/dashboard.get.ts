@@ -76,6 +76,20 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const dispositionType = recentDisposition?.type || null
+    let careStatus = 'Outpatient'
+    let careStatusClass = 'outpatient'
+    if (dispositionType === 'Admitted') {
+      careStatus = 'Admitted'
+      careStatusClass = 'admitted'
+    } else if (dispositionType === 'Transferred') {
+      careStatus = 'Transferred'
+      careStatusClass = 'transferred'
+    } else if (dispositionType === 'Discharged') {
+      careStatus = 'Outpatient'
+      careStatusClass = 'outpatient'
+    }
+
     return {
       success: true,
       patientInfo: {
@@ -85,7 +99,9 @@ export default defineEventHandler(async (event) => {
         age: user.age ?? 24,
         bloodType: user.bloodType || 'O Positive',
         avatar: patient.avatar || '',
-        status: patient.status === 'Active' ? 'Outpatient' : patient.status
+        careStatus,
+        careStatusClass,
+        dispositionType
       },
       vitals: {
         bloodPressure: recentDisposition ? 'See last visit' : '120/80',

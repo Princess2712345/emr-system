@@ -14,6 +14,17 @@ export default defineEventHandler(async (event) => {
           { patientId: { contains: search, mode: 'insensitive' } }
         ]
       },
+      include: {
+        patient: {
+          select: {
+            avatar: true,
+            email: true,
+            phone: true,
+            gender: true,
+            userAccount: { select: { uniqueId: true } }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     })
 
@@ -22,6 +33,11 @@ export default defineEventHandler(async (event) => {
       id: item.id,
       patientName: item.patientName,
       patientId: item.patientId,
+      mrn: item.patient?.userAccount?.uniqueId || null,
+      email: item.patient?.email || null,
+      phone: item.patient?.phone && item.patient.phone !== 'N/A' ? item.patient.phone : null,
+      gender: item.patient?.gender || null,
+      avatar: item.patient?.avatar || '',
       type: item.type,
       physician: item.physician,
       dateTime: item.dateTime.toLocaleString('en-US', {

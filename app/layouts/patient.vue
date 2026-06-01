@@ -80,8 +80,8 @@ const navLinks = [
   { to: '/patient', icon: 'lucide:layout-dashboard', label: 'Dashboard' },
   { to: '/patient/myappointments', icon: 'lucide:calendar-days', label: 'Appointments' },
   { to: '/patient/lab-results', icon: 'lucide:file-heart', label: 'Health Records' },
-  { to: '/patient/history', icon: 'lucide:history', label: 'History' },
-  { to: '/patient/billing', icon: 'lucide:credit-card', label: 'Billing & Payments' }
+  { to: '/patient/billing', icon: 'lucide:credit-card', label: 'Billing & Payments' },
+  { to: '/patient/history', icon: 'lucide:history', label: 'History' }
 ]
 
 const onLogout = () => {

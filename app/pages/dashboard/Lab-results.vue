@@ -291,6 +291,15 @@
           </div>
 
           <div class="detail-actions-vertical">
+            <button
+              v-if="selectedLab.status === 'Pending'"
+              class="action-btn-complete clickable"
+              :disabled="isCompleting"
+              @click="markLabCompleted(selectedLab)"
+            >
+              <Icon :name="isCompleting ? 'lucide:loader-2' : 'lucide:check-check'" :class="{ 'spin-icon': isCompleting }" />
+              {{ isCompleting ? 'Updating…' : 'Mark as Completed' }}
+            </button>
             <button class="action-btn-primary clickable">
               <Icon name="lucide:printer" /> Print Official Report
             </button>
@@ -386,6 +395,26 @@ const { data: filteredLabs, refresh: reloadLabData } = await useFetch<any[]>('/a
 const openDetails = (lab: any) => {
   selectedLab.value = lab
   isDetailOpen.value = true
+}
+
+const isCompleting = ref(false)
+
+const markLabCompleted = async (lab: any) => {
+  if (!lab?.id) return
+  isCompleting.value = true
+  try {
+    await $fetch(`/api/labs/${lab.id}`, {
+      method: 'PATCH',
+      body: { status: 'Completed' }
+    })
+    if (selectedLab.value) selectedLab.value.status = 'Completed'
+    await reloadLabData()
+  } catch (error) {
+    const err = error as { data?: { statusMessage?: string } }
+    alert(err.data?.statusMessage || 'Failed to update lab status.')
+  } finally {
+    isCompleting.value = false
+  }
 }
 
 const detailLines = computed(() =>
@@ -567,6 +596,11 @@ const resetFilters = () => {
 .detail-label { color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
 .detail-value { color: #1e293b; font-weight: 700; }
 .detail-actions-vertical { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.action-btn-complete { background: #16a34a; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+.action-btn-complete:hover { background: #15803d; }
+.action-btn-complete:disabled { opacity: 0.6; cursor: not-allowed; }
+.spin-icon { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .action-btn-primary { background: #1e3a8a; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .action-btn-secondary { background: #f1f5f9; color: #475569; border: none; padding: 1rem; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .clickable { cursor: pointer; transition: all 0.2s ease; }

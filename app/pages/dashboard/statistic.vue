@@ -11,7 +11,7 @@
             <span class="pulse-dot"></span>
             Live Updates
           </div>
-          <button class="export-btn clickable">
+          <button class="export-btn clickable" @click="downloadReport">
             <Icon name="lucide:download" /> Download Full Report
           </button>
         </div>
@@ -36,44 +36,36 @@
           <div class="chart-box main-chart">
             <div class="chart-header">
               <div>
-                <h3>Patient Admissions (Monthly)</h3>
-                <p class="chart-sub">Volume tracking for current fiscal year</p>
+                <h3>Patient Registrations (Monthly)</h3>
+                <p class="chart-sub">New patients admitted over the last 6 months</p>
               </div>
-              <select class="chart-filter">
-                <option>Last 6 Months</option>
-                <option>Last Year</option>
-              </select>
             </div>
             <div class="visual-placeholder bar-chart">
-              <div v-for="(height, index) in statsData.monthlyAdmissions" 
+              <div v-for="(m, index) in monthly" 
                    :key="index" 
                    class="bar-wrapper">
-                <div class="bar-tooltip">{{ height }}%</div>
-                <div class="bar" :style="{ height: height + '%' }"></div>
-                <span class="bar-label">M{{ index + 1 }}</span>
+                <div class="bar-tooltip">{{ m.value }} patient{{ m.value === 1 ? '' : 's' }}</div>
+                <div class="bar" :style="{ height: m.pct + '%' }"></div>
+                <span class="bar-label">{{ m.label }}</span>
               </div>
             </div>
           </div>
           
           <div class="chart-box side-chart">
             <div class="chart-header">
-              <h3>Distribution</h3>
+              <h3>Appointment Status</h3>
             </div>
             <div class="pie-container">
-              <div class="pie-visual">
-                <div class="circle"></div>
-                <div class="inner-label">
-                  <strong>100%</strong>
-                  <span>Total</span>
-                </div>
-              </div>
-              <ul class="chart-legend">
+              <ul class="chart-legend full">
                 <li v-for="item in statsData.distribution" :key="item.name">
                   <div class="legend-info">
                     <span :class="['dot', item.class]"></span>
                     {{ item.name }}
                   </div>
-                  <strong>{{ item.pct }}%</strong>
+                  <strong>{{ item.count }} ({{ item.pct }}%)</strong>
+                </li>
+                <li v-if="!statsData.distribution.length" class="empty-legend">
+                  No appointments recorded yet.
                 </li>
               </ul>
             </div>
@@ -81,24 +73,29 @@
 
           <div class="chart-box full-width-table">
             <div class="chart-header">
-              <h3>Departmental Performance Index</h3>
+              <h3>System Activity Overview</h3>
+              <span class="chart-sub">Everything happening across the platform</span>
             </div>
             <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Department</th>
-                  <th>Total Patients</th>
-                  <th>Avg. Stay</th>
+                  <th>Module</th>
+                  <th>Total Records</th>
+                  <th>This Month</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="dept in statsData.departments" :key="dept.name">
-                  <td class="font-bold">{{ dept.name }}</td>
-                  <td>{{ dept.patients }}</td>
-                  <td>{{ dept.stay }} Days</td>
-                  <td><span class="status-pill">Optimal</span></td>
+                <tr v-for="row in statsData.activity" :key="row.name">
+                  <td class="font-bold">
+                    <span class="module-cell"><Icon :name="row.icon" /> {{ row.name }}</span>
+                  </td>
+                  <td>{{ row.total.toLocaleString() }}</td>
+                  <td>
+                    <span class="month-pill" :class="{ zero: row.thisMonth === 0 }">+{{ row.thisMonth }}</span>
+                  </td>
+                  <td><span class="status-pill">{{ row.thisMonth > 0 ? 'Active' : 'Idle' }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -113,23 +110,71 @@
 definePageMeta({ layout: 'dashboard' })
 
 import { computed } from 'vue'
+import { downloadExcel, buildTable } from '~/utils/exporters'
 
 // Securely pull dynamic live numbers from your Prisma Client backend layout route
 const { data: statsData } = await useFetch('/api/statistic', {
   default: () => ({
-    kpis: { totalPatients: '0', totalStaff: '0', appointmentsCount: '0' },
+    kpis: {
+      totalPatients: '0', totalStaff: '0', appointmentsCount: '0',
+      labResults: '0', pendingLabs: '0', completedLabs: '0',
+      dispositions: '0', revenueCollected: '\u20B10', outstanding: '\u20B10'
+    },
     distribution: [],
-    monthlyAdmissions: [30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+    monthly: [],
+    monthlyAdmissions: [],
+    activity: [],
     departments: []
   })
 })
 
+const monthly = computed(() => statsData.value.monthly || [])
+
+const downloadReport = () => {
+  const k = statsData.value.kpis
+  const kpiTable = buildTable(
+    ['Metric', 'Value'],
+    [
+      ['Total Patients', k.totalPatients],
+      ['Total Staff', k.totalStaff],
+      ['Appointments (all-time)', k.appointmentsCount],
+      ['Lab Results', k.labResults],
+      ['Pending Labs', k.pendingLabs],
+      ['Completed Labs', k.completedLabs],
+      ['Dispositions', k.dispositions],
+      ['Revenue Collected', k.revenueCollected],
+      ['Outstanding Balance', k.outstanding]
+    ]
+  )
+  const monthlyTable = buildTable(
+    ['Month', 'New Patients'],
+    (statsData.value.monthly || []).map((m) => [m.label, m.value])
+  )
+  const statusTable = buildTable(
+    ['Appointment Status', 'Count', 'Percentage'],
+    (statsData.value.distribution || []).map((d) => [d.name, d.count, `${d.pct}%`])
+  )
+  const activityTable = buildTable(
+    ['Module', 'Total Records', 'This Month'],
+    (statsData.value.activity || []).map((a) => [a.name, a.total, a.thisMonth])
+  )
+
+  const body =
+    `<h3>Key Metrics</h3>${kpiTable}` +
+    `<h3>Monthly Patient Registrations</h3>${monthlyTable}` +
+    `<h3>Appointment Status Distribution</h3>${statusTable}` +
+    `<h3>System Activity Overview</h3>${activityTable}`
+
+  const stamp = new Date().toISOString().slice(0, 10)
+  downloadExcel(`EMR_Statistics_Report_${stamp}`, body, 'EMR Statistics')
+}
+
 // Computed array formatting data seamlessly into your layout grid template loops
 const kpiData = computed(() => [
-  { label: 'Patient Registry', value: statsData.value.kpis.totalPatients, trend: '+8.2%', trendType: 'up', icon: 'lucide:user-plus' },
-  { label: 'Booked Appointments', value: statsData.value.kpis.appointmentsCount, trend: 'Stable', trendType: 'up', icon: 'lucide:clock' },
-  { label: 'System Uptime', value: '99.9%', trend: 'Stable', trendType: 'up', icon: 'lucide:activity' },
-  { label: 'Active Staff Users', value: statsData.value.kpis.totalStaff, trend: '+2', trendType: 'up', icon: 'lucide:shield-check' }
+  { label: 'Patient Registry', value: statsData.value.kpis.totalPatients, trend: `+${statsData.value.kpis.totalPatients} total`, trendType: 'up', icon: 'lucide:users' },
+  { label: 'Appointments', value: statsData.value.kpis.appointmentsCount, trend: 'Booked all-time', trendType: 'up', icon: 'lucide:calendar-days' },
+  { label: 'Lab Results', value: statsData.value.kpis.labResults, trend: `${statsData.value.kpis.pendingLabs} pending`, trendType: 'up', icon: 'lucide:test-tube-2' },
+  { label: 'Revenue Collected', value: statsData.value.kpis.revenueCollected, trend: `${statsData.value.kpis.outstanding} outstanding`, trendType: 'up', icon: 'lucide:wallet' }
 ])
 </script>
 
@@ -300,6 +345,25 @@ const kpiData = computed(() => [
 
 .status-pill { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
 .font-bold { font-weight: 700; }
+
+/* Legend (status distribution) */
+.chart-legend { list-style: none; padding: 0; margin: 0; width: 100%; }
+.chart-legend.full { margin-top: 0.5rem; }
+.chart-legend li { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+.chart-legend li:last-child { border-bottom: none; }
+.legend-info { display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 600; }
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.dot.cardio { background: #2563eb; }
+.dot.neuro { background: #10b981; }
+.dot.ped { background: #f59e0b; }
+.dot.amber { background: #ef4444; }
+.empty-legend { color: #94a3b8; font-size: 0.85rem; justify-content: center !important; }
+
+/* Activity table extras */
+.module-cell { display: inline-flex; align-items: center; gap: 8px; }
+.month-pill { background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+.month-pill.zero { background: #f1f5f9; color: #94a3b8; }
+.chart-sub { color: #94a3b8; font-size: 0.8rem; margin: 4px 0 0; }
 
 .export-btn { background: #1e3a8a; color: white; padding: 0.7rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; cursor: pointer; }
 .clickable { cursor: pointer; transition: all 0.2s ease; }

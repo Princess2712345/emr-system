@@ -9,8 +9,9 @@
         <div class="header-actions">
            <div class="user-profile">
             <AdminNotificationBell />
-            <div class="avatar clickable" @click="goToProfile">
-              {{ userInitials }}
+            <div class="avatar clickable" @click="goToProfile" title="My Profile">
+              <img v-if="userAvatar" :src="userAvatar" alt="Profile" class="avatar-img" />
+              <span v-else>{{ userInitials }}</span>
             </div>
           </div>
         </div>
@@ -126,6 +127,7 @@ import { ref, computed, onMounted } from 'vue'
 // 🚀 CHANGE 1: Turn these into empty reactive references
 const doctorName = ref('User') 
 const userInitials = ref('U')
+const userAvatar = ref('')
 const searchQuery = ref('')
 // 🚀 CHANGE 2: Read the logged-in user's details when the component loads on the client
 onMounted(() => {
@@ -134,6 +136,7 @@ onMounted(() => {
     if (storedData) {
       try {
         const user = JSON.parse(storedData)
+        userAvatar.value = user.avatar || ''
         
         // Assuming your backend login returns an object containing firstName and lastName
         if (user.firstName) {
@@ -152,6 +155,18 @@ onMounted(() => {
         console.error("Error parsing logged-in user data:", error)
       }
     }
+
+    // Keep the metric boxes current when returning to the dashboard
+    refreshData()
+    window.addEventListener('focus', onWindowFocus)
+  }
+})
+
+const onWindowFocus = () => refreshData()
+
+onUnmounted(() => {
+  if (process.client) {
+    window.removeEventListener('focus', onWindowFocus)
   }
 })
 
@@ -234,7 +249,7 @@ const handleLogout = async () => {
   }
 }
 
-const goToProfile = () => { alert('Navigating to profile...') }
+const goToProfile = () => { navigateTo('/dashboard/profile') }
 </script>
 
 <style scoped>
@@ -346,7 +361,8 @@ const goToProfile = () => { alert('Navigating to profile...') }
 .user-profile { display: flex; align-items: center; gap: 1.5rem; }
 .notification-wrapper { position: relative; font-size: 1.3rem; color: #64748b; padding: 4px; display: flex; }
 .notification-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid white; }
-.avatar { width: 40px; height: 40px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.avatar { width: 40px; height: 40px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
 .dashboard-body { padding: 2rem 3rem; }
 .table-controls { display: flex; justify-content: space-between; margin-bottom: 2rem; gap: 1.5rem; }

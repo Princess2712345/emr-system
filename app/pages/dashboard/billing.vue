@@ -102,7 +102,7 @@
                       </button>
                     </template>
                     <template v-else>
-                      <button class="icon-btn clickable" title="Download PDF" @click="downloadInvoice(invoice)">
+                      <button class="icon-btn clickable" title="Download invoice (Word)" @click="downloadInvoice(invoice)">
                         <Icon name="lucide:download" />
                       </button>
                       <button class="view-link clickable" @click="recordPayment(invoice)">Pay</button>
@@ -242,6 +242,7 @@
 definePageMeta({ layout: 'dashboard' })
 
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { downloadWord, buildInfoTable, buildTable } from '~/utils/exporters'
 
 let billingPoll = null
 
@@ -322,7 +323,31 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
 }
 
-const downloadInvoice = (inv) => alert(`Downloading Invoice #${inv.id.substring(0,8).toUpperCase()}...`)
+const downloadInvoice = (inv) => {
+  const invNo = inv.id.substring(0, 8).toUpperCase()
+  const items = Array.isArray(inv.items) ? inv.items : []
+  const itemsHtml = items.length
+    ? buildTable(
+        ['Description', 'Amount'],
+        items.map((it) => [it.description || 'Charge', `\u20B1${formatCurrency(it.amount || 0)}`])
+      )
+    : '<p class="muted">No itemized breakdown was recorded for this statement.</p>'
+
+  const body =
+    `<h1>Statement of Account</h1>` +
+    `<p class="muted">Invoice #${invNo}</p>` +
+    buildInfoTable([
+      ['Patient', inv.patientName],
+      ['Status', inv.status],
+      ['Due date', formatDate(inv.dueDate)],
+      ['Total amount', `\u20B1${formatCurrency(inv.amount)}`],
+      ['Balance due', `\u20B1${formatCurrency(inv.balance)}`]
+    ]) +
+    `<h2>Charge Breakdown</h2>${itemsHtml}` +
+    `<p style="margin-top:24pt;" class="muted">Generated on ${new Date().toLocaleString('en-US')}</p>`
+
+  downloadWord(`Invoice_${invNo}`, `Invoice ${invNo}`, body)
+}
 const recordPayment = (inv) => alert(`Opening processing window for ${inv.patientName}...`)
 const resetFilters = () => { searchQuery.value = ''; selectedStatus.value = 'All' }
 

@@ -48,11 +48,12 @@
                 <td>
                   <div class="patient-info">
                     <div class="patient-avatar purple">
-                      <Icon name="lucide:user" />
+                      <img v-if="item.avatar" :src="item.avatar" alt="Patient photo" class="avatar-img" />
+                      <Icon v-else name="lucide:user" />
                     </div>
                     <div>
                       <p class="p-name">{{ item.patientName }}</p>
-                      <p class="p-email">{{ item.patientId }}</p>
+                      <p class="p-email">{{ item.mrn || item.email || 'Linked record' }}</p>
                     </div>
                   </div>
                 </td>
@@ -73,6 +74,63 @@
           </table>
         </div>
       </section>
+
+    <!-- MANAGE CASE / DETAILS MODAL -->
+    <Transition name="fade">
+      <div v-if="activeCase" class="modal-overlay" @click.self="activeCase = null">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="header-with-icon">
+              <Icon name="lucide:folder-open" class="modal-title-icon" />
+              <h3>Patient Case File</h3>
+            </div>
+            <button @click="activeCase = null" class="close-modal">✕</button>
+          </div>
+
+          <div class="case-identity">
+            <div class="case-avatar">
+              <img v-if="activeCase.avatar" :src="activeCase.avatar" alt="Patient photo" class="avatar-img" />
+              <Icon v-else name="lucide:user" />
+            </div>
+            <div>
+              <p class="case-name">{{ activeCase.patientName }}</p>
+              <p class="case-sub">{{ activeCase.mrn || activeCase.patientId }}</p>
+            </div>
+            <span class="status-pill" :class="activeCase.type.toLowerCase()">{{ activeCase.type }}</span>
+          </div>
+
+          <div class="case-rows">
+            <div class="case-row">
+              <span class="case-label"><Icon name="lucide:stethoscope" /> Attending Physician</span>
+              <span class="case-val">Dr. {{ activeCase.physician }}</span>
+            </div>
+            <div class="case-row">
+              <span class="case-label"><Icon name="lucide:calendar" /> Recorded</span>
+              <span class="case-val">{{ activeCase.dateTime }}</span>
+            </div>
+            <div class="case-row" v-if="activeCase.gender">
+              <span class="case-label"><Icon name="lucide:venus-mars" /> Sex</span>
+              <span class="case-val">{{ activeCase.gender }}</span>
+            </div>
+            <div class="case-row" v-if="activeCase.email">
+              <span class="case-label"><Icon name="lucide:mail" /> Email</span>
+              <span class="case-val">{{ activeCase.email }}</span>
+            </div>
+            <div class="case-row" v-if="activeCase.phone">
+              <span class="case-label"><Icon name="lucide:phone" /> Phone</span>
+              <span class="case-val">{{ activeCase.phone }}</span>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary clickable" @click="activeCase = null">Close</button>
+            <NuxtLink to="/dashboard/registration" class="add-btn clickable">
+              <Icon name="lucide:external-link" /> Open in Registry
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- NEW DISPOSITION MODAL -->
     <Transition name="fade">
@@ -126,6 +184,7 @@ import { ref, computed, watch } from 'vue';
 const searchQuery = ref('');
 const selectedCategory = ref('All');
 const isModalOpen = ref(false);
+const activeCase = ref(null);
 
 // --- Live Pipeline Data Stream ---
 const { data: dispositions, refresh: reloadDispositions } = await useFetch('/api/dispositions', {
@@ -174,7 +233,7 @@ const submitNewEntry = async () => {
 };
 
 const manageCase = (item) => {
-  alert(`Accessing Electronic Health Record: ${item.patientName}`);
+  activeCase.value = item;
 };
 </script>
 
@@ -288,8 +347,23 @@ const manageCase = (item) => {
 .patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
 
 .patient-info { display: flex; align-items: center; gap: 12px; }
-.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; overflow: hidden; }
 .patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* CASE FILE MODAL */
+.modal-title-icon { font-size: 1.3rem; }
+.case-identity { display: flex; align-items: center; gap: 12px; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 1.25rem; }
+.case-avatar { width: 48px; height: 48px; border-radius: 12px; background: #f3e8ff; color: #7e22ce; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; overflow: hidden; flex-shrink: 0; }
+.case-name { font-weight: 800; color: #1e293b; margin: 0; }
+.case-sub { font-size: 0.8rem; color: #64748b; margin: 2px 0 0; font-family: ui-monospace, monospace; }
+.case-identity .status-pill { margin-left: auto; }
+.case-rows { display: flex; flex-direction: column; gap: 2px; }
+.case-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0.7rem 0.25rem; border-bottom: 1px solid #f1f5f9; }
+.case-row:last-child { border-bottom: none; }
+.case-label { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; }
+.case-val { font-size: 0.9rem; font-weight: 600; color: #1e293b; text-align: right; word-break: break-word; }
+.modal-actions .add-btn { text-decoration: none; }
 
 .p-name { font-weight: 700; color: #1e293b; margin: 0; }
 .p-email { font-size: 0.8rem; color: #64748b; margin: 0; }

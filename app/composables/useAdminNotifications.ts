@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 
 const STORAGE_KEY = 'admin_notifications_seen_at'
 
-export type AdminNotificationType = 'payment' | 'review' | 'mrn' | 'appointment' | 'other'
+export type AdminNotificationType = 'payment' | 'review' | 'mrn' | 'appointment' | 'refill' | 'other'
 
 export type AdminNotificationItem = {
   id: number
@@ -38,7 +38,10 @@ function parseNotification(raw: {
   let type: AdminNotificationType = 'other'
   let title = 'System alert'
 
-  if (raw.severity === 'MrnRequest') {
+  if (raw.severity === 'RefillRequest') {
+    type = 'refill'
+    title = 'Medication refill request'
+  } else if (raw.severity === 'MrnRequest') {
     type = 'mrn'
     title = 'ID recovery request'
   } else if (raw.severity === 'Appointment') {
@@ -67,7 +70,7 @@ export function useAdminNotifications() {
       return notifications.value.filter((n) => n.type === 'payment' || n.type === 'review')
     }
     if (activeFilter.value === 'requests') {
-      return notifications.value.filter((n) => n.type === 'mrn')
+      return notifications.value.filter((n) => n.type === 'mrn' || n.type === 'refill')
     }
     if (activeFilter.value === 'appointments') {
       return notifications.value.filter((n) => n.type === 'appointment')
@@ -80,7 +83,7 @@ export function useAdminNotifications() {
   )
 
   const requestCount = computed(() =>
-    notifications.value.filter((n) => n.type === 'mrn').length
+    notifications.value.filter((n) => n.type === 'mrn' || n.type === 'refill').length
   )
 
   const appointmentCount = computed(() =>

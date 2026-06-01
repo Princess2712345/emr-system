@@ -76,9 +76,9 @@
                       <button class="action-btn ghost clickable" @click="openDetails(appt)">
                         <Icon name="lucide:eye" /> View
                       </button>
-                      <button v-if="appt.status === 'Pending'" class="action-btn outline clickable" @click="confirmAppt(appt.id)">Confirm</button>
-                      <button v-else-if="appt.status === 'Confirmed'" class="action-btn primary clickable" @click="startVisit(appt.id)">Start</button>
-                      <button v-else-if="appt.status === 'In Progress'" class="action-btn success-btn clickable" @click="completeVisit(appt.id)">Complete</button>
+                      <button v-if="appt.status === 'Pending'" class="action-btn outline clickable" @click="confirmAppt(appt.id)"><Icon name="lucide:check" /> Confirm</button>
+                      <button v-else-if="appt.status === 'Confirmed'" class="action-btn primary clickable" @click="startVisit(appt.id)"><Icon name="lucide:play" /> Start</button>
+                      <button v-else-if="appt.status === 'In Progress'" class="action-btn success-btn clickable" @click="completeVisit(appt.id)"><Icon name="lucide:check-check" /> Complete</button>
                       <span v-else class="checked-out-chip"><Icon name="lucide:check-check" /> Checked out</span>
                     </div>
                   </div>
@@ -535,18 +535,34 @@ const completeVisit = async (id) => {
 .completed { background: #dcfce7; color: #166534; }
 .cancelled { background: #fee2e2; color: #991b1b; }
 
-.action-btn { height: 38px; padding: 0 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.78rem; border: 1px solid transparent; transition: 0.2s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; white-space: nowrap; }
+.action-btn { height: 38px; padding: 0 1rem; border-radius: 8px; font-weight: 700; font-size: 0.78rem; border: 1px solid transparent; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; white-space: nowrap; }
 .action-btn :deep(svg) { font-size: 0.95rem; }
-.action-btn.primary { background: #1e293b; color: white; }
-.action-btn.primary:hover { background: #0f172a; }
-.action-btn.outline { background: white; border-color: #cbd5e1; color: #475569; }
-.action-btn.outline:hover { border-color: #2563eb; color: #2563eb; }
-.action-btn.success-btn { background: #166534; color: white; }
-.action-btn.success-btn:hover { background: #14532d; }
-.action-btn.ghost { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
-.action-btn.ghost:hover { background: #dbeafe; }
-.checked-out-chip { height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.76rem; color: #64748b; font-weight: 700; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; }
-.checked-out-chip :deep(svg) { color: #22c55e; font-size: 0.95rem; }
+.action-btn:hover { transform: translateY(-1px); }
+.action-btn:active { transform: translateY(0); }
+
+/* View — blue */
+.action-btn.ghost { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.action-btn.ghost:hover { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.45); }
+
+/* Confirm — emerald */
+.action-btn.outline { background: #10b981; color: white; box-shadow: 0 2px 6px -1px rgba(16, 185, 129, 0.4); }
+.action-btn.outline:hover { background: #059669; box-shadow: 0 6px 14px -2px rgba(16, 185, 129, 0.5); }
+
+/* Start — amber */
+.action-btn.primary { background: #f59e0b; color: white; box-shadow: 0 2px 6px -1px rgba(245, 158, 11, 0.4); }
+.action-btn.primary:hover { background: #d97706; box-shadow: 0 6px 14px -2px rgba(245, 158, 11, 0.5); }
+
+/* Complete — green */
+.action-btn.success-btn { background: #16a34a; color: white; box-shadow: 0 2px 6px -1px rgba(22, 163, 74, 0.4); }
+.action-btn.success-btn:hover { background: #15803d; box-shadow: 0 6px 14px -2px rgba(22, 163, 74, 0.5); }
+
+.checked-out-chip { height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.76rem; color: #15803d; font-weight: 700; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0 0.9rem; }
+.checked-out-chip :deep(svg) { color: #16a34a; font-size: 0.95rem; }
+
+/* Calendar/List toggle button */
+.calendar-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.1rem; border-radius: 10px; border: none; background: #2563eb; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.4); transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+.calendar-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 6px 14px -2px rgba(37, 99, 235, 0.5); }
+.appointments-mobile-header .calendar-btn { background: #2563eb; color: white; border: none; box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.4); }
 
 /* --- DETAILS MODAL --- */
 .appt-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 5000; padding: 1rem; }

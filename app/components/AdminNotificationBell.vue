@@ -78,7 +78,7 @@
               v-for="item in filteredNotifications"
               :key="item.id"
               class="notif-card"
-              :class="[item.type, { clickable: item.type === 'mrn' || item.type === 'appointment' }]"
+              :class="[item.type, { clickable: item.type === 'mrn' || item.type === 'appointment' || item.type === 'refill' }]"
               @click="onCardClick(item)"
             >
               <div class="notif-icon-wrap" :class="item.type">
@@ -90,6 +90,7 @@
                   <span v-if="item.type === 'payment'" class="status-chip paid">Paid</span>
                   <span v-else-if="item.type === 'review'" class="status-chip review">Pending</span>
                   <span v-else-if="item.type === 'mrn'" class="status-chip mrn">Action</span>
+                  <span v-else-if="item.type === 'refill'" class="status-chip refill">Refill</span>
                   <span v-else-if="item.type === 'appointment'" class="status-chip appointment">New</span>
                 </div>
                 <p class="notif-patient">
@@ -111,6 +112,9 @@
                   </span>
                   <span v-else-if="item.type === 'appointment'" class="notif-cta">
                     View schedule <Icon name="lucide:chevron-right" />
+                  </span>
+                  <span v-else-if="item.type === 'refill'" class="notif-cta">
+                    Review refills <Icon name="lucide:chevron-right" />
                   </span>
                 </span>
               </div>
@@ -210,6 +214,7 @@ const iconFor = (type) => {
   if (type === 'review') return 'lucide:clock-alert'
   if (type === 'mrn') return 'lucide:id-card'
   if (type === 'appointment') return 'lucide:calendar-clock'
+  if (type === 'refill') return 'lucide:pill'
   return 'lucide:info'
 }
 
@@ -219,6 +224,9 @@ const onCardClick = (item) => {
   } else if (item.type === 'appointment') {
     isOpen.value = false
     navigateTo('/dashboard/appointments')
+  } else if (item.type === 'refill') {
+    isOpen.value = false
+    navigateTo('/dashboard/medication-refills')
   }
 }
 
@@ -561,6 +569,10 @@ onUnmounted(() => {
   border-left: 3px solid #0ea5e9;
 }
 
+.notif-card.refill {
+  border-left: 3px solid #7c3aed;
+}
+
 .notif-icon-wrap {
   flex-shrink: 0;
   width: 2.25rem;
@@ -591,6 +603,11 @@ onUnmounted(() => {
   color: #0284c7;
 }
 
+.notif-icon-wrap.refill {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
 .notif-icon-wrap.other {
   background: #dbeafe;
   color: #2563eb;
@@ -618,6 +635,7 @@ onUnmounted(() => {
 .status-chip.paid,
 .status-chip.review,
 .status-chip.mrn,
+.status-chip.refill,
 .status-chip.appointment {
   font-size: 0.65rem;
   font-weight: 700;
@@ -644,6 +662,11 @@ onUnmounted(() => {
 .status-chip.mrn {
   background: #e0e7ff;
   color: #4338ca;
+}
+
+.status-chip.refill {
+  background: #ede9fe;
+  color: #6d28d9;
 }
 
 .notif-patient {

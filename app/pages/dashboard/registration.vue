@@ -3,7 +3,7 @@
       <header class="top-bar portal-top-bar">
         <div class="welcome-msg">
           <h1>Patient Registration Directory</h1>
-          <p>Admit new patients and manage master profiles to link appointments, billing, and lab records.</p>
+          <p>Admit patients, edit profiles, and prescribe active medications shown on the patient portal.</p>
         </div>
         
         <div class="header-actions portal-header-actions">
@@ -52,7 +52,8 @@
                 <td>
                   <div class="patient-info">
                     <div class="patient-avatar" :class="patient.gender === 'Female' ? 'purple' : 'teal'">
-                      <Icon :name="patient.gender === 'Female' ? 'lucide:user-round-text' : 'lucide:user'" />
+                      <img v-if="patient.avatar" :src="patient.avatar" alt="Patient photo" class="avatar-img" />
+                      <Icon v-else :name="patient.gender === 'Female' ? 'lucide:user-round-text' : 'lucide:user'" />
                     </div>
                     <div>
                       <p class="p-name">
@@ -68,10 +69,15 @@
                 <td>
                   <span class="badge active">Active Portal</span>
                 </td>
-                <td class="text-right">
-                  <button class="view-link clickable" @click="openEditModal(patient)">
-                    <Icon name="lucide:edit-3" /> Edit Profile
-                  </button>
+                <td class="col-actions">
+                  <div class="action-cell">
+                    <button type="button" class="rx-link clickable" @click="openRxModal(patient)">
+                      <Icon name="lucide:pill" /> Manage Rx
+                    </button>
+                    <button type="button" class="view-link clickable" @click="openEditModal(patient)">
+                      <Icon name="lucide:edit-3" /> Edit
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -144,6 +150,92 @@
         </form>
       </div>
     </div>
+
+    <Transition name="fade">
+      <div v-if="rxOpen" class="modal-backdrop" @click.self="closeRxModal">
+        <div class="modal-card rx-modal">
+          <div class="modal-header">
+            <h3>
+              <Icon name="lucide:pill" />
+              Manage prescriptions
+            </h3>
+            <button type="button" class="close-modal-btn" @click="closeRxModal">✕</button>
+          </div>
+
+          <div v-if="rxPatient" class="rx-patient-bar">
+            <div class="patient-avatar purple">
+              <img v-if="rxPatient.avatar" :src="rxPatient.avatar" alt="" class="avatar-img" />
+              <Icon v-else name="lucide:user" />
+            </div>
+            <div>
+              <p class="rx-patient-name">{{ rxPatient.name }}</p>
+              <p class="rx-patient-mrn">{{ rxPatient.mrn || 'MRN pending' }}</p>
+            </div>
+            <span class="rx-active-badge">{{ rxActiveCount }} active</span>
+          </div>
+
+          <div v-if="rxLoading" class="rx-state">
+            <Icon name="lucide:loader-2" class="spin-icon" />
+            Loading medications…
+          </div>
+
+          <div v-else class="rx-modal-body">
+            <div class="rx-list-section">
+              <p class="rx-section-label">Active medications</p>
+              <ul v-if="rxMedications.filter((m) => m.status === 'Active').length" class="rx-list">
+                <li v-for="med in rxMedications.filter((m) => m.status === 'Active')" :key="med.id" class="rx-item">
+                  <div class="rx-item-main">
+                    <p class="rx-med-name">{{ med.name }}</p>
+                    <p class="rx-med-detail">{{ med.dose }} • {{ med.timing }}</p>
+                    <p v-if="med.prescribedBy" class="rx-med-by">Prescribed by {{ med.prescribedBy }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="rx-stop-btn clickable"
+                    :disabled="rxSaving"
+                    @click="discontinueMed(med)"
+                  >
+                    Discontinue
+                  </button>
+                </li>
+              </ul>
+              <p v-else class="rx-empty">No active medications on file. Add one below — the patient will see it on Health Records.</p>
+            </div>
+
+            <form class="rx-add-form" @submit.prevent="addMedication">
+              <p class="rx-section-label">Add medication</p>
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label>Medication name</label>
+                  <input v-model="rxForm.name" type="text" placeholder="e.g. Lisinopril" required />
+                </div>
+                <div class="form-group">
+                  <label>Dose</label>
+                  <input v-model="rxForm.dose" type="text" placeholder="e.g. 10 mg" />
+                </div>
+                <div class="form-group">
+                  <label>Timing</label>
+                  <input v-model="rxForm.timing" type="text" placeholder="e.g. Once daily (morning)" />
+                </div>
+                <div class="form-group full-width">
+                  <label>Prescribed by</label>
+                  <input v-model="rxForm.prescribedBy" type="text" placeholder="Dr. Name" />
+                </div>
+              </div>
+              <button type="submit" class="submit-btn clickable" :disabled="rxSaving">
+                <Icon v-if="rxSaving" name="lucide:loader-2" class="spin-icon" />
+                <Icon v-else name="lucide:plus" />
+                Add to patient chart
+              </button>
+            </form>
+          </div>
+
+          <div class="modal-actions rx-modal-footer">
+            <button type="button" class="cancel-btn clickable" @click="closeRxModal">Close</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -228,6 +320,97 @@ const openEditModal = (patient) => {
 
 const closeModal = () => {
   isModalOpen.value = false
+}
+
+const rxOpen = ref(false)
+const rxLoading = ref(false)
+const rxSaving = ref(false)
+const rxPatient = ref(null)
+const rxMedications = ref([])
+const rxActiveCount = ref(0)
+const rxPatientId = ref(null)
+
+const rxForm = reactive({
+  name: '',
+  dose: '',
+  timing: '',
+  prescribedBy: 'Dr. Clinical Staff'
+})
+
+const loadRxMedications = async () => {
+  if (!rxPatientId.value) return
+  rxLoading.value = true
+  try {
+    const data = await $fetch(`/api/patients/${rxPatientId.value}/medications`)
+    if (data.success) {
+      rxPatient.value = data.patient
+      rxMedications.value = data.medications || []
+      rxActiveCount.value = data.activeCount ?? 0
+    }
+  } catch (e) {
+    console.error('Failed to load medications:', e)
+    alert(e?.data?.statusMessage || e?.statusMessage || e?.message || 'Could not load medications.')
+  } finally {
+    rxLoading.value = false
+  }
+}
+
+const openRxModal = async (patient) => {
+  rxPatientId.value = patient.id
+  rxPatient.value = {
+    name: patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim(),
+    mrn: patient.uniqueId || patient.patientId,
+    avatar: patient.avatar || ''
+  }
+  Object.assign(rxForm, {
+    name: '',
+    dose: '',
+    timing: '',
+    prescribedBy: 'Dr. Clinical Staff'
+  })
+  rxOpen.value = true
+  await loadRxMedications()
+}
+
+const closeRxModal = () => {
+  rxOpen.value = false
+  rxPatientId.value = null
+  rxMedications.value = []
+}
+
+const addMedication = async () => {
+  if (!rxPatientId.value || !rxForm.name.trim()) return
+  rxSaving.value = true
+  try {
+    const res = await $fetch(`/api/patients/${rxPatientId.value}/medications`, {
+      method: 'POST',
+      body: { ...rxForm }
+    })
+    Object.assign(rxForm, { name: '', dose: '', timing: '', prescribedBy: rxForm.prescribedBy })
+    await loadRxMedications()
+    alert(res.message || 'Medication added.')
+  } catch (e) {
+    alert(e?.data?.statusMessage || e?.statusMessage || e?.message || 'Could not add medication.')
+  } finally {
+    rxSaving.value = false
+  }
+}
+
+const discontinueMed = async (med) => {
+  if (!confirm(`Discontinue ${med.name} for this patient?`)) return
+  rxSaving.value = true
+  try {
+    const res = await $fetch(`/api/patient-medications/${med.id}`, {
+      method: 'PATCH',
+      body: { discontinue: true }
+    })
+    await loadRxMedications()
+    alert(res.message || 'Medication discontinued.')
+  } catch (e) {
+    alert(e?.data?.statusMessage || 'Could not discontinue medication.')
+  } finally {
+    rxSaving.value = false
+  }
 }
 
 const submitForm = async () => {
@@ -348,9 +531,10 @@ const submitForm = async () => {
 .patient-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 0.9rem; }
 
 .patient-info { display: flex; align-items: center; gap: 12px; }
-.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.patient-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; overflow: hidden; }
 .patient-avatar.purple { background: #f3e8ff; color: #7e22ce; }
 .patient-avatar.teal { background: #ccfbf1; color: #0d9488; }
+.patient-avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
 .p-name { font-weight: 700; color: #1e293b; margin: 0; font-size: 0.95rem; }
 .p-email { font-size: 0.8rem; color: #64748b; margin: 0; }
@@ -398,4 +582,194 @@ const submitForm = async () => {
 .clickable { cursor: pointer; transition: all 0.2s ease; }
 .clickable:active { transform: scale(0.96); }
 .text-right { text-align: right; }
+
+.col-actions { text-align: right; white-space: nowrap; }
+.action-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rx-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.rx-modal {
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.rx-modal-body {
+  padding: 0 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.rx-patient-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rx-patient-name {
+  margin: 0;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.rx-patient-mrn {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+}
+
+.rx-active-badge {
+  margin-left: auto;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.rx-state {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rx-section-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+}
+
+.rx-list-section {
+  padding-top: 1.25rem;
+  padding-bottom: 1rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.rx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rx-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.rx-med-name {
+  margin: 0;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.rx-med-detail {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.rx-med-by {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.rx-stop-btn {
+  flex-shrink: 0;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.rx-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.rx-add-form {
+  padding-bottom: 1rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.25rem;
+}
+
+.rx-add-form .submit-btn {
+  margin-top: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.rx-modal-footer {
+  padding: 1rem 2rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 768px) {
+  .action-cell {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .rx-link,
+  .view-link {
+    justify-content: center;
+  }
+}
 </style>

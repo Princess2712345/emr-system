@@ -35,12 +35,27 @@ export default defineEventHandler(async (event) => {
       include: { staff: true, patient: true }
     })
 
+    const apptDateLabel = new Date(body.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+
     await prisma.auditLog.create({
       data: {
         user: 'Staff',
         action: `Scheduled appointment for ${patient.name} on ${body.date}`,
         resource: `Patient-${patient.id}`,
         severity: 'Info'
+      }
+    }).catch(() => {})
+
+    await prisma.auditLog.create({
+      data: {
+        user: 'Care team',
+        action: `An appointment was scheduled for you on ${apptDateLabel} at ${body.time}. ${body.reason || 'General consultation'}.`,
+        resource: `Patient-${patient.id}`,
+        severity: 'PatientNotify'
       }
     }).catch(() => {})
 

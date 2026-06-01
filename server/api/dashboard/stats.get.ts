@@ -7,19 +7,33 @@ export default defineEventHandler(async (event) => {
     const totalAdmins = await prisma.user.count({ where: { role: 'ADMIN' } })
     
     // 2. Fallback checks for optional operational tables using soft error catch blocks
-    let totalAppointments = 0
+    let todayAppointments = 0
     let pendingLabs = 0
 
-    try { 
-      totalAppointments = await prisma.appointment.count() 
-    } catch (e) { 
-      console.log("Appointment table empty or not yet migrated, falling back to 0") 
+    // Today's active appointments (excludes Completed / Checked-out & Cancelled)
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
+
+    try {
+      todayAppointments = await prisma.appointment.count({
+        where: {
+          date: { gte: startOfDay, lte: endOfDay },
+          status: { notIn: ['Completed', 'Cancelled', 'Checked Out', 'No Show'] }
+        }
+      })
+    } catch (e) {
+      console.log("Appointment table empty or not yet migrated, falling back to 0")
     }
 
-    try { 
-      pendingLabs = await prisma.labResult.count() 
-    } catch (e) { 
-      console.log("LabResult table empty or not yet migrated, falling back to 0") 
+    // Lab results still awaiting validation (not yet Completed)
+    try {
+      pendingLabs = await prisma.labResult.count({
+        where: { status: { notIn: ['Completed', 'Cancelled'] } }
+      })
+    } catch (e) {
+      console.log("LabResult table empty or not yet migrated, falling back to 0")
     }
 
     let unpaidInvoices = 0
@@ -41,7 +55,7 @@ export default defineEventHandler(async (event) => {
       data: {
         totalPatients,
         totalAdmins,
-        todayAppointments: totalAppointments,
+        todayAppointments,
         pendingLabs,
         unpaidInvoices,
         recentLabs,

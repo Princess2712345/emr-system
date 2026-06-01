@@ -28,6 +28,8 @@ model User {
   uniqueId          String        @unique
   age               Int?          @default(24)
   bloodType         String?       @default("O Positive")
+  phone             String?
+  avatar            String?       @db.Text
   status            String        @default("Active")   
   createdAt         DateTime      @default(now())
 
@@ -67,6 +69,8 @@ model Patient {
   bills        Invoice[]
   labResults   LabResult[]
   dispositions Disposition[]
+  medicationRefills MedicationRefill[]
+  medications      PatientMedication[]
 
   @@index([status])
   @@index([createdAt])
@@ -146,6 +150,40 @@ model Disposition {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model PatientMedication {
+  id           String   @id @default(uuid())
+  patientId    String
+  name         String
+  dose         String   @default("")
+  timing       String   @default("")
+  prescribedBy String?
+  status       String   @default("Active")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([status])
+}
+
+model MedicationRefill {
+  id          String    @id @default(uuid())
+  patientId   String
+  patientName String
+  medications Json
+  status      String    @default("Pending")
+  notes       String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([status])
 }
 
 model Inventory {

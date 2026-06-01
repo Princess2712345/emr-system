@@ -93,6 +93,18 @@ export default defineEventHandler(async (event) => {
         }
       }).catch(() => {})
 
+      await prisma.auditLog.create({
+        data: {
+          user: 'Clinical Lab',
+          action:
+            recordStatus === 'Completed'
+              ? `Your lab result "${testName.trim()}" is now available to view.`
+              : `A new lab test "${testName.trim()}" was added to your record. Results are pending review.`,
+          resource: `Patient-${patient.id}`,
+          severity: 'PatientNotify'
+        }
+      }).catch(() => {})
+
       return { success: true, record: newRecord }
     }
   } catch (error: unknown) {

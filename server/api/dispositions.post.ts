@@ -26,12 +26,23 @@ export default defineEventHandler(async (event) => {
       }
     })
 
+    // Staff/clinical timeline entry
     await prisma.auditLog.create({
       data: {
         user: 'Staff',
         action: `Disposition (${type}) recorded for ${patient.name}`,
         resource: `Patient-${patient.id}`,
         severity: 'Info'
+      }
+    }).catch(() => {})
+
+    // Notify the patient on their portal
+    await prisma.auditLog.create({
+      data: {
+        user: 'Care team',
+        action: `Your visit disposition was recorded as "${type}" by Dr. ${physician.trim()}.`,
+        resource: `Patient-${patient.id}`,
+        severity: 'PatientNotify'
       }
     }).catch(() => {})
 

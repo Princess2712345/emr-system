@@ -8,7 +8,7 @@
         </div>
         <div class="header-actions portal-header-actions">
            <button class="export-btn clickable" @click="exportLogs">
-             <Icon name="lucide:download" /> Export CSV
+             <Icon name="lucide:download" /> Export Excel
            </button>
         </div>
       </header>
@@ -132,6 +132,7 @@
 definePageMeta({ layout: 'dashboard' })
 
 import { ref, computed } from 'vue'
+import { downloadExcel, buildTable } from '~/utils/exporters'
 
 const searchQuery = ref('')
 const selectedSeverity = ref('All')
@@ -163,7 +164,12 @@ const getLogIcon = (sev) => {
 
 const openModal = (log) => { selectedLog.value = log; isModalOpen.value = true; }
 const closeModal = () => { isModalOpen.value = false; selectedLog.value = null; }
-const exportLogs = () => { alert('Generating CSV report for Audit History...') }
+const exportLogs = () => {
+  const rows = filteredLogs.value.map((l) => [l.timestamp, l.user, l.action, l.resource, l.severity])
+  const table = buildTable(['Timestamp', 'User', 'Action', 'Resource', 'Severity'], rows)
+  const stamp = new Date().toISOString().slice(0, 10)
+  downloadExcel(`Audit_History_${stamp}`, table, 'Audit History')
+}
 </script>
 
 <style scoped>

@@ -33,7 +33,9 @@
             <div class="hero-text">
               <div class="title-row">
                 <h2>{{ patientInfo.name }}</h2>
-                <span class="badge-status">Outpatient</span>
+                <span :class="['badge-status', patientInfo.careStatusClass || 'outpatient']">
+                  {{ patientInfo.careStatus || 'Outpatient' }}
+                </span>
               </div>
               <div class="meta-row">
                 <span class="meta-item"><strong>ID:</strong> {{ patientInfo.id }}</span>
@@ -128,11 +130,22 @@
 definePageMeta({ layout: 'patient' })
 
 import { ref, onMounted, computed } from 'vue'
+import { downloadWord, buildInfoTable, buildTable } from '~/utils/exporters'
 
 const isLoading = ref(true)
 
 // Reactive holders initialized with safe placeholder defaults
-const patientInfo = ref({ initials: '...', name: 'Loading...', id: '#...', colorClass: 'purple-theme', age: '--', bloodType: '--', avatar: '' })
+const patientInfo = ref({
+  initials: '...',
+  name: 'Loading...',
+  id: '#...',
+  colorClass: 'purple-theme',
+  age: '--',
+  bloodType: '--',
+  avatar: '',
+  careStatus: 'Outpatient',
+  careStatusClass: 'outpatient'
+})
 const vitalsData = ref({ bloodPressure: '--/--', heartRate: '--', criticalAllergy: 'None', lastRecorded: '' })
 const nextAppt = ref({ date: 'No upcoming visits', details: '' })
 const patientNotes = ref([])
@@ -178,7 +191,52 @@ const currentDate = computed(() => {
 
 const displayedTimeline = computed(() => patientNotes.value.slice(0, 5))
 
-const printRecord = () => { window.print() }
+const printRecord = () => {
+  const p = patientInfo.value
+  const v = vitalsData.value
+  const ec = emergencyContact.value
+  const ins = insurance.value
+
+  const timelineHtml = patientNotes.value.length
+    ? buildTable(
+        ['Date', 'Activity'],
+        patientNotes.value.map((n) => [n.date || n.time || '', n.title || n.text || n.action || ''])
+      )
+    : '<p class="muted">No recent activity recorded.</p>'
+
+  const body =
+    `<h1>Electronic Health Record</h1>` +
+    `<p class="muted">${p.name} • ${p.id}</p>` +
+    `<h2>Patient Information</h2>` +
+    buildInfoTable([
+      ['Name', p.name],
+      ['Record ID', p.id],
+      ['Age', p.age],
+      ['Blood Type', p.bloodType]
+    ]) +
+    `<h2>Latest Vitals</h2>` +
+    buildInfoTable([
+      ['Blood Pressure', v.bloodPressure],
+      ['Heart Rate', v.heartRate],
+      ['Critical Allergy', v.criticalAllergy],
+      ['Last Recorded', v.lastRecorded]
+    ]) +
+    `<h2>Emergency Contact</h2>` +
+    buildInfoTable([
+      ['Name', ec.name || 'Not provided'],
+      ['Relation', ec.relation || '—'],
+      ['Phone', ec.phone || '—']
+    ]) +
+    `<h2>Insurance</h2>` +
+    buildInfoTable([
+      ['Provider', ins.provider || 'Not provided'],
+      ['Policy Number', ins.number || '—']
+    ]) +
+    `<h2>Recent Activity</h2>${timelineHtml}` +
+    `<p style="margin-top:24pt;" class="muted">Generated on ${new Date().toLocaleString('en-US')}</p>`
+
+  downloadWord(`E-Record_${String(p.name || 'patient').replace(/[^a-z0-9]/gi, '_')}`, 'Electronic Health Record', body)
+}
 
 const addToCalendar = () => {
   const title = "Ophthalmology Appointment - MyHealth Portal"
@@ -230,7 +288,10 @@ const addToCalendar = () => {
 
 .title-row { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
 .title-row h2 { font-size: 1.6rem; color: #1e3a8a; margin: 0; }
-.badge-status { background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #dbeafe; }
+.badge-status { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; }
+.badge-status.outpatient { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+.badge-status.admitted { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.badge-status.transferred { background: #fef3c7; color: #92400e; border-color: #fde68a; }
 .meta-row { display: flex; gap: 20px; font-size: 0.9rem; color: #64748b; }
 
 /* Bento Grid — columns defined in portal.css */

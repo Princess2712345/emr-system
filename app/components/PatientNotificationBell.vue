@@ -39,7 +39,7 @@
           <div v-else-if="!notifications.length" class="panel-state empty">
             <Icon name="lucide:inbox" />
             <p class="state-title">You're all caught up</p>
-            <span>Payment confirmations and updates will appear here.</span>
+            <span>Payments, lab results, appointments, and refill updates will appear here.</span>
           </div>
 
           <ul v-else class="notif-list">
@@ -98,6 +98,9 @@ const iconFor = (type) => {
   if (type === 'rejected') return 'lucide:circle-x'
   if (type === 'submitted') return 'lucide:clock-alert'
   if (type === 'appointment') return 'lucide:calendar-clock'
+  if (type === 'disposition') return 'lucide:file-output'
+  if (type === 'lab') return 'lucide:test-tube-2'
+  if (type === 'refill') return 'lucide:pill'
   return 'lucide:info'
 }
 
@@ -329,6 +332,8 @@ onUnmounted(() => {
 .notif-card.rejected { border-left: 3px solid #ef4444; }
 .notif-card.submitted { border-left: 3px solid #f59e0b; }
 .notif-card.appointment { border-left: 3px solid #0ea5e9; }
+.notif-card.disposition { border-left: 3px solid #7c3aed; }
+.notif-card.lab { border-left: 3px solid #0d9488; }
 
 .notif-icon-wrap {
   flex-shrink: 0;
@@ -344,6 +349,8 @@ onUnmounted(() => {
 .notif-icon-wrap.rejected { background: #fee2e2; color: #dc2626; }
 .notif-icon-wrap.submitted { background: #fef3c7; color: #d97706; }
 .notif-icon-wrap.appointment { background: #e0f2fe; color: #0284c7; }
+.notif-icon-wrap.disposition { background: #ede9fe; color: #7c3aed; }
+.notif-icon-wrap.lab { background: #ccfbf1; color: #0d9488; }
 .notif-icon-wrap.other { background: #dbeafe; color: #2563eb; }
 
 .notif-content {

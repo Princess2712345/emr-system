@@ -17,7 +17,10 @@
       <span class="mobile-logo-text logo-text">EMR System</span>
       <div class="mobile-bar-actions">
         <AdminNotificationBell />
-        <div class="avatar-sm">{{ initials }}</div>
+        <NuxtLink to="/dashboard/profile" class="avatar-sm" title="My Profile">
+          <img v-if="avatarUrl" :src="avatarUrl" alt="Profile" class="avatar-sm-img" />
+          <span v-else>{{ initials }}</span>
+        </NuxtLink>
       </div>
     </header>
 
@@ -59,7 +62,7 @@
 <script setup>
 const { navLinks } = useDashboardNav()
 const { isMobileOpen, closeMobile } = usePortalLayout()
-const { logout, initials, loadUser } = useAuth()
+const { logout, initials, avatarUrl, loadUser } = useAuth()
 
 loadUser()
 
@@ -181,5 +184,13 @@ const onLogout = () => {
   font-size: 0.7rem;
   font-weight: 800;
   color: white;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.avatar-sm-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>
