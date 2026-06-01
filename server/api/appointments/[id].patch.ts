@@ -28,5 +28,28 @@ export default defineEventHandler(async (event) => {
     }
   }).catch(() => {})
 
+  // Let the patient know about meaningful status changes
+  const patientFacing = {
+    Confirmed: 'confirmed',
+    Cancelled: 'cancelled',
+    Completed: 'completed'
+  }[status]
+
+  if (patientFacing && updated.patientId) {
+    const dateLabel = new Date(updated.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+    await prisma.auditLog.create({
+      data: {
+        user: 'Care team',
+        action: `Your appointment on ${dateLabel} at ${updated.time} was ${patientFacing}.`,
+        resource: `Patient-${updated.patientId}`,
+        severity: 'PatientNotify'
+      }
+    }).catch(() => {})
+  }
+
   return { success: true, data: updated }
 })

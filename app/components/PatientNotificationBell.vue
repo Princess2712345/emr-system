@@ -97,6 +97,7 @@ const iconFor = (type) => {
   if (type === 'approved') return 'lucide:badge-check'
   if (type === 'rejected') return 'lucide:circle-x'
   if (type === 'submitted') return 'lucide:clock-alert'
+  if (type === 'appointment') return 'lucide:calendar-clock'
   return 'lucide:info'
 }
 
@@ -327,6 +328,7 @@ onUnmounted(() => {
 .notif-card.approved { border-left: 3px solid #10b981; }
 .notif-card.rejected { border-left: 3px solid #ef4444; }
 .notif-card.submitted { border-left: 3px solid #f59e0b; }
+.notif-card.appointment { border-left: 3px solid #0ea5e9; }
 
 .notif-icon-wrap {
   flex-shrink: 0;
@@ -341,6 +343,7 @@ onUnmounted(() => {
 .notif-icon-wrap.approved { background: #dcfce7; color: #059669; }
 .notif-icon-wrap.rejected { background: #fee2e2; color: #dc2626; }
 .notif-icon-wrap.submitted { background: #fef3c7; color: #d97706; }
+.notif-icon-wrap.appointment { background: #e0f2fe; color: #0284c7; }
 .notif-icon-wrap.other { background: #dbeafe; color: #2563eb; }
 
 .notif-content {

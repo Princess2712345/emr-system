@@ -34,10 +34,26 @@ export default defineEventHandler(async (event) => {
     include: { staff: true }
   })
 
+  const apptDateLabel = new Date(body.date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      user: patient.name,
+      action: `New appointment request: ${fullReason} on ${apptDateLabel} at ${body.time}`,
+      resource: `Appointment-${appointment.id}`,
+      severity: 'Appointment'
+    }
+  }).catch(() => {})
+
+  // Keep a copy on the patient's own timeline as well
   await prisma.auditLog.create({
     data: {
       user: user.id,
-      action: `Appointment request: ${fullReason} on ${body.date} at ${body.time}`,
+      action: `Appointment request submitted for ${apptDateLabel} at ${body.time}`,
       resource: `Patient-${patient.id}`,
       severity: 'Info'
     }

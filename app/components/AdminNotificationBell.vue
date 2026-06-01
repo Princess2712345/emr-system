@@ -17,7 +17,7 @@
             <Icon name="lucide:bell-ring" class="panel-title-icon" />
             <div>
               <h3>Notifications</h3>
-              <p>{{ paymentCount }} payment · {{ requestCount }} ID request{{ requestCount === 1 ? '' : 's' }}</p>
+              <p>{{ paymentCount }} payment · {{ appointmentCount }} appointment{{ appointmentCount === 1 ? '' : 's' }} · {{ requestCount }} ID</p>
             </div>
           </div>
           <button type="button" class="panel-close" aria-label="Close" @click="isOpen = false">
@@ -43,6 +43,13 @@
             </button>
             <button
               type="button"
+              :class="['tab', { active: activeFilter === 'appointments' }]"
+              @click="activeFilter = 'appointments'"
+            >
+              Appts
+            </button>
+            <button
+              type="button"
               :class="['tab', { active: activeFilter === 'requests' }]"
               @click="activeFilter = 'requests'"
             >
@@ -63,7 +70,7 @@
           <div v-else-if="!filteredNotifications.length" class="panel-state empty">
             <Icon name="lucide:inbox" />
             <p class="state-title">No notifications</p>
-            <span>Patient payments will appear here when they pay an invoice.</span>
+            <span>Patient payments, appointment requests, and ID requests will appear here.</span>
           </div>
 
           <ul v-else class="notif-list">
@@ -71,8 +78,8 @@
               v-for="item in filteredNotifications"
               :key="item.id"
               class="notif-card"
-              :class="[item.type, { clickable: item.type === 'mrn' }]"
-              @click="item.type === 'mrn' && openRequest(item)"
+              :class="[item.type, { clickable: item.type === 'mrn' || item.type === 'appointment' }]"
+              @click="onCardClick(item)"
             >
               <div class="notif-icon-wrap" :class="item.type">
                 <Icon :name="iconFor(item.type)" />
@@ -83,6 +90,7 @@
                   <span v-if="item.type === 'payment'" class="status-chip paid">Paid</span>
                   <span v-else-if="item.type === 'review'" class="status-chip review">Pending</span>
                   <span v-else-if="item.type === 'mrn'" class="status-chip mrn">Action</span>
+                  <span v-else-if="item.type === 'appointment'" class="status-chip appointment">New</span>
                 </div>
                 <p class="notif-patient">
                   <Icon name="lucide:user" />
@@ -100,6 +108,9 @@
                   </span>
                   <span v-if="item.type === 'mrn'" class="notif-cta">
                     View &amp; relay <Icon name="lucide:chevron-right" />
+                  </span>
+                  <span v-else-if="item.type === 'appointment'" class="notif-cta">
+                    View schedule <Icon name="lucide:chevron-right" />
                   </span>
                 </span>
               </div>
@@ -183,6 +194,7 @@ const {
   filteredNotifications,
   paymentCount,
   requestCount,
+  appointmentCount,
   unreadCount,
   isOpen,
   isLoading,
@@ -197,7 +209,17 @@ const iconFor = (type) => {
   if (type === 'payment') return 'lucide:badge-check'
   if (type === 'review') return 'lucide:clock-alert'
   if (type === 'mrn') return 'lucide:id-card'
+  if (type === 'appointment') return 'lucide:calendar-clock'
   return 'lucide:info'
+}
+
+const onCardClick = (item) => {
+  if (item.type === 'mrn') {
+    openRequest(item)
+  } else if (item.type === 'appointment') {
+    isOpen.value = false
+    navigateTo('/dashboard/appointments')
+  }
 }
 
 // --- ID recovery request detail ---
@@ -440,11 +462,12 @@ onUnmounted(() => {
   border: none;
   background: transparent;
   color: var(--emr-text-muted, #64748b);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.35rem 0.65rem;
+  padding: 0.35rem 0.5rem;
   border-radius: 6px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .tab.active {
@@ -534,6 +557,10 @@ onUnmounted(() => {
   border-left: 3px solid #6366f1;
 }
 
+.notif-card.appointment {
+  border-left: 3px solid #0ea5e9;
+}
+
 .notif-icon-wrap {
   flex-shrink: 0;
   width: 2.25rem;
@@ -557,6 +584,11 @@ onUnmounted(() => {
 .notif-icon-wrap.mrn {
   background: #e0e7ff;
   color: #4f46e5;
+}
+
+.notif-icon-wrap.appointment {
+  background: #e0f2fe;
+  color: #0284c7;
 }
 
 .notif-icon-wrap.other {
@@ -585,12 +617,18 @@ onUnmounted(() => {
 
 .status-chip.paid,
 .status-chip.review,
-.status-chip.mrn {
+.status-chip.mrn,
+.status-chip.appointment {
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
+}
+
+.status-chip.appointment {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .status-chip.paid {

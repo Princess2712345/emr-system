@@ -1,6 +1,6 @@
 import { prisma } from '../../utils/prisma'
 
-const ADMIN_SEVERITIES = ['Payment', 'PaymentReview', 'MrnRequest']
+const ADMIN_SEVERITIES = ['Payment', 'PaymentReview', 'MrnRequest', 'Appointment']
 
 export default defineEventHandler(async (event) => {
   const sinceRaw = getQuery(event).since as string | undefined

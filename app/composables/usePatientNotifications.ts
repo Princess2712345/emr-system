@@ -3,7 +3,7 @@ import { getStoredUser } from '~/utils/authSession'
 
 const STORAGE_KEY = 'patient_notifications_seen_at'
 
-export type PatientNotificationType = 'approved' | 'rejected' | 'submitted' | 'other'
+export type PatientNotificationType = 'approved' | 'rejected' | 'submitted' | 'appointment' | 'other'
 
 export type PatientNotificationItem = {
   id: number
@@ -24,7 +24,13 @@ function parseNotification(raw: { id: number; message: string; timeLabel: string
   let type: PatientNotificationType = 'other'
   let title = 'Notification'
 
-  if (msg.includes('approved') || msg.includes('thank you')) {
+  if (msg.includes('appointment')) {
+    type = 'appointment'
+    if (msg.includes('confirmed')) title = 'Appointment confirmed'
+    else if (msg.includes('cancelled')) title = 'Appointment cancelled'
+    else if (msg.includes('completed')) title = 'Appointment completed'
+    else title = 'Appointment update'
+  } else if (msg.includes('approved') || msg.includes('thank you')) {
     type = 'approved'
     title = 'Payment approved'
   } else if (msg.includes('not approved') || msg.includes('rejected') || msg.includes('declined')) {

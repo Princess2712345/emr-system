@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 
 const STORAGE_KEY = 'admin_notifications_seen_at'
 
-export type AdminNotificationType = 'payment' | 'review' | 'mrn' | 'other'
+export type AdminNotificationType = 'payment' | 'review' | 'mrn' | 'appointment' | 'other'
 
 export type AdminNotificationItem = {
   id: number
@@ -21,7 +21,7 @@ const notifications = ref<AdminNotificationItem[]>([])
 const unreadCount = ref(0)
 const isOpen = ref(false)
 const isLoading = ref(false)
-const activeFilter = ref<'all' | 'payments' | 'requests'>('all')
+const activeFilter = ref<'all' | 'payments' | 'requests' | 'appointments'>('all')
 
 function parseNotification(raw: {
   id: number
@@ -41,6 +41,9 @@ function parseNotification(raw: {
   if (raw.severity === 'MrnRequest') {
     type = 'mrn'
     title = 'ID recovery request'
+  } else if (raw.severity === 'Appointment') {
+    type = 'appointment'
+    title = 'New appointment request'
   } else if (raw.severity === 'PaymentReview') {
     type = 'review'
     title = 'Payment awaiting approval'
@@ -66,6 +69,9 @@ export function useAdminNotifications() {
     if (activeFilter.value === 'requests') {
       return notifications.value.filter((n) => n.type === 'mrn')
     }
+    if (activeFilter.value === 'appointments') {
+      return notifications.value.filter((n) => n.type === 'appointment')
+    }
     return notifications.value
   })
 
@@ -75,6 +81,10 @@ export function useAdminNotifications() {
 
   const requestCount = computed(() =>
     notifications.value.filter((n) => n.type === 'mrn').length
+  )
+
+  const appointmentCount = computed(() =>
+    notifications.value.filter((n) => n.type === 'appointment').length
   )
 
   const getSeenAt = () => {
@@ -124,6 +134,7 @@ export function useAdminNotifications() {
     filteredNotifications,
     paymentCount,
     requestCount,
+    appointmentCount,
     unreadCount,
     isOpen,
     isLoading,
