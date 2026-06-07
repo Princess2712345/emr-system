@@ -37,8 +37,10 @@ COPY --from=build /app/.output ./.output
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/package.json ./package.json
+COPY scripts/start-production.sh ./start-production.sh
+RUN chmod +x ./start-production.sh
 
 EXPOSE 3000
 
-# Apply any pending migrations, then start the Nuxt/Nitro server.
-CMD ["sh", "-c", "npx prisma migrate deploy && node .output/server/index.mjs"]
+# Migrate (with P3009 auto-recovery), then start the Nuxt/Nitro server.
+CMD ["./start-production.sh"]
