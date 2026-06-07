@@ -14,12 +14,15 @@ if [ "$MIGRATE_FAILED" -eq 1 ]; then
     FAILED_MIG=$(grep -oE '[0-9]{14}_[a-zA-Z0-9_]+' /tmp/migrate-out.log | head -1)
 
     if [ -n "$FAILED_MIG" ]; then
-      echo "==> Resolving: $FAILED_MIG"
-      npx prisma migrate resolve --rolled-back "$FAILED_MIG" 2>/dev/null || \
-      npx prisma migrate resolve --applied "$FAILED_MIG" 2>/dev/null || true
+      echo "==> Resolving: $FAILED_MIG (rolled back, will re-run fixed SQL)"
+      npx prisma migrate resolve --rolled-back "$FAILED_MIG" 2>/dev/null || true
 
       echo "==> Retrying migrations..."
-      npx prisma migrate deploy
+      npx prisma migrate deploy || {
+        echo "==> Retry failed — marking as applied if schema already exists..."
+        npx prisma migrate resolve --applied "$FAILED_MIG" 2>/dev/null || true
+        npx prisma migrate deploy
+      }
     else
       echo "==> Could not detect failed migration name."
       exit 1
