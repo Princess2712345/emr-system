@@ -7,9 +7,11 @@ WORKDIR /app
 # Prisma needs OpenSSL to download/run its query engine
 RUN apk add --no-cache openssl
 
-# Install dependencies using the lockfile for reproducible builds
-COPY package.json package-lock.json ./
-RUN npm ci
+# Install dependencies. `npm install` (not `npm ci`) is used because the
+# project is developed with pnpm, so package-lock.json may be out of sync.
+# This resolves from package.json and won't hard-fail on a stale lockfile.
+COPY package.json package-lock.json* ./
+RUN npm install --no-audit --no-fund
 
 # Copy the rest of the source
 COPY . .
