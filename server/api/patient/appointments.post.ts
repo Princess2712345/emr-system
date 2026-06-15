@@ -30,8 +30,7 @@ export default defineEventHandler(async (event) => {
       patientId: patient.id,
       patientName: patient.name,
       staffId: body.staffId || null
-    },
-    include: { staff: true }
+    }
   })
 
   const apptDateLabel = new Date(body.date).toLocaleDateString('en-US', {

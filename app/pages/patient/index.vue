@@ -10,8 +10,8 @@
           <button class="action-outline clickable" @click="printRecord">
             <Icon name="lucide:printer" /> Download E-Record
           </button>
-          <PatientNotificationBell />
-          <NuxtLink to="/patient/profile" class="profile-chip" title="My Profile">
+          <PatientNotificationBell class="desktop-only" />
+          <NuxtLink to="/patient/profile" class="profile-chip desktop-only" title="My Profile">
             <div class="avatar-circle" :class="patientInfo.colorClass">
               <img v-if="patientInfo.avatar" :src="patientInfo.avatar" alt="Profile" class="avatar-img" />
               <span v-else>{{ patientInfo.initials }}</span>

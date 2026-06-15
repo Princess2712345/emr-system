@@ -1,6 +1,7 @@
 import { prisma } from '../../utils/prisma'
 import { requirePatientContext } from '../../utils/patient'
 import { enrichLabRecord } from '../../utils/labResultDetails'
+import { loadStaffMap, staffDoctorLabel } from '../../utils/appointmentStaff'
 
 export default defineEventHandler(async (event) => {
   const userId = getQuery(event).userId as string
@@ -13,7 +14,6 @@ export default defineEventHandler(async (event) => {
   const [appointments, labs, invoices, auditLogs, dispositions] = await Promise.all([
     prisma.appointment.findMany({
       where: { patientId: patient.id },
-      include: { staff: true },
       orderBy: { date: 'desc' }
     }),
     prisma.labResult.findMany({
@@ -38,9 +38,11 @@ export default defineEventHandler(async (event) => {
   const formatDate = (d: Date) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
+  const staffMap = await loadStaffMap(appointments.map((apt) => apt.staffId))
+
   const visitRows = appointments.map((apt) => {
-    const staff = apt.staff
-    const doctor = staff ? `Dr. ${staff.lastName}` : 'Clinical team'
+    const staff = apt.staffId ? staffMap.get(apt.staffId) : undefined
+    const doctor = staffDoctorLabel(staff, 'Clinical team')
     return {
       id: `apt-${apt.id}`,
       type: 'visit',

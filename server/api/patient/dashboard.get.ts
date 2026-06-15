@@ -1,5 +1,6 @@
 import { prisma } from '../../utils/prisma'
 import { requirePatientContext } from '../../utils/patient'
+import { staffDoctorLabel } from '../../utils/appointmentStaff'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -17,7 +18,6 @@ export default defineEventHandler(async (event) => {
           status: { in: ['Pending', 'Confirmed', 'In Progress'] },
           date: { gte: new Date() }
         },
-        include: { staff: true },
         orderBy: { date: 'asc' }
       }),
       prisma.labResult.findMany({
@@ -42,9 +42,14 @@ export default defineEventHandler(async (event) => {
       })
     ])
 
-    const staffLabel = nextAppointment?.staff
-      ? `Dr. ${nextAppointment.staff.lastName}`
-      : 'Clinical Staff'
+    const staffUser = nextAppointment?.staffId
+      ? await prisma.user.findUnique({
+          where: { id: nextAppointment.staffId },
+          select: { id: true, lastName: true, role: true }
+        })
+      : null
+
+    const staffLabel = staffDoctorLabel(staffUser ?? undefined, 'Clinical Staff')
 
     const labNotes = recentLabs.map((lab) => ({
       doctor: lab.uploadedBy || 'Clinical Lab',

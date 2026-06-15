@@ -10,8 +10,8 @@
           <button class="add-btn clickable" @click="handleRequestRecord">
             <Icon name="lucide:file-up" /> Request Medical Record
           </button>
-          <PatientNotificationBell />
-          <NuxtLink to="/patient/profile" class="profile-chip" :title="displayName">
+          <PatientNotificationBell class="desktop-only" />
+          <NuxtLink to="/patient/profile" class="profile-chip desktop-only" :title="displayName">
             <div class="avatar-circle purple-theme">{{ initials }}</div>
           </NuxtLink>
         </div>

@@ -7,8 +7,8 @@
       </div>
 
       <div class="header-actions portal-header-actions">
-        <PatientNotificationBell />
-        <div class="profile-chip">
+        <PatientNotificationBell class="desktop-only" />
+        <div class="profile-chip desktop-only">
           <div class="avatar-circle purple-theme">
             <img v-if="form && form.avatar" :src="form.avatar" alt="Profile photo" class="avatar-img" />
             <span v-else>{{ initials }}</span>

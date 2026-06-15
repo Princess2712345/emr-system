@@ -1,5 +1,6 @@
 import { prisma } from '../../utils/prisma'
 import { requirePatientContext } from '../../utils/patient'
+import { loadStaffMap } from '../../utils/appointmentStaff'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,9 +13,10 @@ export default defineEventHandler(async (event) => {
 
     const dbAppointments = await prisma.appointment.findMany({
       where: { patientId: patient.id },
-      include: { staff: true },
       orderBy: { date: 'asc' }
     })
+
+    const staffMap = await loadStaffMap(dbAppointments.map((apt) => apt.staffId))
 
     const now = new Date()
     const upcomingVisits = dbAppointments.filter(a =>
@@ -33,7 +35,8 @@ export default defineEventHandler(async (event) => {
       daysRemainingStr = diffDays <= 0 ? 'Today' : `In ${diffDays} Days`
     }
 
-    const staffName = (staff: typeof dbAppointments[0]['staff']) => {
+    const staffName = (staffId: string | null) => {
+      const staff = staffId ? staffMap.get(staffId) : undefined
       if (!staff) return 'General Physician'
       return `Dr. ${staff.lastName} (${staff.role})`
     }
@@ -42,7 +45,7 @@ export default defineEventHandler(async (event) => {
       const dt = new Date(apt.date)
       return {
         id: apt.id,
-        doctor: staffName(apt.staff),
+        doctor: staffName(apt.staffId),
         date: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         time: apt.time || '09:00 AM',
         reason: apt.reason,

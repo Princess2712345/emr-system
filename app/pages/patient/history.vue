@@ -9,7 +9,7 @@
         <NuxtLink to="/patient" class="action-outline clickable">
           <Icon name="lucide:arrow-left" /> Back to Dashboard
         </NuxtLink>
-        <PatientNotificationBell />
+        <PatientNotificationBell class="desktop-only" />
       </div>
     </header>
 
