@@ -224,7 +224,8 @@ video {
 .billing-body,
 .patient-body,
 .appointment-body,
-.statistics-body {
+.statistics-body,
+.stats-body {
   padding: 1.5rem 2rem;
   flex: 1;
   overflow-y: auto;
@@ -550,6 +551,35 @@ video {
     grid-template-columns: 1fr !important;
     gap: 1.25rem;
     min-width: 0;
+  }
+
+  .portal-page .top-bar,
+  .portal-top-bar,
+  .dashboard-layout .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem !important;
+    gap: 0.75rem;
+  }
+
+  .portal-page .header-actions,
+  .portal-header-actions,
+  .dashboard-layout .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .portal-page .add-btn,
+  .portal-page .export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-body,
+  .statistics-body {
+    padding: 1rem !important;
   }
 
   .schedule-header {

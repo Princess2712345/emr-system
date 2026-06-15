@@ -763,13 +763,152 @@ const submitForm = async () => {
 }
 
 @media (max-width: 768px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem !important;
+    gap: 0.75rem;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .patient-body {
+    padding: 1rem !important;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-wrapper {
+    max-width: none;
+    width: 100%;
+  }
+
+  .filter-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+    line-height: 1.35;
+    padding-right: 0.5rem;
+  }
+
+  .modal-form {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group.full-width {
+    grid-column: span 1;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    flex-shrink: 0;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rx-modal {
+    max-height: 95vh;
+  }
+
+  .rx-modal-body {
+    padding: 0 1.25rem;
+  }
+
+  .rx-patient-bar {
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .rx-active-badge {
+    margin-left: 0;
+  }
+
+  .rx-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .rx-stop-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .rx-modal-footer {
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .rx-add-form .submit-btn {
+    width: 100%;
+  }
+
   .action-cell {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
   }
+
   .rx-link,
   .view-link {
     justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-table th,
+  .patient-table td {
+    padding: 0.75rem 1rem;
   }
 }
 </style>

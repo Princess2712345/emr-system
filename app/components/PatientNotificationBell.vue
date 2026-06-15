@@ -427,4 +427,37 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateY(-6px);
 }
+
+@media (max-width: 768px) {
+  .patient-notif-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: min(88vh, 640px);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.2);
+  }
+
+  .panel-toolbar {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .panel-footer {
+    flex-direction: column;
+  }
+
+  .panel-enter-from,
+  .panel-leave-to {
+    transform: translateY(100%);
+  }
+
+  .notif-card {
+    padding: 0.75rem 0.85rem;
+  }
+}
 </style>

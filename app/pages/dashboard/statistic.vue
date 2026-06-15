@@ -369,6 +369,140 @@ const kpiData = computed(() => [
 .clickable { cursor: pointer; transition: all 0.2s ease; }
 .clickable:active { transform: scale(0.96); }
 
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 .pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
+
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width-table {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem !important;
+    gap: 0.75rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .status-indicator {
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-body {
+    padding: 1rem !important;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .kpi-card {
+    padding: 1.15rem;
+  }
+
+  .kpi-value {
+    font-size: 1.65rem;
+  }
+
+  .charts-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chart-box {
+    padding: 1.15rem;
+  }
+
+  .chart-header {
+    margin-bottom: 1.25rem;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .visual-placeholder {
+    height: 220px;
+    padding: 1rem 0.5rem;
+  }
+
+  .bar-wrapper {
+    width: 12%;
+    min-width: 28px;
+  }
+
+  .bar-label {
+    font-size: 0.65rem;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  .chart-legend li {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.65rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  .module-cell {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-trend {
+    font-size: 0.75rem;
+  }
+
+  .trend-label {
+    display: block;
+    margin-top: 2px;
+  }
+}
 </style>

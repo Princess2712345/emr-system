@@ -1003,4 +1003,91 @@ onUnmounted(() => {
 .req-fade-leave-to {
   opacity: 0;
 }
+
+@media (max-width: 768px) {
+  .admin-notif-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: min(88vh, 640px);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.2);
+  }
+
+  .panel-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .panel-tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+
+  .mark-read-btn {
+    align-self: flex-end;
+  }
+
+  .notif-top {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .notif-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .panel-footer {
+    flex-direction: column;
+  }
+
+  .panel-enter-from,
+  .panel-leave-to {
+    transform: translateY(100%);
+  }
+
+  .req-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .req-modal {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  .req-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .req-row strong {
+    text-align: left;
+  }
+
+  .req-id-value {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .req-copy {
+    justify-content: center;
+  }
+
+  .req-actions {
+    flex-direction: column;
+  }
+}
 </style>
