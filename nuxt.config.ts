@@ -20,10 +20,13 @@ export default defineNuxtConfig({
     databaseUrl: '',
   },
 
+  // Keep Prisma external so native query-engine binaries load from node_modules
   nitro: {
     externals: {
-      inline: ['@prisma/client', '.prisma/client']
-    }
+      external: ['.prisma', '@prisma/client'],
+      inline: []
+    },
+    moduleSideEffects: ['@prisma/client']
   },
 
   devtools: { enabled: true }
