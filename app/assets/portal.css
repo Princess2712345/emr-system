@@ -587,6 +587,166 @@ video {
     min-width: 0;
     width: 100%;
   }
+
+  /* --- Patient portal mobile (MyHealth Portal) --- */
+  .patient-layout.portal-layout,
+  .patient-layout.dashboard-layout {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .patient-layout .portal-mobile-bar {
+    flex-shrink: 0;
+    z-index: 1002;
+  }
+
+  .patient-layout .portal-main,
+  .patient-layout .main-content {
+    flex: 1;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .patient-layout .portal-page {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .patient-layout .portal-page > .portal-top-bar,
+  .patient-layout .portal-page > .top-bar {
+    flex-shrink: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    gap: 0.5rem;
+  }
+
+  .patient-layout .portal-page .header-info {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  .patient-layout .portal-page .header-info h1 {
+    font-size: 1.1rem !important;
+    line-height: 1.25;
+  }
+
+  .patient-layout .portal-page .header-info .current-date {
+    font-size: 0.72rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .patient-layout .portal-page .portal-header-actions,
+  .patient-layout .portal-page .header-actions {
+    flex: 0 1 auto;
+    width: auto !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem !important;
+  }
+
+  /* Bell + avatar live in the mobile nav bar — hide duplicates in page header */
+  .patient-layout .portal-page .portal-header-actions .patient-notif,
+  .patient-layout .portal-page .header-actions .patient-notif,
+  .patient-layout .portal-page .portal-header-actions .profile-chip,
+  .patient-layout .portal-page .header-actions .profile-chip {
+    display: none !important;
+  }
+
+  .patient-layout .portal-page .action-outline,
+  .patient-layout .portal-page .add-btn {
+    width: auto !important;
+    padding: 0.5rem 0.85rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+  }
+
+  .patient-layout .portal-page .scrollable-body {
+    flex: 1;
+    min-height: 0;
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .patient-layout .portal-page .patient-hero {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .patient-layout .portal-page .hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .patient-layout .portal-page .title-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .patient-layout .portal-page .title-row h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .patient-layout .portal-page .meta-row {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .patient-layout .portal-page .bottom-layout,
+  .patient-layout .portal-page .portal-bottom-layout {
+    gap: 1rem;
+  }
+
+  .patient-layout .portal-page .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .patient-layout .portal-page .card-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .patient-layout .portal-page .identity-hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem;
+  }
+
+  .patient-layout .portal-page .identity-meta {
+    justify-content: center;
+  }
+
+  .patient-layout .portal-page .identity-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .patient-layout .portal-page .profile-grid,
+  .patient-layout .portal-page .field-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* ==========================================================================

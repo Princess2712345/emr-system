@@ -363,4 +363,52 @@ const addToCalendar = () => {
 /* Utility */
 .clickable { cursor: pointer; }
 .clickable:active { transform: scale(0.98); }
+
+@media (max-width: 768px) {
+  .hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .patient-hero {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .title-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .title-row h2 {
+    font-size: 1.25rem;
+  }
+
+  .meta-row {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+
+  .action-outline {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.75rem;
+  }
+
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .card-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
 </style>

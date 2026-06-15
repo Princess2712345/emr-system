@@ -1,6 +1,6 @@
 <template>
   <div
-    class="portal-layout dashboard-layout"
+    class="portal-layout dashboard-layout patient-layout"
     :class="{ 'mobile-open': isMobileOpen }"
   >
     <div class="portal-sidebar-overlay" @click="closeMobile" />
