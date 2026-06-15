@@ -229,9 +229,10 @@ video {
   padding: 1.5rem 2rem;
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
   -webkit-overflow-scrolling: touch;
   width: 100%;
+  min-width: 0;
 }
 
 /* Space between stat cards (bento) and main content tables below */

@@ -305,7 +305,14 @@ const kpiData = computed(() => [
 /* --- MAIN CONTENT AREA --- */
 .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .top-bar { background: white; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
-.stats-body { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; }
+.stats-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: visible;
+  padding: 2rem 2.5rem;
+  min-width: 0;
+  width: 100%;
+}
 
 /* KPI CARDS */
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
@@ -320,8 +327,22 @@ const kpiData = computed(() => [
 .kpi-value { font-size: 2rem; font-weight: 800; margin: 1rem 0; color: #1e293b; letter-spacing: -1px; }
 
 /* CHARTS */
-.charts-container { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; }
-.chart-box { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.charts-container {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  min-width: 0;
+  width: 100%;
+}
+.chart-box {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  min-width: 0;
+  max-width: 100%;
+}
 .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
 .chart-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e3a8a; }
 
@@ -338,9 +359,16 @@ const kpiData = computed(() => [
 .pie-visual { position: relative; }
 .inner-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: flex; flex-direction: column; }
 
-.full-width-table { grid-column: span 2; }
-.data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.data-table th { text-align: left; padding: 12px; font-size: 0.8rem; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+.full-width-table {
+  grid-column: span 2;
+  min-width: 0;
+}
+.data-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+.data-table th { text-align: left; padding: 12px; font-size: 0.8rem; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; white-space: nowrap; }
 .data-table td { padding: 12px; font-size: 0.9rem; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
 
 .status-pill { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
@@ -380,9 +408,17 @@ const kpiData = computed(() => [
 }
 
 .table-container {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  margin-top: 0.5rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
 }
 
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
@@ -432,6 +468,7 @@ const kpiData = computed(() => [
 
   .stats-body {
     padding: 1rem !important;
+    overflow-x: visible;
   }
 
   .kpi-grid {
