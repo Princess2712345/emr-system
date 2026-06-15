@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import { PrismaClient } from 'db-client'
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { registerPatientAccount } from '../../utils/patientRegistry'
 import { generateUniqueStaffId, isStaffRole } from '../../utils/uniqueIdGenerator'

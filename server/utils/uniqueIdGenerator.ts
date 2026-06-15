@@ -1,4 +1,4 @@
-import type { PrismaClient } from 'db-client'
+import type { PrismaClient } from '@prisma/client'
 import { prisma } from './prisma'
 
 type DbClient = PrismaClient | Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>

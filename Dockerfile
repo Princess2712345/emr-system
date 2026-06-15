@@ -16,7 +16,7 @@ RUN npm install --no-audit --no-fund
 # Copy the rest of the source
 COPY . .
 
-# Generate the Prisma client (outputs to node_modules/db-client) then build Nuxt
+# Generate the Prisma client then build Nuxt
 RUN npx prisma generate
 RUN npm run build
 
