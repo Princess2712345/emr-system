@@ -1,10 +1,8 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { registerPatientAccount } from '../../utils/patientRegistry'
-import { generateUniqueStaffId, isStaffRole } from '../../utils/uniqueIdGenerator'
-
-const prisma = new PrismaClient()
+import { generateUniqueMrn, generateUniqueStaffId, isStaffRole } from '../../utils/uniqueIdGenerator'
+import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
